@@ -101,22 +101,6 @@
             </div>
             <p id="level-text" class="text-[10px] text-zinc-500 text-center font-medium">Carregando...</p>
         </div>
-
-        <!-- User Profile & Logout Bottom -->
-        <div class="pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-2xl bg-gradient-to-tr from-lime-400 to-emerald-500 text-black font-extrabold flex items-center justify-center text-xs shrink-0 shadow-md shadow-lime-400/10">
-                    <?= strtoupper(substr($_SESSION['usuario_nome'] ?? 'A', 0, 1)) ?>
-                </div>
-                <div class="min-w-0">
-                    <p class="font-bold text-white text-xs truncate leading-tight"><?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Administrador') ?></p>
-                    <p class="text-[10px] text-zinc-500 truncate"><?= htmlspecialchars($_SESSION['usuario_email'] ?? 'admin@aires.io') ?></p>
-                </div>
-            </div>
-            <a href="<?= htmlspecialchars(\Aires\Core\Request::getBasePath() . '/logout') ?>" class="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all" title="Encerrar Sessão">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-            </a>
-        </div>
     </aside>
 
     <!-- ========================================================
