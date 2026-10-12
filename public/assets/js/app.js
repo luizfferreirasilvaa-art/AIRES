@@ -215,7 +215,7 @@ const App = (() => {
         if (!listContainer) return;
 
         let html = `
-            <button type="button" data-mode-slug="todos" class="mode-item-btn w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all text-left group ${activeMode === 'todos' ? 'bg-white/10 text-white' : 'text-zinc-300'}">
+            <button type="button" data-mode-slug="todos" class="mode-select-btn w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all text-left group ${activeMode === 'todos' ? 'bg-white/10 text-white' : 'text-zinc-300'}">
                 <div class="flex items-center gap-2.5">
                     <div class="flex items-center -space-x-1.5">
                         <span class="w-5 h-5 rounded-full bg-purple-600/80 flex items-center justify-center text-[10px]">💼</span>
@@ -234,25 +234,38 @@ const App = (() => {
         modesList.forEach(m => {
             const isSelected = activeMode === m.slug;
             html += `
-                <button type="button" data-mode-slug="${escapeHtml(m.slug)}" class="mode-item-btn w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all text-left group ${isSelected ? 'bg-white/10 text-white' : 'text-zinc-300'}">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-7 h-7 rounded-xl bg-white/5 flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform">${escapeHtml(m.icone || '🎯')}</span>
-                        <div>
-                            <p class="font-bold text-xs ${isSelected ? 'text-white' : 'text-zinc-200 group-hover:text-white'}">${escapeHtml(m.nome)}</p>
-                            <p class="text-[9px] text-zinc-500">${m.tarefas_ativas !== undefined ? `${m.tarefas_ativas} ações ativas` : `Filtrar por ${escapeHtml(m.nome)}`}</p>
+                <div class="mode-item-row w-full flex items-center justify-between px-3 py-1.5 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all group ${isSelected ? 'bg-white/10 text-white' : 'text-zinc-300'}">
+                    <button type="button" data-mode-slug="${escapeHtml(m.slug)}" class="mode-select-btn flex items-center gap-2.5 flex-1 min-w-0 text-left py-0.5">
+                        <span class="w-7 h-7 rounded-xl bg-white/5 flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform shrink-0">${escapeHtml(m.icone || '🎯')}</span>
+                        <div class="min-w-0 truncate">
+                            <p class="font-bold text-xs ${isSelected ? 'text-white' : 'text-zinc-200 group-hover:text-white'} truncate">${escapeHtml(m.nome)}</p>
+                            <p class="text-[9px] text-zinc-500 truncate">${m.tarefas_ativas !== undefined ? `${m.tarefas_ativas} ações ativas` : `Filtrar por ${escapeHtml(m.nome)}`}</p>
                         </div>
+                    </button>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <span class="mode-check-indicator ${isSelected ? '' : 'hidden'} text-lime-400 font-black text-xs mr-1">✓</span>
+                        <button type="button" class="btn-edit-mode text-zinc-500 hover:text-white p-1 rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" data-mode-id="${m.id}" title="Editar ${escapeHtml(m.nome)}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
                     </div>
-                    <span class="mode-check-indicator ${isSelected ? '' : 'hidden'} text-lime-400 font-black text-xs">✓</span>
-                </button>
+                </div>
             `;
         });
 
         listContainer.innerHTML = html;
 
-        listContainer.querySelectorAll('.mode-item-btn').forEach(btn => {
+        listContainer.querySelectorAll('.mode-select-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const slug = btn.dataset.modeSlug;
                 selectMode(slug);
+            });
+        });
+
+        listContainer.querySelectorAll('.btn-edit-mode').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const modeId = parseInt(btn.dataset.modeId);
+                openEditModeModal(modeId);
             });
         });
     }
@@ -352,6 +365,7 @@ const App = (() => {
         const btnOpen = document.getElementById('btn-open-create-mode');
         const btnClose = document.getElementById('btn-close-create-mode');
         const btnCancel = document.getElementById('btn-cancel-create-mode');
+        const btnDelete = document.getElementById('btn-delete-mode');
         const form = document.getElementById('form-create-mode');
         const iconInput = document.getElementById('new-mode-icone');
 
@@ -371,8 +385,10 @@ const App = (() => {
             });
         });
 
+        // Submit form (Criar ou Atualizar)
         form?.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const modeId = document.getElementById('new-mode-id')?.value;
             const nome = document.getElementById('new-mode-nome')?.value.trim();
             const icone = iconInput?.value.trim() || '🎯';
             const corRadio = document.querySelector('input[name="new-mode-cor"]:checked');
@@ -384,29 +400,142 @@ const App = (() => {
             }
 
             try {
-                const res = await API.createModo({ nome, icone, cor });
-                if (res.sucesso && res.modo) {
-                    modesList.push(res.modo);
+                if (modeId) {
+                    // Atualizar modo existente
+                    const res = await API.updateModo(modeId, { nome, icone, cor });
+                    if (res.sucesso && res.modo) {
+                        const idx = modesList.findIndex(m => m.id == modeId);
+                        if (idx !== -1) {
+                            modesList[idx] = { ...modesList[idx], ...res.modo };
+                        }
+                        if (typeof TaskModal !== 'undefined' && TaskModal.updateModeOptions) {
+                            TaskModal.updateModeOptions(modesList);
+                        }
+                        closeCreateModeModal();
+                        updateModeSwitcherUI();
+                        renderModesDropdown();
+                        reloadCurrentView();
+                        showToast(`Modo "${res.modo.nome}" atualizado!`, 'success');
+                    }
+                } else {
+                    // Criar novo modo
+                    const res = await API.createModo({ nome, icone, cor });
+                    if (res.sucesso && res.modo) {
+                        modesList.push(res.modo);
+                        if (typeof TaskModal !== 'undefined' && TaskModal.updateModeOptions) {
+                            TaskModal.updateModeOptions(modesList);
+                        }
+                        closeCreateModeModal();
+                        selectMode(res.modo.slug);
+                        showToast(`Novo modo "${res.modo.nome}" criado com sucesso!`, 'success');
+                    }
+                }
+            } catch (err) {
+                showToast(err.message || 'Erro ao salvar modo', 'error');
+            }
+        });
+
+        // Excluir modo
+        btnDelete?.addEventListener('click', async () => {
+            const modeId = document.getElementById('new-mode-id')?.value;
+            if (!modeId) return;
+
+            const mode = modesList.find(m => m.id == modeId);
+            const nome = mode ? mode.nome : 'este modo';
+
+            if (!confirm(`Deseja realmente excluir o modo "${nome}"? As tarefas vinculadas serão preservadas.`)) {
+                return;
+            }
+
+            try {
+                const res = await API.deleteModo(modeId);
+                if (res.sucesso) {
+                    if (mode && activeMode === mode.slug) {
+                        activeMode = res.fallback_modo || 'todos';
+                        localStorage.setItem('aires_active_mode', activeMode);
+                    }
+                    modesList = modesList.filter(m => m.id != modeId);
                     if (typeof TaskModal !== 'undefined' && TaskModal.updateModeOptions) {
                         TaskModal.updateModeOptions(modesList);
                     }
                     closeCreateModeModal();
-                    form.reset();
-                    selectMode(res.modo.slug);
-                    showToast(`Novo modo "${res.modo.nome}" criado com sucesso!`, 'success');
+                    updateModeSwitcherUI();
+                    renderModesDropdown();
+                    reloadCurrentView();
+                    showToast(`Modo "${nome}" removido!`, 'success');
                 }
             } catch (err) {
-                showToast(err.message || 'Erro ao criar modo', 'error');
+                showToast(err.message || 'Erro ao excluir modo', 'error');
             }
         });
     }
 
     function openCreateModeModal() {
         const modal = document.getElementById('modal-create-mode');
+        const form = document.getElementById('form-create-mode');
+        const idInput = document.getElementById('new-mode-id');
+        const title = document.getElementById('modal-mode-title');
+        const desc = document.getElementById('modal-mode-desc');
+        const submitBtn = document.getElementById('btn-submit-create-mode');
+        const deleteBtn = document.getElementById('btn-delete-mode');
+
+        if (form) form.reset();
+        if (idInput) idInput.value = '';
+        if (title) title.innerText = 'Novo Modo de Contexto';
+        if (desc) desc.innerText = 'Separe fluxos de tarefas (Ex: Freelance, Família)';
+        if (submitBtn) submitBtn.innerText = 'Salvar Modo';
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+
+        const limeRadio = document.querySelector('input[name="new-mode-cor"][value="lime"]');
+        if (limeRadio) limeRadio.checked = true;
+
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.getElementById('new-mode-nome')?.focus();
+        }
+    }
+
+    function openEditModeModal(modeId) {
+        const modal = document.getElementById('modal-create-mode');
+        const idInput = document.getElementById('new-mode-id');
+        const nameInput = document.getElementById('new-mode-nome');
+        const iconInput = document.getElementById('new-mode-icone');
+        const title = document.getElementById('modal-mode-title');
+        const desc = document.getElementById('modal-mode-desc');
+        const submitBtn = document.getElementById('btn-submit-create-mode');
+        const deleteBtn = document.getElementById('btn-delete-mode');
+
+        const mode = modesList.find(m => m.id == modeId);
+        if (!mode) return;
+
+        // Fechar dropdown de modos
+        document.getElementById('modes-dropdown-menu')?.classList.add('hidden');
+        document.getElementById('mode-chevron')?.classList.remove('rotate-180');
+
+        if (idInput) idInput.value = mode.id;
+        if (nameInput) nameInput.value = mode.nome;
+        if (iconInput) iconInput.value = mode.icone;
+        if (title) title.innerText = 'Editar Modo de Contexto';
+        if (desc) desc.innerText = `Personalize o nome, ícone e cor de "${mode.nome}"`;
+        if (submitBtn) submitBtn.innerText = 'Salvar Alterações';
+
+        // Permitir exclusão se houver mais de 1 modo cadastrado
+        if (deleteBtn) {
+            if (modesList.length > 1) {
+                deleteBtn.classList.remove('hidden');
+            } else {
+                deleteBtn.classList.add('hidden');
+            }
+        }
+
+        const colorRadio = document.querySelector(`input[name="new-mode-cor"][value="${mode.cor}"]`);
+        if (colorRadio) colorRadio.checked = true;
+
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            nameInput?.focus();
         }
     }
 
@@ -917,6 +1046,7 @@ const App = (() => {
         getModeBadgeHtml,
         selectMode,
         openCreateModeModal,
+        openEditModeModal,
         closeCreateModeModal
     };
 })();

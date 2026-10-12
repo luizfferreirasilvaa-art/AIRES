@@ -82,6 +82,7 @@ $router->get('/', function (Request $req) {
 // Modos de Foco & Contexto (Trabalho, Pessoal, Empresarial...)
 $router->get('/api/modos', [ModeController::class, 'index']);
 $router->post('/api/modos', [ModeController::class, 'store']);
+$router->put('/api/modos/{id}', [ModeController::class, 'update']);
 $router->delete('/api/modos/{id}', [ModeController::class, 'destroy']);
 
 // Dashboard & Gamificação (Pilar 4)

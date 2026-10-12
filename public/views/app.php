@@ -227,16 +227,21 @@ $compMes = $compromissos_mes ?? [];
                                     <span class="mode-check-indicator text-lime-400 font-black text-xs">✓</span>
                                 </button>
                                 <?php foreach (($modos ?? []) as $m): ?>
-                                    <button type="button" data-mode-slug="<?= htmlspecialchars($m['slug']) ?>" class="mode-item-btn w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-all text-left group">
-                                        <div class="flex items-center gap-2.5">
-                                            <span class="w-7 h-7 rounded-xl bg-white/5 flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform"><?= htmlspecialchars($m['icone']) ?></span>
-                                            <div>
-                                                <p class="font-bold text-xs text-zinc-200 group-hover:text-white"><?= htmlspecialchars($m['nome']) ?></p>
-                                                <p class="text-[9px] text-zinc-500">Filtrar por <?= htmlspecialchars($m['nome']) ?></p>
+                                    <div class="mode-item-row w-full flex items-center justify-between px-3 py-1.5 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all group">
+                                        <button type="button" data-mode-slug="<?= htmlspecialchars($m['slug']) ?>" class="mode-select-btn flex items-center gap-2.5 flex-1 min-w-0 text-left py-0.5">
+                                            <span class="w-7 h-7 rounded-xl bg-white/5 flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform shrink-0"><?= htmlspecialchars($m['icone']) ?></span>
+                                            <div class="min-w-0 truncate">
+                                                <p class="font-bold text-xs text-zinc-200 group-hover:text-white truncate"><?= htmlspecialchars($m['nome']) ?></p>
+                                                <p class="text-[9px] text-zinc-500 truncate">Filtrar por <?= htmlspecialchars($m['nome']) ?></p>
                                             </div>
+                                        </button>
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <span class="mode-check-indicator hidden text-lime-400 font-black text-xs mr-1">✓</span>
+                                            <button type="button" class="btn-edit-mode text-zinc-500 hover:text-white p-1 rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" data-mode-id="<?= (int)$m['id'] ?>" title="Editar <?= htmlspecialchars($m['nome']) ?>">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                            </button>
                                         </div>
-                                        <span class="mode-check-indicator hidden text-lime-400 font-black text-xs">✓</span>
-                                    </button>
+                                    </div>
                                 <?php endforeach; ?>
                             </div>
 
@@ -829,12 +834,13 @@ $compMes = $compromissos_mes ?? [];
                     ✨
                 </div>
                 <div>
-                    <h3 class="text-base font-extrabold text-white">Novo Modo de Contexto</h3>
-                    <p class="text-xs text-zinc-400">Separe fluxos de tarefas (Ex: Freelance, Família)</p>
+                    <h3 id="modal-mode-title" class="text-base font-extrabold text-white">Novo Modo de Contexto</h3>
+                    <p id="modal-mode-desc" class="text-xs text-zinc-400">Separe fluxos de tarefas (Ex: Freelance, Família)</p>
                 </div>
             </div>
 
             <form id="form-create-mode" class="space-y-4">
+                <input type="hidden" id="new-mode-id" value="">
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Nome do Modo *</label>
                     <input type="text" id="new-mode-nome" required placeholder="Ex: Investimentos, Startup, Família..." class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80 text-xs">
@@ -883,6 +889,9 @@ $compMes = $compromissos_mes ?? [];
                 </div>
 
                 <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                    <button type="button" id="btn-delete-mode" class="hidden px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs rounded-full transition-all mr-auto">
+                        Excluir Modo
+                    </button>
                     <button type="button" id="btn-cancel-create-mode" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
                         Cancelar
                     </button>

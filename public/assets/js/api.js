@@ -105,6 +105,7 @@ const API = (() => {
 
         getModos: () => request('/modos'),
         createModo: (payload) => request('/modos', { method: 'POST', body: payload }),
+        updateModo: (id, payload) => request(`/modos/${id}`, { method: 'PUT', body: payload }),
         deleteModo: (id) => request(`/modos/${id}`, { method: 'DELETE' })
     };
 })();
