@@ -1,3 +1,14 @@
+<?php
+$userStreak = (int)($usuario['streak_dias'] ?? 0);
+$userXp = (int)($usuario['xp'] ?? 0);
+$totalActiveTasks = (int)(($metricas['planejamento'] ?? 0) + ($metricas['a_fazer'] ?? 0) + ($metricas['em_andamento'] ?? 0));
+$concludedToday = (int)($metricas['hoje_concluidas'] ?? 0);
+$concludedWeek = (int)($metricas['semana_concluidas'] ?? $metricas['concluidas'] ?? 0);
+$focusRate = (int)($metricas['taxa_foco'] ?? 0);
+$level = (int)floor($userXp / 100) + 1;
+$xpInLevel = $userXp % 100;
+$xpToNext = 100 - $xpInLevel;
+?>
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
@@ -92,14 +103,14 @@
         <div class="p-3.5 rounded-3xl bg-zinc-900/60 border border-white/5 space-y-2">
             <div class="flex items-center justify-between text-xs">
                 <span class="font-bold flex items-center gap-1.5 text-orange-400">
-                    🔥 <span id="stat-streak">— dias</span>
+                    🔥 <span id="stat-streak"><?= $userStreak ?> dias</span>
                 </span>
-                <span class="font-extrabold text-lime-400" id="stat-xp">— XP</span>
+                <span class="font-extrabold text-lime-400" id="stat-xp"><?= $userXp ?> XP</span>
             </div>
             <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                <div id="level-progress-bar" class="bg-gradient-to-r from-orange-500 via-amber-400 to-lime-400 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                <div id="level-progress-bar" class="bg-gradient-to-r from-orange-500 via-amber-400 to-lime-400 h-1.5 rounded-full transition-all" style="width: <?= $xpInLevel ?>%"></div>
             </div>
-            <p id="level-text" class="text-[10px] text-zinc-500 text-center font-medium">Carregando...</p>
+            <p id="level-text" class="text-[10px] text-zinc-500 text-center font-medium">Nível <?= $level ?> • <?= $xpToNext ?> XP para o Nível <?= $level + 1 ?></p>
         </div>
     </aside>
 
@@ -182,12 +193,12 @@
 
                     <!-- Streak Pill Badge -->
                     <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400 text-xs font-extrabold">
-                        🔥 <span class="user-streak-display">—</span>
+                        🔥 <span class="user-streak-display"><?= $userStreak ?>d</span>
                     </div>
 
                     <!-- XP Pill -->
                     <div class="hidden sm:flex items-center gap-1 px-3 py-1 rounded-full bg-lime-400/15 border border-lime-400/30 text-lime-400 text-xs font-extrabold">
-                        ⚡ <span class="user-xp-display">— XP</span>
+                        ⚡ <span class="user-xp-display"><?= $userXp ?> XP</span>
                     </div>
                 </div>
             </div>
@@ -209,10 +220,10 @@
                     </div>
                     <div>
                         <span class="text-[11px] text-zinc-400 font-medium">Ações em Andamento</span>
-                        <div class="text-2xl font-black text-white tracking-tight mt-0.5" id="hero-active-count">— Tarefas</div>
+                        <div class="text-2xl font-black text-white tracking-tight mt-0.5" id="hero-active-count"><?= $totalActiveTasks ?> Tarefas</div>
                         <div class="text-[11px] text-zinc-400 mt-1 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-lime-400"></span>
-                            <span id="hero-concluded-today">0 concluídas hoje</span>
+                            <span id="hero-concluded-today"><?= $concludedToday ?> concluídas hoje</span>
                         </div>
                     </div>
                 </div>
@@ -230,7 +241,7 @@
                     </div>
                     <div>
                         <span class="text-[11px] text-zinc-400 font-medium">Eficiência Semanal</span>
-                        <div class="text-2xl font-black text-white tracking-tight mt-0.5" id="hero-focus-rate">—% Foco</div>
+                        <div class="text-2xl font-black text-white tracking-tight mt-0.5" id="hero-focus-rate"><?= $focusRate ?>% Foco</div>
                         <div class="text-[11px] text-zinc-400 mt-1">
                             3 categorias prioritárias
                         </div>
@@ -382,22 +393,22 @@
                 <div class="glass-card rounded-3xl p-5 space-y-1">
                     <span class="text-xs font-semibold text-zinc-400">Streak Consecutivo</span>
                     <p class="text-3xl font-black text-orange-400 flex items-center gap-1.5">
-                        🔥 <span id="stat-streak-dash">7d</span>
+                        🔥 <span id="stat-streak-dash"><?= $userStreak ?>d</span>
                     </p>
                 </div>
                 <div class="glass-card rounded-3xl p-5 space-y-1">
                     <span class="text-xs font-semibold text-zinc-400">XP Acumulado</span>
                     <p class="text-3xl font-black text-lime-400 flex items-center gap-1.5">
-                        ⚡ <span id="stat-xp-dash">450</span>
+                        ⚡ <span id="stat-xp-dash"><?= $userXp ?></span>
                     </p>
                 </div>
                 <div class="glass-card rounded-3xl p-5 space-y-1">
                     <span class="text-xs font-semibold text-zinc-400">Concluídas na Semana</span>
-                    <p class="text-3xl font-black text-cyan-400" id="stat-concluidas">0</p>
+                    <p class="text-3xl font-black text-cyan-400" id="stat-concluidas"><?= $concludedWeek ?></p>
                 </div>
                 <div class="glass-card rounded-3xl p-5 space-y-1">
                     <span class="text-xs font-semibold text-zinc-400">Velocidade de Foco</span>
-                    <p class="text-3xl font-black text-purple-400" id="stat-foco">0%</p>
+                    <p class="text-3xl font-black text-purple-400" id="stat-foco"><?= $focusRate ?>%</p>
                 </div>
             </div>
         </section>

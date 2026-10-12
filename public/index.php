@@ -64,7 +64,10 @@ $router->get('/api/auth/me', [AuthController::class, 'me']);
 // ROTAS DE INTERFACE WEB (VIEWS)
 // ==========================================
 $router->get('/', function (Request $req) {
-    Response::render('app');
+    $dashboardCtrl = new DashboardController();
+    $userId = isset($_SESSION['usuario_id']) ? (int)$_SESSION['usuario_id'] : 1;
+    $statsData = $dashboardCtrl->getStatsData($userId);
+    Response::render('app', $statsData);
 });
 
 // ==========================================

@@ -9,25 +9,25 @@ const App = (() => {
     let alertInterval = null;
 
     function init() {
-        initNavigation();
-        initUserMenu();
-        initTaskViewSwitcher();
-        initFastCapture();
-        initAlertChecker();
+        try { initNavigation(); } catch (e) { console.error('initNavigation erro:', e); }
+        try { initUserMenu(); } catch (e) { console.error('initUserMenu erro:', e); }
+        try { initTaskViewSwitcher(); } catch (e) { console.error('initTaskViewSwitcher erro:', e); }
+        try { initFastCapture(); } catch (e) { console.error('initFastCapture erro:', e); }
+        try { initAlertChecker(); } catch (e) { console.error('initAlertChecker erro:', e); }
         
         // Inicializar submódulos
-        ConflictDialog.init();
-        TaskModal.init();
-        KanbanView.init(document.getElementById('view-kanban-container'));
-        ListView.init(document.getElementById('view-lista-container'));
-        CalendarView.init(document.getElementById('view-calendario-container'));
+        try { ConflictDialog?.init(); } catch (e) { console.error('ConflictDialog erro:', e); }
+        try { TaskModal?.init(); } catch (e) { console.error('TaskModal erro:', e); }
+        try { KanbanView?.init(document.getElementById('view-kanban-container')); } catch (e) { console.error('KanbanView erro:', e); }
+        try { ListView?.init(document.getElementById('view-lista-container')); } catch (e) { console.error('ListView erro:', e); }
+        try { CalendarView?.init(document.getElementById('view-calendario-container')); } catch (e) { console.error('CalendarView erro:', e); }
 
         // Carregar visão inicial
-        loadSection('inicio');
+        try { loadSection('inicio'); } catch (e) { console.error('loadSection erro:', e); }
         updateStats();
 
         // Checagem imediata de alertas
-        checkAlerts();
+        try { checkAlerts(); } catch (e) { console.error('checkAlerts erro:', e); }
     }
 
     /* ========================================================
@@ -453,32 +453,39 @@ const App = (() => {
     async function updateStats() {
         try {
             const res = await API.getDashboardStats();
-            if (res.sucesso) {
-                const u = res.usuario;
-                const m = res.metricas;
+            if (res && res.sucesso) {
+                const u = res.usuario || {};
+                const m = res.metricas || {};
+
+                const streak = (typeof u.streak_dias !== 'undefined') ? u.streak_dias : 0;
+                const xp = (typeof u.xp !== 'undefined') ? u.xp : 0;
+                const totalActive = (m.planejamento || 0) + (m.a_fazer || 0) + (m.em_andamento || 0);
+                const focusRate = m.taxa_foco || 0;
+                const concludedToday = m.hoje_concluidas || 0;
+                const concludedWeek = (typeof m.semana_concluidas !== 'undefined') ? m.semana_concluidas : (m.concluidas || 0);
 
                 // ---- Streak (all locations) ----
-                document.querySelectorAll('.user-streak-display').forEach(el => el.innerText = `${u.streak_dias}d`);
+                document.querySelectorAll('.user-streak-display').forEach(el => el.innerText = `${streak}d`);
                 
                 const streakEl = document.getElementById('stat-streak');
-                if (streakEl) streakEl.innerText = `${u.streak_dias} dias`;
+                if (streakEl) streakEl.innerText = `${streak} dias`;
 
                 const streakDashEl = document.getElementById('stat-streak-dash');
-                if (streakDashEl) streakDashEl.innerText = `${u.streak_dias}d`;
+                if (streakDashEl) streakDashEl.innerText = `${streak}d`;
 
                 // ---- XP (all locations) ----
                 const xpEl = document.getElementById('stat-xp');
-                if (xpEl) xpEl.innerText = `${u.xp} XP`;
+                if (xpEl) xpEl.innerText = `${xp} XP`;
 
                 const xpDashEl = document.getElementById('stat-xp-dash');
-                if (xpDashEl) xpDashEl.innerText = `${u.xp}`;
+                if (xpDashEl) xpDashEl.innerText = `${xp}`;
 
                 // Header XP pill
-                document.querySelectorAll('.user-xp-display').forEach(el => el.innerText = `${u.xp} XP`);
+                document.querySelectorAll('.user-xp-display').forEach(el => el.innerText = `${xp} XP`);
 
                 // ---- Level progress bar ----
-                const level = Math.floor(u.xp / 100) + 1;
-                const xpInLevel = u.xp % 100;
+                const level = Math.floor(xp / 100) + 1;
+                const xpInLevel = xp % 100;
                 const xpToNext = 100 - xpInLevel;
                 const levelProgress = xpInLevel;
                 const levelBar = document.getElementById('level-progress-bar');
@@ -488,25 +495,25 @@ const App = (() => {
 
                 // ---- Dashboard stats ----
                 const concluidasEl = document.getElementById('stat-concluidas');
-                if (concluidasEl) concluidasEl.innerText = m.semana_concluidas || m.concluidas;
+                if (concluidasEl) concluidasEl.innerText = concludedWeek;
 
                 const focoEl = document.getElementById('stat-foco');
-                if (focoEl) focoEl.innerText = `${m.taxa_foco}%`;
+                if (focoEl) focoEl.innerText = `${focusRate}%`;
 
                 // ---- Hero Cards (Início) ----
                 const heroActive = document.getElementById('hero-active-count');
-                if (heroActive) heroActive.innerText = `${(m.planejamento || 0) + m.a_fazer + m.em_andamento} Tarefas`;
+                if (heroActive) heroActive.innerText = `${totalActive} Tarefas`;
 
                 const heroFocus = document.getElementById('hero-focus-rate');
-                if (heroFocus) heroFocus.innerText = `${m.taxa_foco}% Foco`;
+                if (heroFocus) heroFocus.innerText = `${focusRate}% Foco`;
 
                 const heroConcluded = document.getElementById('hero-concluded-today');
-                if (heroConcluded) heroConcluded.innerText = `${m.hoje_concluidas || 0} concluídas hoje`;
+                if (heroConcluded) heroConcluded.innerText = `${concludedToday} concluídas hoje`;
 
                 return res;
             }
         } catch (e) {
-            console.error(e);
+            console.error('Erro ao atualizar estatísticas:', e);
         }
         return null;
     }

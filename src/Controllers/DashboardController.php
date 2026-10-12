@@ -22,13 +22,13 @@ final class DashboardController
         return isset($_SESSION['usuario_id']) ? (int)$_SESSION['usuario_id'] : 1;
     }
 
-    public function stats(Request $request): void
+    public function getStatsData(?int $userId = null): array
     {
-        $userId = $this->getUserId();
+        $userId = $userId ?? $this->getUserId();
 
         $stmtUser = $this->pdo->prepare("SELECT nome, xp, streak_dias, ultimo_dia_produtivo FROM usuarios WHERE id = :id");
         $stmtUser->execute(['id' => $userId]);
-        $user = $stmtUser->fetch() ?: ['nome' => 'Comandante', 'xp' => 0, 'streak_dias' => 1];
+        $user = $stmtUser->fetch() ?: ['nome' => 'Comandante', 'xp' => 0, 'streak_dias' => 0];
 
         $stmtTasks = $this->pdo->prepare("SELECT
             COUNT(*) AS total,
@@ -59,8 +59,7 @@ final class DashboardController
         $concluidas = (int)($taskStats['concluidas'] ?? 0);
         $taxaFoco = $total > 0 ? (int)round(($concluidas / $total) * 100) : 0;
 
-        Response::json([
-            'sucesso' => true,
+        return [
             'usuario' => [
                 'nome'        => $user['nome'],
                 'xp'          => (int)$user['xp'],
@@ -78,6 +77,12 @@ final class DashboardController
                 'hoje_concluidas'   => $hojeConcluidas,
                 'taxa_foco'         => $taxaFoco
             ]
-        ]);
+        ];
+    }
+
+    public function stats(Request $request): void
+    {
+        $data = $this->getStatsData();
+        Response::json(array_merge(['sucesso' => true], $data));
     }
 }
