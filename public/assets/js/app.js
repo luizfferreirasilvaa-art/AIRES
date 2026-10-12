@@ -510,6 +510,58 @@ const App = (() => {
                 const heroConcluded = document.getElementById('hero-concluded-today');
                 if (heroConcluded) heroConcluded.innerText = `${concludedToday} concluídas hoje`;
 
+                // ---- Heatmap de Compromissos no Mês ----
+                const comp = res.compromissos_mes;
+                if (comp) {
+                    const badgeEl = document.getElementById('heatmap-badge-count');
+                    if (badgeEl) {
+                        if (comp.dias_com_agenda > 0) {
+                            badgeEl.className = 'text-[10px] font-bold text-lime-400 bg-lime-400/10 px-2 py-0.5 rounded-full';
+                            badgeEl.innerText = `${comp.dias_com_agenda} dias marcados`;
+                        } else {
+                            badgeEl.className = 'text-[10px] font-bold text-zinc-400 bg-white/5 px-2 py-0.5 rounded-full';
+                            badgeEl.innerText = 'Ritmo Livre';
+                        }
+                    }
+
+                    const mesNomeEl = document.getElementById('heatmap-mes-nome');
+                    if (mesNomeEl && comp.mes_nome) {
+                        mesNomeEl.innerText = comp.mes_nome;
+                    }
+
+                    const container = document.getElementById('heatmap-cells-container');
+                    if (container && Array.isArray(comp.dias)) {
+                        container.innerHTML = comp.dias.map(d => {
+                            const count = d.count || 0;
+                            const isToday = !!d.is_today;
+                            const diaNum = String(d.dia).padStart(2, '0');
+                            const tarefasList = (d.tarefas && d.tarefas.length > 0) ? d.tarefas.join(', ') : '';
+
+                            let titleText = `Dia ${diaNum}`;
+                            if (isToday) titleText += ' (Hoje)';
+                            if (count === 0) {
+                                titleText += ': Sem compromissos';
+                            } else if (count === 1) {
+                                titleText += `: 1 compromisso (${tarefasList})`;
+                            } else {
+                                titleText += `: ${count} compromissos (${tarefasList})`;
+                            }
+
+                            const classes = ['heat-cell'];
+                            if (count >= 2) {
+                                classes.push('heat-cell-active', 'heat-cell-high');
+                            } else if (count === 1) {
+                                classes.push('heat-cell-active');
+                            }
+                            if (isToday) {
+                                classes.push('ring-1', 'ring-lime-400/80');
+                            }
+
+                            return `<div class="${classes.join(' ')}" data-date="${d.data}" data-count="${count}" title="${escapeHtml(titleText)}"></div>`;
+                        }).join('');
+                    }
+                }
+
                 return res;
             }
         } catch (e) {

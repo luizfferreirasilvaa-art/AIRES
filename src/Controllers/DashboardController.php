@@ -59,6 +59,8 @@ final class DashboardController
         $concluidas = (int)($taskStats['concluidas'] ?? 0);
         $taxaFoco = $total > 0 ? (int)round(($concluidas / $total) * 100) : 0;
 
+        $compromissosMes = $this->getMonthCommitments($userId);
+
         return [
             'usuario' => [
                 'nome'        => $user['nome'],
@@ -76,7 +78,100 @@ final class DashboardController
                 'semana_concluidas' => $semanaConcluidas,
                 'hoje_concluidas'   => $hojeConcluidas,
                 'taxa_foco'         => $taxaFoco
-            ]
+            ],
+            'compromissos_mes' => $compromissosMes
+        ];
+    }
+
+    public function getMonthCommitments(int $userId): array
+    {
+        $year = (int)date('Y');
+        $month = (int)date('n');
+        $daysInMonth = (int)date('t');
+        $todayDay = (int)date('j');
+
+        $mesesPt = [
+            1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
+            5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto',
+            9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'
+        ];
+        $mesNome = $mesesPt[$month] ?? date('F');
+
+        $startDate = sprintf('%04d-%02d-01 00:00:00', $year, $month);
+        $endDate = sprintf('%04d-%02d-%02d 23:59:59', $year, $month, $daysInMonth);
+
+        $stmt = $this->pdo->prepare("SELECT id, titulo, prioridade, status, data_inicio, data_entrega, concluida_em
+            FROM tarefas
+            WHERE usuario_id = :id
+              AND deletado_em IS NULL
+              AND (
+                  (data_inicio IS NOT NULL AND data_inicio BETWEEN :start1 AND :end1)
+                  OR (data_entrega IS NOT NULL AND data_entrega BETWEEN :start2 AND :end2)
+                  OR (concluida_em IS NOT NULL AND concluida_em BETWEEN :start3 AND :end3)
+              )
+            ORDER BY COALESCE(data_inicio, data_entrega) ASC");
+        $stmt->execute([
+            'id' => $userId,
+            'start1' => $startDate,
+            'end1' => $endDate,
+            'start2' => $startDate,
+            'end2' => $endDate,
+            'start3' => $startDate,
+            'end3' => $endDate
+        ]);
+        $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $days = [];
+        $totalCompromissos = 0;
+        $diasComAgenda = 0;
+
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $d);
+            $dayTasks = [];
+
+            foreach ($tasks as $t) {
+                $matches = false;
+                if (!empty($t['data_inicio']) && str_starts_with($t['data_inicio'], $dateStr)) {
+                    $matches = true;
+                } elseif (!empty($t['data_entrega']) && str_starts_with($t['data_entrega'], $dateStr)) {
+                    $matches = true;
+                } elseif (!empty($t['concluida_em']) && str_starts_with($t['concluida_em'], $dateStr)) {
+                    $matches = true;
+                } elseif (!empty($t['data_inicio']) && !empty($t['data_entrega'])) {
+                    $startDay = substr($t['data_inicio'], 0, 10);
+                    $endDay = substr($t['data_entrega'], 0, 10);
+                    if ($dateStr >= $startDay && $dateStr <= $endDay) {
+                        $matches = true;
+                    }
+                }
+
+                if ($matches) {
+                    $dayTasks[] = $t['titulo'];
+                }
+            }
+
+            $count = count($dayTasks);
+            if ($count > 0) {
+                $diasComAgenda++;
+                $totalCompromissos += $count;
+            }
+
+            $days[] = [
+                'dia' => $d,
+                'data' => $dateStr,
+                'count' => $count,
+                'is_today' => ($d === $todayDay),
+                'tarefas' => $dayTasks
+            ];
+        }
+
+        return [
+            'mes_nome' => $mesNome,
+            'ano' => $year,
+            'total_compromissos' => $totalCompromissos,
+            'dias_com_agenda' => $diasComAgenda,
+            'dias_total' => $daysInMonth,
+            'dias' => $days
         ];
     }
 

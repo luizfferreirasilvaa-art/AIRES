@@ -8,6 +8,7 @@ $focusRate = (int)($metricas['taxa_foco'] ?? 0);
 $level = (int)floor($userXp / 100) + 1;
 $xpInLevel = $userXp % 100;
 $xpToNext = 100 - $xpInLevel;
+$compMes = $compromissos_mes ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
@@ -248,47 +249,59 @@ $xpToNext = 100 - $xpInLevel;
                     </div>
                 </div>
 
-                <!-- Card 3: Heatmap de Densidade (The Signature Grid from Image 1) -->
+                <!-- Card 3: Heatmap de Compromissos no Mês -->
                 <div class="glass-card rounded-3xl p-4 flex flex-col justify-between md:col-span-2 lg:col-span-1 cursor-pointer group hover:border-white/20 transition-all" onclick="App.loadSection('tarefas'); App.loadTaskView('calendario')">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-[11px] font-semibold text-zinc-400">Densidade Operacional • Mês</span>
-                        <span class="text-[10px] font-bold text-lime-400 bg-lime-400/10 px-2 py-0.5 rounded-full">Ritmo Ativo</span>
+                        <span class="text-[11px] font-semibold text-zinc-400">Compromissos • <span id="heatmap-mes-nome"><?= htmlspecialchars($compMes['mes_nome'] ?? date('F')) ?></span></span>
+                        <span class="text-[10px] font-bold <?= (($compMes['dias_com_agenda'] ?? 0) > 0) ? 'text-lime-400 bg-lime-400/10' : 'text-zinc-400 bg-white/5' ?> px-2 py-0.5 rounded-full" id="heatmap-badge-count">
+                            <?= (($compMes['dias_com_agenda'] ?? 0) > 0) ? (($compMes['dias_com_agenda']) . ' dias marcados') : 'Ritmo Livre' ?>
+                        </span>
                     </div>
 
                     <!-- Mini Heatmap Grid of Squares (Grey + Neon Lime) -->
                     <div class="flex items-center gap-1.5 py-1">
-                        <div class="grid grid-flow-col grid-rows-3 gap-1.5">
-                            <!-- 24 days representation with active days highlighted -->
-                            <div class="heat-cell heat-cell-active" title="27/09 - 3 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="26/09 - 2 concluídas"></div>
-                            <div class="heat-cell" title="25/09 - 0 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="24/09 - 4 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="23/09 - 1 concluída"></div>
-                            <div class="heat-cell" title="22/09 - 0 concluídas"></div>
-                            <div class="heat-cell" title="21/09 - 0 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="20/09 - 2 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="19/09 - 3 concluídas"></div>
-                            <div class="heat-cell" title="18/09 - 0 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="17/09 - 1 concluída"></div>
-                            <div class="heat-cell heat-cell-active" title="16/09 - 2 concluídas"></div>
-                            <div class="heat-cell" title="15/09 - 0 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="14/09 - 3 concluídas"></div>
-                            <div class="heat-cell" title="13/09 - 0 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="12/09 - 2 concluídas"></div>
-                            <div class="heat-cell" title="11/09 - 0 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="10/09 - 1 concluída"></div>
-                            <div class="heat-cell" title="09/09 - 0 concluídas"></div>
-                            <div class="heat-cell heat-cell-active" title="08/09 - 2 concluídas"></div>
-                            <div class="heat-cell" title="07/09 - 0 concluídas"></div>
+                        <div id="heatmap-cells-container" class="grid grid-flow-col grid-rows-3 gap-1.5">
+                            <?php foreach (($compMes['dias'] ?? []) as $d): ?>
+                                <?php
+                                $cCount = (int)($d['count'] ?? 0);
+                                $cIsToday = !empty($d['is_today']);
+                                $cDia = $d['dia'];
+                                $cTarefas = !empty($d['tarefas']) ? implode(', ', $d['tarefas']) : '';
+
+                                $cTitle = "Dia " . str_pad((string)$cDia, 2, '0', STR_PAD_LEFT);
+                                if ($cIsToday) $cTitle .= " (Hoje)";
+                                if ($cCount === 0) {
+                                    $cTitle .= ": Sem compromissos";
+                                } elseif ($cCount === 1) {
+                                    $cTitle .= ": 1 compromisso ({$cTarefas})";
+                                } else {
+                                    $cTitle .= ": {$cCount} compromissos ({$cTarefas})";
+                                }
+
+                                $cClasses = ['heat-cell'];
+                                if ($cCount >= 2) {
+                                    $cClasses[] = 'heat-cell-active heat-cell-high';
+                                } elseif ($cCount === 1) {
+                                    $cClasses[] = 'heat-cell-active';
+                                }
+                                if ($cIsToday) {
+                                    $cClasses[] = 'ring-1 ring-lime-400/80';
+                                }
+                                ?>
+                                <div class="<?= implode(' ', $cClasses) ?>"
+                                     data-date="<?= htmlspecialchars($d['data']) ?>"
+                                     data-count="<?= $cCount ?>"
+                                     title="<?= htmlspecialchars($cTitle) ?>"></div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
                     <div class="text-[10px] text-zinc-500 flex justify-between items-center mt-1">
                         <span>Menos</span>
                         <div class="flex items-center gap-1">
-                            <span class="w-2 h-2 rounded bg-zinc-800"></span>
-                            <span class="w-2 h-2 rounded bg-lime-400/40"></span>
-                            <span class="w-2 h-2 rounded bg-lime-400"></span>
+                            <span class="w-2 h-2 rounded bg-zinc-800" title="Sem compromissos"></span>
+                            <span class="w-2 h-2 rounded bg-lime-400/40" title="1 compromisso"></span>
+                            <span class="w-2 h-2 rounded bg-lime-400 shadow-sm shadow-lime-400/50" title="2+ compromissos"></span>
                         </div>
                         <span>Mais</span>
                     </div>

@@ -74,7 +74,13 @@ body {
     height: 14px;
     border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.08);
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+}
+
+.heat-cell:hover {
+    transform: scale(1.25);
+    z-index: 10;
 }
 
 .heat-cell-active {
@@ -83,11 +89,13 @@ body {
 }
 
 .heat-cell-mid {
-    background-color: #facc15;
+    background-color: #a3e635;
+    box-shadow: 0 0 8px rgba(163, 230, 53, 0.4);
 }
 
 .heat-cell-high {
-    background-color: #fb923c;
+    background-color: #a3e635;
+    box-shadow: 0 0 12px rgba(163, 230, 53, 0.75);
 }
 
 /* Donut Ring Progress SVG */
