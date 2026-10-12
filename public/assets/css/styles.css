@@ -83,19 +83,26 @@ body {
     z-index: 10;
 }
 
-.heat-cell-active {
+/* 1 - Verde Fraco (1 compromisso) */
+.heat-cell-low,
+.heat-cell-level-1 {
+    background-color: rgba(163, 230, 53, 0.3);
+    border: 1px solid rgba(163, 230, 53, 0.4);
+}
+
+/* 2 - Verde Meio (2 a 3 compromissos) */
+.heat-cell-mid,
+.heat-cell-level-2 {
+    background-color: #84cc16;
+    box-shadow: 0 0 7px rgba(132, 204, 22, 0.55);
+}
+
+/* 3 - Verde Forte (+ de 4 compromissos) */
+.heat-cell-active,
+.heat-cell-high,
+.heat-cell-level-3 {
     background-color: #bef264;
-    box-shadow: 0 0 8px rgba(190, 242, 100, 0.5);
-}
-
-.heat-cell-mid {
-    background-color: #a3e635;
-    box-shadow: 0 0 8px rgba(163, 230, 53, 0.4);
-}
-
-.heat-cell-high {
-    background-color: #a3e635;
-    box-shadow: 0 0 12px rgba(163, 230, 53, 0.75);
+    box-shadow: 0 0 12px rgba(190, 242, 100, 0.9);
 }
 
 /* Donut Ring Progress SVG */

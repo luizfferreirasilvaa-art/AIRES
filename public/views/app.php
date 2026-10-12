@@ -279,10 +279,12 @@ $compMes = $compromissos_mes ?? [];
                                 }
 
                                 $cClasses = ['heat-cell'];
-                                if ($cCount >= 2) {
-                                    $cClasses[] = 'heat-cell-active heat-cell-high';
+                                if ($cCount >= 4) {
+                                    $cClasses[] = 'heat-cell-level-3';
+                                } elseif ($cCount >= 2) {
+                                    $cClasses[] = 'heat-cell-level-2';
                                 } elseif ($cCount === 1) {
-                                    $cClasses[] = 'heat-cell-active';
+                                    $cClasses[] = 'heat-cell-level-1';
                                 }
                                 if ($cIsToday) {
                                     $cClasses[] = 'ring-1 ring-lime-400/80';
@@ -298,10 +300,11 @@ $compMes = $compromissos_mes ?? [];
 
                     <div class="text-[10px] text-zinc-500 flex justify-between items-center mt-1">
                         <span>Menos</span>
-                        <div class="flex items-center gap-1">
-                            <span class="w-2 h-2 rounded bg-zinc-800" title="Sem compromissos"></span>
-                            <span class="w-2 h-2 rounded bg-lime-400/40" title="1 compromisso"></span>
-                            <span class="w-2 h-2 rounded bg-lime-400 shadow-sm shadow-lime-400/50" title="2+ compromissos"></span>
+                        <div class="flex items-center gap-1.5" title="Escala: 1 fraco | 2-3 meio | 4+ forte">
+                            <span class="w-2 h-2 rounded bg-zinc-800" title="0: Sem compromissos"></span>
+                            <span class="w-2 h-2 rounded bg-lime-400/30 border border-lime-400/40" title="1 compromisso (Verde fraco)"></span>
+                            <span class="w-2 h-2 rounded bg-[#84cc16]" title="2 a 3 compromissos (Verde meio)"></span>
+                            <span class="w-2 h-2 rounded bg-[#bef264] shadow-sm shadow-lime-400/80" title="4+ compromissos (Verde forte)"></span>
                         </div>
                         <span>Mais</span>
                     </div>

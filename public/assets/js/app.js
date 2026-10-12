@@ -548,10 +548,12 @@ const App = (() => {
                             }
 
                             const classes = ['heat-cell'];
-                            if (count >= 2) {
-                                classes.push('heat-cell-active', 'heat-cell-high');
+                            if (count >= 4) {
+                                classes.push('heat-cell-level-3');
+                            } else if (count >= 2) {
+                                classes.push('heat-cell-level-2');
                             } else if (count === 1) {
-                                classes.push('heat-cell-active');
+                                classes.push('heat-cell-level-1');
                             }
                             if (isToday) {
                                 classes.push('ring-1', 'ring-lime-400/80');
