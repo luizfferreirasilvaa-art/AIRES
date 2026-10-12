@@ -129,24 +129,65 @@
             
             <!-- Top Status Bar: User Greeting + Multi-Icon Group + Streak -->
             <div class="flex items-center justify-between gap-4 mb-4">
-                <!-- User Profile / Greeting -->
-                <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 via-orange-400 to-amber-300 p-0.5 shadow-md shadow-orange-500/10">
-                            <div class="w-full h-full rounded-full bg-[#121216] flex items-center justify-center font-bold text-xs text-white">
-                                ⚡
+                <!-- User Profile / Greeting with Dropdown Trigger -->
+                <div class="relative" id="user-menu-wrapper">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2.5 px-2.5 py-1.5 -ml-2 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-left group select-none">
+                        <div class="relative">
+                            <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-purple-500 via-orange-400 to-amber-300 p-0.5 shadow-md shadow-orange-500/10">
+                                <div class="w-full h-full rounded-full bg-[#121216] flex items-center justify-center font-bold text-xs text-white">
+                                    ⚡
+                                </div>
                             </div>
+                            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-lime-400 ring-2 ring-[#070709]"></span>
                         </div>
-                        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-lime-400 ring-2 ring-[#070709]"></span>
-                    </div>
-                    <div>
-                        <h2 class="text-sm md:text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
-                            Olá, <span id="header-user-name"><?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Administrador') ?></span>
-                        </h2>
+                        <div class="flex items-center gap-2">
+                            <div>
+                                <h2 class="text-sm md:text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
+                                    Olá, <span id="header-user-name"><?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Administrador') ?></span>
+                                </h2>
+                            </div>
+                            <!-- Seta para baixo (Chevron Down) -->
+                            <svg id="user-menu-chevron" class="w-4 h-4 text-zinc-400 group-hover:text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </button>
+
+                    <!-- Pierre Glassmorphism Dropdown Menu -->
+                    <div id="user-dropdown-menu" class="hidden absolute left-0 top-full mt-2 w-64 rounded-3xl bg-[#121217]/95 border border-white/10 shadow-2xl backdrop-blur-2xl p-2 z-50">
+                        <!-- Header inside dropdown with User Info -->
+                        <div class="px-3 py-2.5 border-b border-white/5 mb-1.5">
+                            <p class="text-xs font-bold text-white"><?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Administrador') ?></p>
+                            <p class="text-[10px] text-zinc-500 font-medium truncate"><?= htmlspecialchars($_SESSION['usuario_email'] ?? 'admin@aires.io') ?></p>
+                        </div>
+
+                        <!-- Option: Configurações -->
+                        <button type="button" onclick="App.openSettingsModal()" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/10 transition-all text-left group">
+                            <div class="w-7 h-7 rounded-xl bg-white/5 group-hover:bg-lime-400/20 text-zinc-400 group-hover:text-lime-400 flex items-center justify-center transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </div>
+                            <div>
+                                <p class="font-bold text-xs text-zinc-200 group-hover:text-white">Configurações</p>
+                                <p class="text-[10px] text-zinc-500">Preferências do sistema</p>
+                            </div>
+                        </button>
+
+                        <div class="h-px bg-white/5 my-1"></div>
+
+                        <!-- Option: Sair -->
+                        <a href="<?= htmlspecialchars(\Aires\Core\Request::getBasePath() . '/logout') ?>" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all group">
+                            <div class="w-7 h-7 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            </div>
+                            <div>
+                                <p class="font-bold text-xs text-red-400 group-hover:text-red-300">Sair da Conta</p>
+                                <p class="text-[10px] text-zinc-500">Encerrar sessão</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
-                <!-- Right Micro Badges: Category Dots + Streak + XP + Logout -->
+                <!-- Right Micro Badges: Category Dots + Streak + XP -->
                 <div class="flex items-center gap-2">
                     <!-- Clustered Icons Badge (Inspired by Pierre Mockup 1) -->
                     <div class="flex items-center -space-x-1.5 px-2 py-1 rounded-full bg-zinc-900/80 border border-white/10 shadow-inner">
@@ -164,12 +205,6 @@
                     <div class="hidden sm:flex items-center gap-1 px-3 py-1 rounded-full bg-lime-400/15 border border-lime-400/30 text-lime-400 text-xs font-extrabold">
                         ⚡ <span class="user-xp-display">— XP</span>
                     </div>
-
-                    <!-- Botão Sair (Logout) -->
-                    <a href="<?= htmlspecialchars(\Aires\Core\Request::getBasePath() . '/logout') ?>" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 hover:bg-red-500/15 text-zinc-400 hover:text-red-300 border border-white/5 hover:border-red-500/30 transition-all text-xs font-bold" title="Sair da Conta">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                        <span class="hidden sm:inline">Sair</span>
-                    </a>
                 </div>
             </div>
 
@@ -625,6 +660,77 @@
                 </button>
                 <button type="button" id="conflict-btn-confirm" class="flex-1 py-2.5 px-4 bg-orange-500 hover:bg-orange-600 text-black font-extrabold text-xs rounded-full shadow-lg transition-all">
                     Sobrepor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL DE CONFIGURAÇÕES (Pierre Glassmorphism)
+         ======================================================== -->
+    <div id="settings-modal" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 relative">
+            <!-- Close button -->
+            <button type="button" onclick="App.closeSettingsModal()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <!-- Header -->
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-lime-400/20 to-emerald-500/20 text-lime-400 border border-lime-400/30 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-white">Configurações & Preferências</h3>
+                    <p class="text-xs text-zinc-400">Gerenciamento do Comandante e Sistema AIRES</p>
+                </div>
+            </div>
+
+            <!-- Content Details -->
+            <div class="space-y-4">
+                <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-3">
+                    <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider">Identidade do Administrador</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span class="text-zinc-500 block text-[11px] mb-1">Nome de Exibição</span>
+                            <div class="px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white font-medium">
+                                <?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Administrador') ?>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-zinc-500 block text-[11px] mb-1">E-mail Principal</span>
+                            <div class="px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white font-medium">
+                                <?= htmlspecialchars($_SESSION['usuario_email'] ?? 'admin@aires.io') ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-3">
+                    <h4 class="text-xs font-bold text-zinc-300 uppercase tracking-wider">Preferências Operacionais</h4>
+                    <div class="space-y-2.5">
+                        <label class="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors">
+                            <div class="text-xs">
+                                <p class="font-bold text-zinc-200">Detector de Conflitos de Agenda</p>
+                                <p class="text-[10px] text-zinc-500">Auditoria preventiva anti-colisão em tempo real</p>
+                            </div>
+                            <input type="checkbox" checked disabled class="w-4 h-4 rounded text-lime-400 bg-zinc-900 border-zinc-700">
+                        </label>
+                        <label class="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors">
+                            <div class="text-xs">
+                                <p class="font-bold text-zinc-200">Alertas de Deslocamento com Trânsito</p>
+                                <p class="text-[10px] text-zinc-500">Cálculo de hora de saída baseado no tempo de viagem</p>
+                            </div>
+                            <input type="checkbox" checked disabled class="w-4 h-4 rounded text-lime-400 bg-zinc-900 border-zinc-700">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer actions -->
+            <div class="flex items-center justify-end gap-3 pt-2 border-t border-white/5">
+                <button type="button" onclick="App.closeSettingsModal()" class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-full transition-all">
+                    Fechar
                 </button>
             </div>
         </div>

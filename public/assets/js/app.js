@@ -10,6 +10,7 @@ const App = (() => {
 
     function init() {
         initNavigation();
+        initUserMenu();
         initTaskViewSwitcher();
         initFastCapture();
         initAlertChecker();
@@ -83,6 +84,65 @@ const App = (() => {
             renderNotes();
         } else if (section === 'dashboard') {
             renderDashboard();
+        }
+    }
+
+    /* ========================================================
+     * MENU DO USUÁRIO & CONFIGURAÇÕES (Dropdown)
+     * ======================================================== */
+    function initUserMenu() {
+        const btn = document.getElementById('btn-user-menu');
+        const menu = document.getElementById('user-dropdown-menu');
+        const chevron = document.getElementById('user-menu-chevron');
+
+        if (!btn || !menu) return;
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                chevron?.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                chevron?.classList.remove('rotate-180');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.add('hidden');
+                chevron?.classList.remove('rotate-180');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                menu.classList.add('hidden');
+                chevron?.classList.remove('rotate-180');
+                closeSettingsModal();
+            }
+        });
+    }
+
+    function openSettingsModal() {
+        const menu = document.getElementById('user-dropdown-menu');
+        const chevron = document.getElementById('user-menu-chevron');
+        menu?.classList.add('hidden');
+        chevron?.classList.remove('rotate-180');
+
+        const modal = document.getElementById('settings-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+
+    function closeSettingsModal() {
+        const modal = document.getElementById('settings-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
     }
 
@@ -512,7 +572,9 @@ const App = (() => {
                     renderNotes();
                 }).catch(e => showToast(e.message, 'error'));
             }
-        }
+        },
+        openSettingsModal,
+        closeSettingsModal
     };
 })();
 
