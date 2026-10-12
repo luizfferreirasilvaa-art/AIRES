@@ -65,6 +65,7 @@ const ListView = (() => {
 
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2">
+                                        ${(typeof App !== 'undefined' && App.getModeBadgeHtml) ? App.getModeBadgeHtml(t.modo) : ''}
                                         <h4 class="text-xs md:text-sm font-bold truncate ${isDone ? 'line-through text-zinc-500' : 'text-zinc-100'}">
                                             ${escapeHtml(t.titulo)}
                                         </h4>

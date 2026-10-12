@@ -16,6 +16,7 @@ const TaskModal = (() => {
 
         elements.id = document.getElementById('task-id');
         elements.title = document.getElementById('task-title');
+        elements.modo = document.getElementById('task-modo');
         elements.missao = document.getElementById('task-missao');
         elements.prioridade = document.getElementById('task-prioridade');
         elements.status = document.getElementById('task-status');
@@ -282,6 +283,7 @@ const TaskModal = (() => {
         if (task) {
             elements.id.value = task.id;
             elements.title.value = task.titulo || '';
+            if (elements.modo) elements.modo.value = task.modo || 'trabalho';
             elements.missao.value = task.missao_id || '';
             elements.prioridade.value = task.prioridade || 'media';
             elements.status.value = task.status || 'planejamento';
@@ -309,6 +311,10 @@ const TaskModal = (() => {
         } else {
             elements.form.reset();
             elements.id.value = '';
+            if (elements.modo) {
+                const active = (typeof App !== 'undefined' && App.getActiveMode) ? App.getActiveMode() : 'trabalho';
+                elements.modo.value = defaultValues.modo || (active !== 'todos' ? active : 'trabalho');
+            }
             elements.missao.value = defaultValues.missao_id || '';
             elements.status.value = defaultValues.status || 'planejamento';
             elements.prioridade.value = defaultValues.prioridade || 'media';
@@ -365,6 +371,7 @@ const TaskModal = (() => {
     async function saveTask(overrideConflict = false) {
         const payload = {
             titulo: elements.title.value.trim(),
+            modo: elements.modo ? elements.modo.value : 'trabalho',
             missao_id: elements.missao.value ? parseInt(elements.missao.value) : null,
             prioridade: elements.prioridade.value,
             status: elements.status.value,
@@ -407,6 +414,17 @@ const TaskModal = (() => {
         }
     }
 
+    function updateModeOptions(modes) {
+        if (!elements.modo || !Array.isArray(modes)) return;
+        const currentVal = elements.modo.value;
+        elements.modo.innerHTML = modes.map(m => `
+            <option value="${escapeHtml(m.slug)}">${escapeHtml(m.icone + ' ' + m.nome)}</option>
+        `).join('');
+        if (currentVal) {
+            elements.modo.value = currentVal;
+        }
+    }
+
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -414,5 +432,5 @@ const TaskModal = (() => {
         return div.innerHTML;
     }
 
-    return { init, open, close };
+    return { init, open, close, updateModeOptions };
 })();

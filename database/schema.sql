@@ -44,10 +44,24 @@ CREATE TABLE IF NOT EXISTS `missoes` (
     CONSTRAINT `fk_missoes_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `modos` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `usuario_id` INT NOT NULL,
+    `slug` VARCHAR(50) NOT NULL,
+    `nome` VARCHAR(100) NOT NULL,
+    `icone` VARCHAR(20) NOT NULL DEFAULT '💼',
+    `cor` VARCHAR(30) NOT NULL DEFAULT 'purple',
+    `ordem` INT NOT NULL DEFAULT 0,
+    `criado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_modos_usuario` (`usuario_id`),
+    CONSTRAINT `fk_modos_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `tarefas` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `usuario_id` INT NOT NULL,
     `missao_id` INT NULL,
+    `modo` VARCHAR(50) NOT NULL DEFAULT 'trabalho',
     `titulo` VARCHAR(255) NOT NULL,
     `descricao` MEDIUMTEXT NULL,
     `prioridade` ENUM('critica', 'alta', 'media', 'baixa') NOT NULL DEFAULT 'media',
@@ -65,6 +79,7 @@ CREATE TABLE IF NOT EXISTS `tarefas` (
     `atualizado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletado_em` TIMESTAMP NULL DEFAULT NULL,
     INDEX `idx_tarefas_usuario_status` (`usuario_id`, `status`, `deletado_em`),
+    INDEX `idx_tarefas_modo` (`usuario_id`, `modo`),
     INDEX `idx_tarefas_datas` (`usuario_id`, `data_inicio`, `data_entrega`),
     INDEX `idx_tarefas_inbox` (`usuario_id`, `inbox`),
     INDEX `idx_tarefas_missao` (`missao_id`),

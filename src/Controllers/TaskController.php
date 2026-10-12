@@ -37,6 +37,7 @@ final class TaskController
         $prioridade = $request->get('prioridade');
         $busca = $request->get('busca');
         $mes = $request->get('mes');
+        $modo = $request->get('modo');
 
         $sql = "SELECT t.*, m.titulo AS missao_titulo, m.cor AS missao_cor,
                        (SELECT COUNT(*) FROM subtarefas st WHERE st.tarefa_id = t.id AND st.deletado_em IS NULL) AS checklist_total,
@@ -47,6 +48,11 @@ final class TaskController
                   AND t.deletado_em IS NULL";
 
         $params = ['usuario_id' => $userId];
+
+        if (!empty($modo) && $modo !== 'todos') {
+            $sql .= " AND t.modo = :modo";
+            $params['modo'] = $modo;
+        }
 
         if (!empty($status)) {
             $sql .= " AND t.status = :status";
@@ -212,16 +218,17 @@ final class TaskController
         }
 
         $antecedenciaAvisoMinutos = (int)$request->input('antecedencia_aviso_minutos', 0);
+        $modo = trim((string)$request->input('modo', 'trabalho')) ?: 'trabalho';
 
         $stmtOrdem = $this->pdo->prepare("SELECT COALESCE(MAX(ordem), 0) + 1 AS proxima FROM tarefas WHERE usuario_id = :usuario_id AND status = :status AND deletado_em IS NULL");
         $stmtOrdem->execute(['usuario_id' => $userId, 'status' => $status]);
         $ordem = (int)$stmtOrdem->fetch()['proxima'];
 
         $sql = "INSERT INTO tarefas (
-                    usuario_id, missao_id, titulo, descricao, prioridade, status, ordem, inbox,
+                    usuario_id, missao_id, modo, titulo, descricao, prioridade, status, ordem, inbox,
                     data_inicio, data_entrega, endereco_local, exige_veiculo, tempo_viagem_minutos, antecedencia_aviso_minutos
                 ) VALUES (
-                    :usuario_id, :missao_id, :titulo, :descricao, :prioridade, :status, :ordem, :inbox,
+                    :usuario_id, :missao_id, :modo, :titulo, :descricao, :prioridade, :status, :ordem, :inbox,
                     :data_inicio, :data_entrega, :endereco_local, :exige_veiculo, :tempo_viagem_minutos, :antecedencia_aviso_minutos
                 )";
 
@@ -229,6 +236,7 @@ final class TaskController
         $stmt->execute([
             'usuario_id'                 => $userId,
             'missao_id'                  => $missaoId,
+            'modo'                       => $modo,
             'titulo'                     => $titulo,
             'descricao'                  => $descricao,
             'prioridade'                 => $prioridade,
@@ -335,6 +343,7 @@ final class TaskController
         }
 
         $antecedenciaAvisoMinutos = $request->input('antecedencia_aviso_minutos') !== null ? (int)$request->input('antecedencia_aviso_minutos') : (int)$existing['antecedencia_aviso_minutos'];
+        $modo = $request->input('modo') !== null ? (string)$request->input('modo') : ($existing['modo'] ?? 'trabalho');
 
         $concluidaEm = $existing['concluida_em'];
         if ($status === 'feito' && $existing['status'] !== 'feito') {
@@ -345,6 +354,7 @@ final class TaskController
 
         $sql = "UPDATE tarefas SET
                     missao_id = :missao_id,
+                    modo = :modo,
                     titulo = :titulo,
                     descricao = :descricao,
                     prioridade = :prioridade,
@@ -363,6 +373,7 @@ final class TaskController
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             'missao_id'                  => $missaoId,
+            'modo'                       => $modo,
             'titulo'                     => $titulo,
             'descricao'                  => $descricao,
             'prioridade'                 => $prioridade,

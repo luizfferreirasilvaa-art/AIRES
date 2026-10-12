@@ -101,6 +101,10 @@ const API = (() => {
             return request(`/notas${query ? '?' + query : ''}`);
         },
         createNota: (payload) => request('/notas', { method: 'POST', body: payload }),
-        deleteNota: (id) => request(`/notas/${id}`, { method: 'DELETE' })
+        deleteNota: (id) => request(`/notas/${id}`, { method: 'DELETE' }),
+
+        getModos: () => request('/modos'),
+        createModo: (payload) => request('/modos', { method: 'POST', body: payload }),
+        deleteModo: (id) => request(`/modos/${id}`, { method: 'DELETE' })
     };
 })();

@@ -28,6 +28,7 @@ use Aires\Controllers\MissionController;
 use Aires\Controllers\AlertController;
 use Aires\Controllers\DashboardController;
 use Aires\Controllers\NoteController;
+use Aires\Controllers\ModeController;
 
 // Iniciar sessões armazenadas no banco de dados MySQL
 SessionHandler::start();
@@ -67,12 +68,21 @@ $router->get('/', function (Request $req) {
     $dashboardCtrl = new DashboardController();
     $userId = isset($_SESSION['usuario_id']) ? (int)$_SESSION['usuario_id'] : 1;
     $statsData = $dashboardCtrl->getStatsData($userId);
+    $stmtModos = \Aires\Core\Database::getInstance()->getConnection()->prepare("SELECT * FROM modos WHERE usuario_id = :uid ORDER BY ordem ASC, id ASC");
+    $stmtModos->execute(['uid' => $userId]);
+    $statsData['modos'] = $stmtModos->fetchAll(PDO::FETCH_ASSOC);
+
     Response::render('app', $statsData);
 });
 
 // ==========================================
 // ROTAS DE API REST JSON
 // ==========================================
+
+// Modos de Foco & Contexto (Trabalho, Pessoal, Empresarial...)
+$router->get('/api/modos', [ModeController::class, 'index']);
+$router->post('/api/modos', [ModeController::class, 'store']);
+$router->delete('/api/modos/{id}', [ModeController::class, 'destroy']);
 
 // Dashboard & Gamificação (Pilar 4)
 $router->get('/api/dashboard/stats', [DashboardController::class, 'stats']);

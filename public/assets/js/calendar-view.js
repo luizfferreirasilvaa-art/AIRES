@@ -7,12 +7,17 @@ const CalendarView = (() => {
     let containerEl = null;
     let currentDate = new Date(); // Mês atual exibido
 
+    let currentFilters = {};
+
     function init(container) {
         containerEl = container;
     }
 
-    async function render() {
+    async function render(filters = null) {
         if (!containerEl) return;
+        if (filters !== null) {
+            currentFilters = filters;
+        }
 
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth(); // 0 a 11
@@ -25,10 +30,10 @@ const CalendarView = (() => {
         `;
 
         try {
-            // Buscar todas as tarefas e tarefas sem data para o Backlog
+            // Buscar todas as tarefas e tarefas sem data para o Backlog com filtros (ex: modo)
             const [tasksRes, backlogRes] = await Promise.all([
-                API.getTarefas(),
-                API.getTarefas({ inbox: 1 })
+                API.getTarefas(currentFilters),
+                API.getTarefas({ ...currentFilters, inbox: 1 })
             ]);
 
             const allTasks = tasksRes.sucesso ? tasksRes.tarefas : [];
@@ -147,8 +152,9 @@ const CalendarView = (() => {
                                     <!-- Chips de Tarefas -->
                                     <div class="space-y-1 overflow-hidden flex-1">
                                         ${dayTasks.slice(0, 3).map(t => `
-                                            <div class="cal-task-chip px-2 py-0.5 rounded-full text-[9px] font-bold truncate border ${priorityStyles[t.prioridade] || priorityStyles.baixa} shadow-2xs" data-id="${t.id}" title="${escapeHtml(t.titulo)}">
-                                                ${t.status === 'feito' ? '✓ ' : ''}${escapeHtml(t.titulo)}
+                                            <div class="cal-task-chip px-2 py-0.5 rounded-full text-[9px] font-bold truncate border ${priorityStyles[t.prioridade] || priorityStyles.baixa} shadow-2xs flex items-center gap-1" data-id="${t.id}" title="${escapeHtml(t.titulo)}">
+                                                <span>${(typeof App !== 'undefined' && App.getModeIcon) ? App.getModeIcon(t.modo) : ''}</span>
+                                                <span class="truncate">${t.status === 'feito' ? '✓ ' : ''}${escapeHtml(t.titulo)}</span>
                                             </div>
                                         `).join('')}
                                         ${taskCount > 3 ? `
@@ -185,10 +191,13 @@ const CalendarView = (() => {
                             ` : backlogTasks.map(t => `
                                 <div class="p-3 rounded-2xl bg-[#141418] hover:bg-[#181820] border border-white/[0.05] hover:border-white/20 transition-all cursor-pointer" onclick="TaskModal.open(window._cachedTasksMap[${t.id}])">
                                     <div class="flex items-center justify-between gap-1 mb-1">
-                                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-zinc-400 uppercase">
-                                            ${t.prioridade}
-                                        </span>
-                                        <span class="text-[10px] text-lime-400 font-bold hover:underline">
+                                        <div class="flex items-center gap-1 flex-wrap">
+                                            ${(typeof App !== 'undefined' && App.getModeBadgeHtml) ? App.getModeBadgeHtml(t.modo) : ''}
+                                            <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-zinc-400 uppercase">
+                                                ${t.prioridade}
+                                            </span>
+                                        </div>
+                                        <span class="text-[10px] text-lime-400 font-bold hover:underline shrink-0">
                                             Agendar →
                                         </span>
                                     </div>

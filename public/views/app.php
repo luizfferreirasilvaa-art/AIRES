@@ -185,11 +185,71 @@ $compMes = $compromissos_mes ?? [];
 
                 <!-- Right Micro Badges: Category Dots + Streak + XP -->
                 <div class="flex items-center gap-2">
-                    <!-- Clustered Icons Badge (Inspired by Pierre Mockup 1) -->
-                    <div class="flex items-center -space-x-1.5 px-2 py-1 rounded-full bg-zinc-900/80 border border-white/10 shadow-inner">
-                        <span class="w-5 h-5 rounded-full bg-purple-600/80 flex items-center justify-center text-[10px]" title="Missões">🎯</span>
-                        <span class="w-5 h-5 rounded-full bg-cyan-600/80 flex items-center justify-center text-[10px]" title="Tarefas">⚡</span>
-                        <span class="w-5 h-5 rounded-full bg-orange-600/80 flex items-center justify-center text-[10px]" title="Logística">🚗</span>
+                    <!-- Modos de Foco & Contexto (Dropdown Trigger & Container) -->
+                    <div class="relative" id="mode-switcher-wrapper">
+                        <button type="button" id="btn-mode-switcher" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/90 hover:bg-zinc-800 border border-white/10 hover:border-white/20 shadow-inner transition-all select-none group" title="Alternar Modo de Contexto">
+                            <div id="mode-pill-display" class="flex items-center -space-x-1.5">
+                                <span class="w-5 h-5 rounded-full bg-purple-600/80 flex items-center justify-center text-[10px] shadow-sm">💼</span>
+                                <span class="w-5 h-5 rounded-full bg-orange-600/80 flex items-center justify-center text-[10px] shadow-sm">👤</span>
+                                <span class="w-5 h-5 rounded-full bg-cyan-600/80 flex items-center justify-center text-[10px] shadow-sm">🏢</span>
+                            </div>
+                            <span id="mode-active-label" class="text-[10px] font-extrabold text-zinc-300 hidden sm:inline">Todos</span>
+                            <svg id="mode-chevron" class="w-3 h-3 text-zinc-500 group-hover:text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu de Modos (Pierre Glassmorphism) -->
+                        <div id="modes-dropdown-menu" class="hidden absolute right-0 top-full mt-2 w-72 rounded-3xl bg-[#121217]/95 border border-white/10 shadow-2xl backdrop-blur-2xl p-2.5 z-50">
+                            <!-- Header -->
+                            <div class="px-3 py-2 border-b border-white/5 mb-1.5 flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-black text-white tracking-tight">Modos de Contexto</p>
+                                    <p class="text-[10px] text-zinc-500">Filtrar fluxo de tarefas</p>
+                                </div>
+                                <span id="mode-badge-total" class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-white/10 text-lime-400">Ativo</span>
+                            </div>
+
+                            <!-- List of Modes -->
+                            <div id="modes-list-container" class="space-y-1 max-h-60 overflow-y-auto pr-0.5">
+                                <button type="button" data-mode-slug="todos" class="mode-item-btn w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all text-left group bg-white/10 text-white">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="flex items-center -space-x-1.5">
+                                            <span class="w-5 h-5 rounded-full bg-purple-600/80 flex items-center justify-center text-[10px]">💼</span>
+                                            <span class="w-5 h-5 rounded-full bg-orange-600/80 flex items-center justify-center text-[10px]">👤</span>
+                                            <span class="w-5 h-5 rounded-full bg-cyan-600/80 flex items-center justify-center text-[10px]">🏢</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-xs text-white">Todos os Modos</p>
+                                            <p class="text-[9px] text-zinc-500">Visão integrada geral</p>
+                                        </div>
+                                    </div>
+                                    <span class="mode-check-indicator text-lime-400 font-black text-xs">✓</span>
+                                </button>
+                                <?php foreach (($modos ?? []) as $m): ?>
+                                    <button type="button" data-mode-slug="<?= htmlspecialchars($m['slug']) ?>" class="mode-item-btn w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-all text-left group">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="w-7 h-7 rounded-xl bg-white/5 flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform"><?= htmlspecialchars($m['icone']) ?></span>
+                                            <div>
+                                                <p class="font-bold text-xs text-zinc-200 group-hover:text-white"><?= htmlspecialchars($m['nome']) ?></p>
+                                                <p class="text-[9px] text-zinc-500">Filtrar por <?= htmlspecialchars($m['nome']) ?></p>
+                                            </div>
+                                        </div>
+                                        <span class="mode-check-indicator hidden text-lime-400 font-black text-xs">✓</span>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div class="h-px bg-white/5 my-1.5"></div>
+
+                            <!-- Action: Adicionar Novo Modo -->
+                            <button type="button" id="btn-open-create-mode" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-bold text-lime-400 hover:text-lime-300 hover:bg-lime-400/10 transition-all text-left">
+                                <div class="w-6 h-6 rounded-lg bg-lime-400/20 text-lime-400 flex items-center justify-center text-xs font-black">
+                                    +
+                                </div>
+                                <span>Adicionar Novo Modo</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Streak Pill Badge -->
@@ -492,7 +552,15 @@ $compMes = $compromissos_mes ?? [];
                         <input type="text" id="task-title" required placeholder="O que você vai executar?" class="w-full px-4 py-3 bg-zinc-900/80 border border-white/10 rounded-2xl text-sm font-semibold text-white placeholder-zinc-600 focus:outline-none focus:border-lime-400/80 transition-all">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block font-semibold text-zinc-400 mb-1.5">Modo de Contexto</label>
+                            <select id="task-modo" class="w-full px-3.5 py-2.5 bg-zinc-900/80 border border-white/10 rounded-2xl text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                                <?php foreach (($modos ?? []) as $m): ?>
+                                    <option value="<?= htmlspecialchars($m['slug']) ?>"><?= htmlspecialchars($m['icone'] . ' ' . $m['nome']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         <div>
                             <label class="block font-semibold text-zinc-400 mb-1.5">Missão Mãe</label>
                             <select id="task-missao" class="w-full px-3.5 py-2.5 bg-zinc-900/80 border border-white/10 rounded-2xl text-zinc-200 focus:outline-none focus:border-lime-400/80">
@@ -744,6 +812,85 @@ $compMes = $compromissos_mes ?? [];
                     Fechar
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL DE CRIAR NOVO MODO (Pierre Glassmorphism)
+         ======================================================== -->
+    <div id="modal-create-mode" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="max-w-md w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative">
+            <button type="button" id="btn-close-create-mode" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-lime-400/10 text-lime-400 border border-lime-400/20 flex items-center justify-center text-xl">
+                    ✨
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-white">Novo Modo de Contexto</h3>
+                    <p class="text-xs text-zinc-400">Separe fluxos de tarefas (Ex: Freelance, Família)</p>
+                </div>
+            </div>
+
+            <form id="form-create-mode" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Nome do Modo *</label>
+                    <input type="text" id="new-mode-nome" required placeholder="Ex: Investimentos, Startup, Família..." class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80 text-xs">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Ícone (Emoji)</label>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <input type="text" id="new-mode-icone" maxlength="4" value="🎯" class="w-14 text-center py-2 bg-zinc-900 border border-white/10 rounded-2xl text-lg focus:outline-none focus:border-lime-400/80">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <?php foreach (['💼', '👤', '🏢', '🚀', '🎯', '💡', '🏠', '🎨', '📚', '⚡', '💰', '🛡️'] as $emo): ?>
+                                <button type="button" class="mode-emoji-opt w-7 h-7 rounded-lg bg-white/5 hover:bg-white/20 text-xs flex items-center justify-center transition-transform hover:scale-110" data-emoji="<?= $emo ?>"><?= $emo ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Cor Temática</label>
+                    <div class="flex items-center gap-2.5" id="new-mode-cor-picker">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="new-mode-cor" value="lime" checked class="sr-only peer">
+                            <span class="w-7 h-7 rounded-full bg-lime-400 border-2 border-transparent peer-checked:border-white peer-checked:ring-2 peer-checked:ring-lime-400/50 block transition-all"></span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="new-mode-cor" value="purple" class="sr-only peer">
+                            <span class="w-7 h-7 rounded-full bg-purple-500 border-2 border-transparent peer-checked:border-white peer-checked:ring-2 peer-checked:ring-purple-500/50 block transition-all"></span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="new-mode-cor" value="orange" class="sr-only peer">
+                            <span class="w-7 h-7 rounded-full bg-orange-500 border-2 border-transparent peer-checked:border-white peer-checked:ring-2 peer-checked:ring-orange-500/50 block transition-all"></span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="new-mode-cor" value="cyan" class="sr-only peer">
+                            <span class="w-7 h-7 rounded-full bg-cyan-400 border-2 border-transparent peer-checked:border-white peer-checked:ring-2 peer-checked:ring-cyan-400/50 block transition-all"></span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="new-mode-cor" value="emerald" class="sr-only peer">
+                            <span class="w-7 h-7 rounded-full bg-emerald-400 border-2 border-transparent peer-checked:border-white peer-checked:ring-2 peer-checked:ring-emerald-400/50 block transition-all"></span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="new-mode-cor" value="rose" class="sr-only peer">
+                            <span class="w-7 h-7 rounded-full bg-rose-500 border-2 border-transparent peer-checked:border-white peer-checked:ring-2 peer-checked:ring-rose-500/50 block transition-all"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                    <button type="button" id="btn-cancel-create-mode" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-submit-create-mode" class="px-5 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all">
+                        Salvar Modo
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -155,6 +155,7 @@ const KanbanView = (() => {
                 <!-- Top Pills -->
                 <div class="flex items-center justify-between gap-1.5 mb-2.5">
                     <div class="flex items-center gap-1.5 flex-wrap">
+                        ${(typeof App !== 'undefined' && App.getModeBadgeHtml) ? App.getModeBadgeHtml(task.modo) : ''}
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${priorityStyles[task.prioridade]}">
                             ${priorityLabels[task.prioridade]}
                         </span>

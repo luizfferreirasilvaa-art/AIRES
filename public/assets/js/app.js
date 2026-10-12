@@ -11,6 +11,7 @@ const App = (() => {
     function init() {
         try { initNavigation(); } catch (e) { console.error('initNavigation erro:', e); }
         try { initUserMenu(); } catch (e) { console.error('initUserMenu erro:', e); }
+        try { initModeSwitcher(); } catch (e) { console.error('initModeSwitcher erro:', e); }
         try { initTaskViewSwitcher(); } catch (e) { console.error('initTaskViewSwitcher erro:', e); }
         try { initFastCapture(); } catch (e) { console.error('initFastCapture erro:', e); }
         try { initAlertChecker(); } catch (e) { console.error('initAlertChecker erro:', e); }
@@ -147,6 +148,277 @@ const App = (() => {
     }
 
     /* ========================================================
+     * MODOS DE CONTEXTO & FOCO (Trabalho, Pessoal, Empresarial...)
+     * ======================================================== */
+    let activeMode = localStorage.getItem('aires_active_mode') || 'todos';
+    let modesList = [];
+
+    async function initModeSwitcher() {
+        const btn = document.getElementById('btn-mode-switcher');
+        const menu = document.getElementById('modes-dropdown-menu');
+        const chevron = document.getElementById('mode-chevron');
+
+        // Buscar lista inicial de modos da API
+        try {
+            const res = await API.getModos();
+            if (res.sucesso && Array.isArray(res.modos)) {
+                modesList = res.modos;
+                renderModesDropdown();
+                if (typeof TaskModal !== 'undefined' && TaskModal.updateModeOptions) {
+                    TaskModal.updateModeOptions(modesList);
+                }
+            }
+        } catch (e) {
+            console.error('Erro ao carregar modos:', e);
+        }
+
+        updateModeSwitcherUI();
+
+        if (btn && menu) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Fechar menu de usuário se aberto
+                document.getElementById('user-dropdown-menu')?.classList.add('hidden');
+                document.getElementById('user-menu-chevron')?.classList.remove('rotate-180');
+
+                const isHidden = menu.classList.contains('hidden');
+                if (isHidden) {
+                    menu.classList.remove('hidden');
+                    chevron?.classList.add('rotate-180');
+                } else {
+                    menu.classList.add('hidden');
+                    chevron?.classList.remove('rotate-180');
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                    menu.classList.add('hidden');
+                    chevron?.classList.remove('rotate-180');
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    menu.classList.add('hidden');
+                    chevron?.classList.remove('rotate-180');
+                    closeCreateModeModal();
+                }
+            });
+        }
+
+        setupCreateModeModal();
+    }
+
+    function renderModesDropdown() {
+        const listContainer = document.getElementById('modes-list-container');
+        if (!listContainer) return;
+
+        let html = `
+            <button type="button" data-mode-slug="todos" class="mode-item-btn w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all text-left group ${activeMode === 'todos' ? 'bg-white/10 text-white' : 'text-zinc-300'}">
+                <div class="flex items-center gap-2.5">
+                    <div class="flex items-center -space-x-1.5">
+                        <span class="w-5 h-5 rounded-full bg-purple-600/80 flex items-center justify-center text-[10px]">💼</span>
+                        <span class="w-5 h-5 rounded-full bg-orange-600/80 flex items-center justify-center text-[10px]">👤</span>
+                        <span class="w-5 h-5 rounded-full bg-cyan-600/80 flex items-center justify-center text-[10px]">🏢</span>
+                    </div>
+                    <div>
+                        <p class="font-bold text-xs ${activeMode === 'todos' ? 'text-white' : 'text-zinc-200 group-hover:text-white'}">Todos os Modos</p>
+                        <p class="text-[9px] text-zinc-500">Visão integrada geral</p>
+                    </div>
+                </div>
+                <span class="mode-check-indicator ${activeMode === 'todos' ? '' : 'hidden'} text-lime-400 font-black text-xs">✓</span>
+            </button>
+        `;
+
+        modesList.forEach(m => {
+            const isSelected = activeMode === m.slug;
+            html += `
+                <button type="button" data-mode-slug="${escapeHtml(m.slug)}" class="mode-item-btn w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all text-left group ${isSelected ? 'bg-white/10 text-white' : 'text-zinc-300'}">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-xl bg-white/5 flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform">${escapeHtml(m.icone || '🎯')}</span>
+                        <div>
+                            <p class="font-bold text-xs ${isSelected ? 'text-white' : 'text-zinc-200 group-hover:text-white'}">${escapeHtml(m.nome)}</p>
+                            <p class="text-[9px] text-zinc-500">${m.tarefas_ativas !== undefined ? `${m.tarefas_ativas} ações ativas` : `Filtrar por ${escapeHtml(m.nome)}`}</p>
+                        </div>
+                    </div>
+                    <span class="mode-check-indicator ${isSelected ? '' : 'hidden'} text-lime-400 font-black text-xs">✓</span>
+                </button>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+
+        listContainer.querySelectorAll('.mode-item-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const slug = btn.dataset.modeSlug;
+                selectMode(slug);
+            });
+        });
+    }
+
+    function selectMode(slug) {
+        activeMode = slug;
+        localStorage.setItem('aires_active_mode', slug);
+        updateModeSwitcherUI();
+        renderModesDropdown();
+
+        const menu = document.getElementById('modes-dropdown-menu');
+        const chevron = document.getElementById('mode-chevron');
+        menu?.classList.add('hidden');
+        chevron?.classList.remove('rotate-180');
+
+        showToast(
+            slug === 'todos' ? 'Modo: Visão Integrada (Todos)' : `Modo alternado: ${getModeName(slug)}`,
+            'info'
+        );
+
+        reloadCurrentView();
+    }
+
+    function updateModeSwitcherUI() {
+        const label = document.getElementById('mode-active-label');
+        const pillDisplay = document.getElementById('mode-pill-display');
+        const totalBadge = document.getElementById('mode-badge-total');
+
+        if (activeMode === 'todos') {
+            if (label) label.innerText = 'Todos';
+            if (totalBadge) totalBadge.innerText = 'Todos';
+            if (pillDisplay) {
+                pillDisplay.innerHTML = `
+                    <span class="w-5 h-5 rounded-full bg-purple-600/80 flex items-center justify-center text-[10px] shadow-sm">💼</span>
+                    <span class="w-5 h-5 rounded-full bg-orange-600/80 flex items-center justify-center text-[10px] shadow-sm">👤</span>
+                    <span class="w-5 h-5 rounded-full bg-cyan-600/80 flex items-center justify-center text-[10px] shadow-sm">🏢</span>
+                `;
+            }
+        } else {
+            const current = modesList.find(m => m.slug === activeMode);
+            const nome = current ? current.nome : activeMode;
+            const icone = current ? current.icone : '🎯';
+
+            if (label) label.innerText = nome;
+            if (totalBadge) totalBadge.innerText = nome;
+            if (pillDisplay) {
+                pillDisplay.innerHTML = `
+                    <span class="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] shadow-sm ring-1 ring-white/20">${icone}</span>
+                `;
+            }
+        }
+    }
+
+    function getModeName(slug) {
+        if (slug === 'todos') return 'Todos';
+        const found = modesList.find(m => m.slug === slug);
+        return found ? found.nome : slug;
+    }
+
+    function getModeIcon(slug) {
+        if (!slug || slug === 'todos') return '⚡';
+        const found = modesList.find(m => m.slug === slug);
+        if (found) return found.icone || '🎯';
+        if (slug === 'trabalho') return '💼';
+        if (slug === 'pessoal') return '👤';
+        if (slug === 'empresarial') return '🏢';
+        return '🎯';
+    }
+
+    function getModeBadgeHtml(slug) {
+        if (!slug) return '';
+        const found = modesList.find(m => m.slug === slug);
+        const nome = found ? found.nome : slug;
+        const icone = found ? found.icone : (slug === 'trabalho' ? '💼' : slug === 'pessoal' ? '👤' : slug === 'empresarial' ? '🏢' : '🎯');
+        const cor = found ? found.cor : 'lime';
+
+        const colorClasses = {
+            lime: 'bg-lime-500/10 text-lime-400 border-lime-500/20',
+            purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+            orange: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+            cyan: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+            emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+            rose: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+        };
+
+        const badgeClass = colorClasses[cor] || colorClasses.lime;
+
+        return `
+            <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}" title="Modo: ${escapeHtml(nome)}">
+                <span>${icone}</span>
+                <span>${escapeHtml(nome)}</span>
+            </span>
+        `;
+    }
+
+    function setupCreateModeModal() {
+        const btnOpen = document.getElementById('btn-open-create-mode');
+        const btnClose = document.getElementById('btn-close-create-mode');
+        const btnCancel = document.getElementById('btn-cancel-create-mode');
+        const form = document.getElementById('form-create-mode');
+        const iconInput = document.getElementById('new-mode-icone');
+
+        btnOpen?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('modes-dropdown-menu')?.classList.add('hidden');
+            document.getElementById('mode-chevron')?.classList.remove('rotate-180');
+            openCreateModeModal();
+        });
+
+        btnClose?.addEventListener('click', closeCreateModeModal);
+        btnCancel?.addEventListener('click', closeCreateModeModal);
+
+        document.querySelectorAll('.mode-emoji-opt').forEach(opt => {
+            opt.addEventListener('click', () => {
+                if (iconInput) iconInput.value = opt.dataset.emoji;
+            });
+        });
+
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('new-mode-nome')?.value.trim();
+            const icone = iconInput?.value.trim() || '🎯';
+            const corRadio = document.querySelector('input[name="new-mode-cor"]:checked');
+            const cor = corRadio ? corRadio.value : 'lime';
+
+            if (!nome) {
+                showToast('Informe o nome do modo.', 'error');
+                return;
+            }
+
+            try {
+                const res = await API.createModo({ nome, icone, cor });
+                if (res.sucesso && res.modo) {
+                    modesList.push(res.modo);
+                    if (typeof TaskModal !== 'undefined' && TaskModal.updateModeOptions) {
+                        TaskModal.updateModeOptions(modesList);
+                    }
+                    closeCreateModeModal();
+                    form.reset();
+                    selectMode(res.modo.slug);
+                    showToast(`Novo modo "${res.modo.nome}" criado com sucesso!`, 'success');
+                }
+            } catch (err) {
+                showToast(err.message || 'Erro ao criar modo', 'error');
+            }
+        });
+    }
+
+    function openCreateModeModal() {
+        const modal = document.getElementById('modal-create-mode');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('new-mode-nome')?.focus();
+        }
+    }
+
+    function closeCreateModeModal() {
+        const modal = document.getElementById('modal-create-mode');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    /* ========================================================
      * ALTERNADOR DE VISÕES (Pills estilo Pierre)
      * ======================================================== */
     function initTaskViewSwitcher() {
@@ -203,7 +475,7 @@ const App = (() => {
         } else if (view === 'lista') {
             ListView.render(filters);
         } else if (view === 'calendario') {
-            CalendarView.render();
+            CalendarView.render(filters);
         }
     }
 
@@ -213,6 +485,7 @@ const App = (() => {
         const filters = {};
         if (busca) filters.busca = busca;
         if (prioridade) filters.prioridade = prioridade;
+        if (activeMode && activeMode !== 'todos') filters.modo = activeMode;
         return filters;
     }
 
@@ -247,7 +520,8 @@ const App = (() => {
                     titulo: val,
                     inbox: true,
                     prioridade: 'media',
-                    status: 'planejamento'
+                    status: 'planejamento',
+                    modo: (activeMode && activeMode !== 'todos') ? activeMode : 'trabalho'
                 });
 
                 input.value = '';
@@ -635,7 +909,15 @@ const App = (() => {
             }
         },
         openSettingsModal,
-        closeSettingsModal
+        closeSettingsModal,
+        getModes: () => modesList,
+        getActiveMode: () => activeMode,
+        getModeName,
+        getModeIcon,
+        getModeBadgeHtml,
+        selectMode,
+        openCreateModeModal,
+        closeCreateModeModal
     };
 })();
 
