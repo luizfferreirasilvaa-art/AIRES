@@ -21,6 +21,7 @@ use Aires\Core\Request;
 use Aires\Core\Response;
 use Aires\Core\Router;
 use Aires\Core\SessionHandler;
+use Aires\Controllers\AuthController;
 use Aires\Controllers\TaskController;
 use Aires\Controllers\SubtaskController;
 use Aires\Controllers\MissionController;
@@ -31,15 +32,33 @@ use Aires\Controllers\NoteController;
 // Iniciar sessões armazenadas no banco de dados MySQL
 SessionHandler::start();
 
-// Usuário padrão de demonstração se não autenticado
-if (!isset($_SESSION['usuario_id'])) {
-    $_SESSION['usuario_id'] = 1;
-    $_SESSION['usuario_nome'] = 'Comandante AIRES';
-    $_SESSION['usuario_email'] = 'demo@aires.io';
-}
-
 $request = new Request();
 $router = new Router();
+
+$path = $request->getPath();
+
+// Verificação de Autenticação Obrigatória (Item obrigatório antes de todas as páginas)
+$isLoggedIn = isset($_SESSION['usuario_id']) && (int)$_SESSION['usuario_id'] > 0;
+$isAuthRoute = in_array($path, ['/login', '/logout', '/api/auth/login', '/api/auth/logout'], true);
+
+if (!$isLoggedIn && !$isAuthRoute) {
+    if (str_starts_with($path, '/api/')) {
+        Response::error('Sessão expirada ou não autenticado. Faça login para continuar.', 401);
+    } else {
+        Response::redirect(Request::getBasePath() . '/login');
+    }
+}
+
+// ==========================================
+// ROTAS DE AUTENTICAÇÃO
+// ==========================================
+$router->get('/login', [AuthController::class, 'showLogin']);
+$router->post('/login', [AuthController::class, 'login']);
+$router->post('/api/auth/login', [AuthController::class, 'login']);
+$router->get('/logout', [AuthController::class, 'logout']);
+$router->post('/logout', [AuthController::class, 'logout']);
+$router->post('/api/auth/logout', [AuthController::class, 'logout']);
+$router->get('/api/auth/me', [AuthController::class, 'me']);
 
 // ==========================================
 // ROTAS DE INTERFACE WEB (VIEWS)

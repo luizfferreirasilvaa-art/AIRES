@@ -105,4 +105,15 @@ final class Request
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         return str_contains($accept, 'application/json') || str_contains($contentType, 'application/json');
     }
+
+    public static function getBasePath(): string
+    {
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        foreach (['/AIRES/public', '/AIRES', '/public'] as $prefix) {
+            if (str_starts_with($uri, $prefix)) {
+                return $prefix;
+            }
+        }
+        return '';
+    }
 }

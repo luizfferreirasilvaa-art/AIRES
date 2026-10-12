@@ -57,7 +57,7 @@ require_once SRC_DIR . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'Ses
 require_once SRC_DIR . DIRECTORY_SEPARATOR . 'Services' . DIRECTORY_SEPARATOR . 'ConflictDetector.php';
 require_once SRC_DIR . DIRECTORY_SEPARATOR . 'Services' . DIRECTORY_SEPARATOR . 'TravelAlertCalculator.php';
 
-// Controllers
+require_once SRC_DIR . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'AuthController.php';
 require_once SRC_DIR . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'TaskController.php';
 require_once SRC_DIR . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'SubtaskController.php';
 require_once SRC_DIR . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'MissionController.php';

@@ -41,6 +41,11 @@ const API = (() => {
             const data = await response.json().catch(() => null);
 
             if (!response.ok) {
+                if (response.status === 401 && !window.location.pathname.includes('/login')) {
+                    const loginUrl = getBaseUrl().replace('/api', '') + '/login';
+                    window.location.href = loginUrl;
+                    return;
+                }
                 const error = new Error((data && data.erro) || (data && data.mensagem) || `Erro HTTP ${response.status}`);
                 error.status = response.status;
                 error.data = data;
