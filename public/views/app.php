@@ -127,7 +127,6 @@
                         <h2 class="text-sm md:text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
                             Olá, Comandante
                         </h2>
-                        <p class="text-[11px] text-zinc-400 font-medium">Você é AIRES Pro</p>
                     </div>
                 </div>
 
