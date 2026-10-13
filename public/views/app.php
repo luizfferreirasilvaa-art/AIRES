@@ -123,7 +123,7 @@ $compMes = $compromissos_mes ?? [];
 
                 <!-- Módulo: Startup (Energia Solar) -->
                 <div class="sidebar-section-header pt-3 pb-1 px-3 flex items-center gap-2 select-none">
-                    <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-amber-400/80">Startup</span>
+                    <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Startup</span>
                     <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
                 </div>
                 <button type="button" data-nav-section="startup-clientes" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Clientes & Contratos">
