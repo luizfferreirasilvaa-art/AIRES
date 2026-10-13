@@ -90,19 +90,18 @@ final class StartupFinanceiroController
         $saldo = $entradas - $saidas;
 
         // Inadimplência: faturas emitidas/enviadas cujo vencimento passou e não estão pagas
-        $hoje = date('Y-m-d');
         $stmtInadimplentes = $this->pdo->prepare("
             SELECT f.*, c.nome AS cliente_nome, c.whatsapp, c.telefone,
-                   DATEDIFF(:hoje, f.data_vencimento) AS dias_atraso
+                   DATEDIFF(CURDATE(), f.data_vencimento) AS dias_atraso
             FROM startup_faturas f
             JOIN startup_clientes c ON c.id = f.cliente_id
             WHERE f.usuario_id = :uid 
               AND f.status IN ('emitida', 'enviada', 'atrasada')
-              AND f.data_vencimento < :hoje
+              AND f.data_vencimento < CURDATE()
               AND f.deletado_em IS NULL
             ORDER BY dias_atraso DESC
         ");
-        $stmtInadimplentes->execute(['uid' => $userId, 'hoje' => $hoje]);
+        $stmtInadimplentes->execute(['uid' => $userId]);
         $inadimplentes = $stmtInadimplentes->fetchAll(PDO::FETCH_ASSOC);
 
         $totalInadimplente = array_sum(array_map(fn($f) => (float)$f['valor_cobrado'], $inadimplentes));
