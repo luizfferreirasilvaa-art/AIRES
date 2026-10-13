@@ -17,6 +17,11 @@ $compMes = $compromissos_mes ?? [];
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AIRES — Execution Engine & Segundo Cérebro</title>
     
+    <!-- Google Fonts: Outfit (Arredondada), Plus Jakarta Sans e Dancing Script -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -46,7 +51,7 @@ $compMes = $compromissos_mes ?? [];
     </script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css?v=<?= time() ?>">
     <script>
         if (localStorage.getItem('aires_sidebar_collapsed') === 'true') {
             document.documentElement.classList.add('sidebar-init-collapsed');
@@ -631,19 +636,17 @@ $compMes = $compromissos_mes ?? [];
                     <p class="text-xs text-zinc-400">Emissão automatizada a partir da conta Energisa e gestão de faturas.</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                    <!-- Tab Pills: Emissão | Painel -->
-                    <div class="inline-flex p-1 bg-zinc-900/90 rounded-full border border-white/10 gap-1 shadow-lg">
-                        <button type="button" id="btn-tab-fatura-painel" onclick="StartupFaturamento.switchTab('painel')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all glass-pill-active">
-                            Painel de Faturas
+                    <!-- Tab Pills: Painel | Emissão -->
+                    <div class="inline-flex p-1 bg-zinc-900/90 rounded-full border border-white/10 gap-1 shadow-lg backdrop-blur-md">
+                        <button type="button" id="btn-tab-fatura-painel" onclick="StartupFaturamento.switchTab('painel')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all glass-pill-active flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span>Painel de Faturas</span>
                         </button>
                         <button type="button" id="btn-tab-fatura-emissao" onclick="StartupFaturamento.switchTab('emissao')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition-all flex items-center gap-1.5">
-                            <span>🤖 Emissor (Robô)</span>
+                            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span>Robô de Emissão</span>
                         </button>
                     </div>
-                    <button type="button" onclick="StartupFaturamento.switchTab('emissao')" class="px-4 py-2 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-bold text-xs rounded-full shadow-lg shadow-lime-400/10 transition-all flex items-center gap-1.5 active:scale-95">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                        <span>Emitir Fatura</span>
-                    </button>
                 </div>
             </div>
 
@@ -1162,18 +1165,18 @@ $compMes = $compromissos_mes ?? [];
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/api.js"></script>
-    <script src="assets/js/conflict-dialog.js"></script>
-    <script src="assets/js/modal-task.js"></script>
-    <script src="assets/js/kanban.js"></script>
-    <script src="assets/js/list-view.js"></script>
-    <script src="assets/js/calendar-view.js"></script>
-    <script src="assets/js/startup-clientes.js"></script>
-    <script src="assets/js/startup-faturamento.js"></script>
-    <script src="assets/js/startup-creditos.js"></script>
-    <script src="assets/js/startup-financeiro.js"></script>
-    <script src="assets/js/startup-dashboard.js"></script>
-    <script src="assets/js/startup-auditoria.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/api.js?v=<?= time() ?>"></script>
+    <script src="assets/js/conflict-dialog.js?v=<?= time() ?>"></script>
+    <script src="assets/js/modal-task.js?v=<?= time() ?>"></script>
+    <script src="assets/js/kanban.js?v=<?= time() ?>"></script>
+    <script src="assets/js/list-view.js?v=<?= time() ?>"></script>
+    <script src="assets/js/calendar-view.js?v=<?= time() ?>"></script>
+    <script src="assets/js/startup-clientes.js?v=<?= time() ?>"></script>
+    <script src="assets/js/startup-faturamento.js?v=<?= time() ?>"></script>
+    <script src="assets/js/startup-creditos.js?v=<?= time() ?>"></script>
+    <script src="assets/js/startup-financeiro.js?v=<?= time() ?>"></script>
+    <script src="assets/js/startup-dashboard.js?v=<?= time() ?>"></script>
+    <script src="assets/js/startup-auditoria.js?v=<?= time() ?>"></script>
+    <script src="assets/js/app.js?v=<?= time() ?>"></script>
 </body>
 </html>

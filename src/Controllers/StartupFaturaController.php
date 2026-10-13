@@ -149,15 +149,30 @@ final class StartupFaturaController
         $dataPagamento = ($status === 'paga') ? (!empty($request->input('data_pagamento')) ? (string)$request->input('data_pagamento') : date('Y-m-d')) : null;
         $observacoes = trim((string)$request->input('observacoes', '')) ?: null;
 
+        $arquivoAnexo = null;
+        $nomeArquivoAnexo = null;
+        $anexoBase64 = $request->input('anexo_base64');
+        $anexoNome = (string)$request->input('anexo_nome', '');
+
+        if (!empty($anexoBase64)) {
+            $salvo = $this->salvarArquivoBase64($userId, $anexoBase64, $anexoNome ?: 'fatura.pdf');
+            if ($salvo) {
+                $arquivoAnexo = $salvo['path'];
+                $nomeArquivoAnexo = $salvo['name'];
+            }
+        }
+
         $stmt = $this->pdo->prepare("
             INSERT INTO startup_faturas (
                 usuario_id, cliente_id, mes_referencia, consumo_kwh, creditos_injetados_kwh,
                 iluminacao_publica, tarifa_kwh, valor_energisa, desconto_pct, valor_desconto,
-                valor_cobrado, status, data_emissao, data_vencimento, data_pagamento, observacoes
+                valor_cobrado, status, data_emissao, data_vencimento, data_pagamento, observacoes,
+                arquivo_anexo, nome_arquivo_anexo
             ) VALUES (
                 :uid, :cid, :mes, :consumo, :creditos,
                 :ilum, :tarifa, :v_energisa, :desc_pct, :v_desconto,
-                :v_cobrado, :status, :emissao, :vencimento, :pagamento, :obs
+                :v_cobrado, :status, :emissao, :vencimento, :pagamento, :obs,
+                :anexo, :nome_anexo
             )
         ");
 
@@ -177,7 +192,9 @@ final class StartupFaturaController
             'emissao'    => $dataEmissao,
             'vencimento' => $dataVencimento,
             'pagamento'  => $dataPagamento,
-            'obs'        => $observacoes
+            'obs'        => $observacoes,
+            'anexo'      => $arquivoAnexo,
+            'nome_anexo' => $nomeArquivoAnexo
         ]);
 
         $faturaId = (int)$this->pdo->lastInsertId();
@@ -245,6 +262,22 @@ final class StartupFaturaController
 
         $observacoes = $request->input('observacoes') !== null ? (trim((string)$request->input('observacoes')) ?: null) : $existing['observacoes'];
 
+        $arquivoAnexo = $existing['arquivo_anexo'] ?? null;
+        $nomeArquivoAnexo = $existing['nome_arquivo_anexo'] ?? null;
+
+        if ($request->input('remover_anexo') === true) {
+            $this->excluirArquivoAnexo($arquivoAnexo);
+            $arquivoAnexo = null;
+            $nomeArquivoAnexo = null;
+        } elseif (!empty($request->input('anexo_base64'))) {
+            $this->excluirArquivoAnexo($arquivoAnexo);
+            $salvo = $this->salvarArquivoBase64($userId, (string)$request->input('anexo_base64'), (string)$request->input('anexo_nome', 'fatura.pdf'));
+            if ($salvo) {
+                $arquivoAnexo = $salvo['path'];
+                $nomeArquivoAnexo = $salvo['name'];
+            }
+        }
+
         $stmt = $this->pdo->prepare("
             UPDATE startup_faturas SET
                 consumo_kwh = :consumo,
@@ -259,6 +292,8 @@ final class StartupFaturaController
                 data_vencimento = :vencimento,
                 data_pagamento = :pagamento,
                 observacoes = :obs,
+                arquivo_anexo = :anexo,
+                nome_arquivo_anexo = :nome_anexo,
                 atualizado_em = NOW()
             WHERE id = :id AND usuario_id = :uid
         ");
@@ -276,6 +311,8 @@ final class StartupFaturaController
             'vencimento' => $dataVencimento,
             'pagamento'  => $dataPagamento,
             'obs'        => $observacoes,
+            'anexo'      => $arquivoAnexo,
+            'nome_anexo' => $nomeArquivoAnexo,
             'id'         => $faturaId,
             'uid'        => $userId
         ]);
@@ -377,5 +414,120 @@ final class StartupFaturaController
         ]);
 
         Response::success(null, 'Fatura removida com sucesso!');
+    }
+
+    public function anexarArquivo(Request $request, string $id): void
+    {
+        $userId = $this->getUserId();
+        $faturaId = (int)$id;
+
+        $stmtCheck = $this->pdo->prepare("SELECT * FROM startup_faturas WHERE id = :id AND usuario_id = :uid AND deletado_em IS NULL");
+        $stmtCheck->execute(['id' => $faturaId, 'uid' => $userId]);
+        $existing = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+        if (!$existing) {
+            Response::error('Fatura não encontrada.', 404);
+            return;
+        }
+
+        $anexoBase64 = $request->input('anexo_base64');
+        $anexoNome = (string)$request->input('anexo_nome', 'fatura.pdf');
+
+        if (empty($anexoBase64)) {
+            Response::error('Nenhum arquivo enviado para anexo.', 422);
+            return;
+        }
+
+        $this->excluirArquivoAnexo($existing['arquivo_anexo'] ?? null);
+        $salvo = $this->salvarArquivoBase64($userId, (string)$anexoBase64, $anexoNome);
+
+        if (!$salvo) {
+            Response::error('Falha ao salvar o arquivo anexo.', 500);
+            return;
+        }
+
+        $this->pdo->prepare("UPDATE startup_faturas SET arquivo_anexo = :anexo, nome_arquivo_anexo = :nome, atualizado_em = NOW() WHERE id = :id AND usuario_id = :uid")
+            ->execute([
+                'anexo' => $salvo['path'],
+                'nome'  => $salvo['name'],
+                'id'    => $faturaId,
+                'uid'   => $userId
+            ]);
+
+        $this->auditoria->registrar($userId, 'anexar_fatura', 'fatura', $faturaId, [
+            'arquivo' => $salvo['path'],
+            'nome'    => $salvo['name']
+        ]);
+
+        Response::success([
+            'arquivo_anexo'      => $salvo['path'],
+            'nome_arquivo_anexo' => $salvo['name']
+        ], 'Fatura anexada com sucesso!');
+    }
+
+    public function removerAnexo(Request $request, string $id): void
+    {
+        $userId = $this->getUserId();
+        $faturaId = (int)$id;
+
+        $stmtCheck = $this->pdo->prepare("SELECT * FROM startup_faturas WHERE id = :id AND usuario_id = :uid AND deletado_em IS NULL");
+        $stmtCheck->execute(['id' => $faturaId, 'uid' => $userId]);
+        $existing = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+        if (!$existing) {
+            Response::error('Fatura não encontrada.', 404);
+            return;
+        }
+
+        $this->excluirArquivoAnexo($existing['arquivo_anexo'] ?? null);
+
+        $this->pdo->prepare("UPDATE startup_faturas SET arquivo_anexo = NULL, nome_arquivo_anexo = NULL, atualizado_em = NOW() WHERE id = :id AND usuario_id = :uid")
+            ->execute(['id' => $faturaId, 'uid' => $userId]);
+
+        Response::success(null, 'Anexo removido com sucesso!');
+    }
+
+    private function salvarArquivoBase64(int $userId, string $base64Data, string $origName): ?array
+    {
+        if (str_contains($base64Data, ',')) {
+            $parts = explode(',', $base64Data, 2);
+            $base64Data = $parts[1];
+        }
+
+        $binary = base64_decode($base64Data, true);
+        if ($binary === false || strlen($binary) === 0) {
+            return null;
+        }
+
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/faturas';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION)) ?: 'pdf';
+        if (!in_array($ext, ['pdf', 'png', 'jpg', 'jpeg', 'webp'], true)) {
+            $ext = 'pdf';
+        }
+
+        $filename = 'fatura_' . $userId . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $destPath = $uploadDir . '/' . $filename;
+
+        if (file_put_contents($destPath, $binary) === false) {
+            return null;
+        }
+
+        return [
+            'path' => 'uploads/faturas/' . $filename,
+            'name' => basename($origName)
+        ];
+    }
+
+    private function excluirArquivoAnexo(?string $relPath): void
+    {
+        if (empty($relPath)) return;
+        $fullPath = dirname(__DIR__, 2) . '/public/' . ltrim($relPath, '/');
+        if (file_exists($fullPath) && is_file($fullPath)) {
+            @unlink($fullPath);
+        }
     }
 }

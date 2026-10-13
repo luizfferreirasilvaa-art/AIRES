@@ -142,6 +142,8 @@ $router->post('/api/startup/faturas', [StartupFaturaController::class, 'store'])
 $router->get('/api/startup/faturas/{id}', [StartupFaturaController::class, 'show']);
 $router->put('/api/startup/faturas/{id}', [StartupFaturaController::class, 'update']);
 $router->patch('/api/startup/faturas/{id}/status', [StartupFaturaController::class, 'updateStatus']);
+$router->post('/api/startup/faturas/{id}/anexar', [StartupFaturaController::class, 'anexarArquivo']);
+$router->delete('/api/startup/faturas/{id}/anexo', [StartupFaturaController::class, 'removerAnexo']);
 $router->delete('/api/startup/faturas/{id}', [StartupFaturaController::class, 'destroy']);
 
 // Estoque de Créditos

@@ -131,6 +131,8 @@ const API = (() => {
         createStartupFatura: (payload) => request('/startup/faturas', { method: 'POST', body: payload }),
         updateStartupFatura: (id, payload) => request(`/startup/faturas/${id}`, { method: 'PUT', body: payload }),
         updateStartupFaturaStatus: (id, status) => request(`/startup/faturas/${id}/status`, { method: 'PATCH', body: { status } }),
+        anexarStartupFatura: (id, payload) => request(`/startup/faturas/${id}/anexar`, { method: 'POST', body: payload }),
+        removerAnexoStartupFatura: (id) => request(`/startup/faturas/${id}/anexo`, { method: 'DELETE' }),
         deleteStartupFatura: (id) => request(`/startup/faturas/${id}`, { method: 'DELETE' }),
 
         // Startup - Estoque de Créditos
