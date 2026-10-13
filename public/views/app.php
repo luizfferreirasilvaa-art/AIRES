@@ -120,6 +120,36 @@ $compMes = $compromissos_mes ?? [];
                     <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     <span class="sidebar-text-collapsible">Notas</span>
                 </button>
+
+                <!-- Módulo: Startup (Energia Solar) -->
+                <div class="sidebar-section-header pt-3 pb-1 px-3 flex items-center gap-2 select-none">
+                    <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-amber-400/80">Startup</span>
+                    <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
+                </div>
+                <button type="button" data-nav-section="startup-clientes" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Clientes & Contratos">
+                    <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span class="sidebar-text-collapsible">Clientes</span>
+                </button>
+                <button type="button" data-nav-section="startup-faturamento" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Emissor & Painel de Faturas">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+                    <span class="sidebar-text-collapsible">Faturamento</span>
+                </button>
+                <button type="button" data-nav-section="startup-creditos" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Estoque de Créditos">
+                    <svg class="w-4 h-4 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span class="sidebar-text-collapsible">Créditos</span>
+                </button>
+                <button type="button" data-nav-section="startup-financeiro" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Financeiro & Inadimplência">
+                    <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="sidebar-text-collapsible">Financeiro</span>
+                </button>
+                <button type="button" data-nav-section="startup-dashboard" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Dashboard Solar">
+                    <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span class="sidebar-text-collapsible">Dashboard Solar</span>
+                </button>
+                <button type="button" data-nav-section="startup-auditoria" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Log de Auditoria">
+                    <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="sidebar-text-collapsible">Auditoria</span>
+                </button>
             </nav>
         </div>
 
@@ -542,6 +572,183 @@ $compMes = $compromissos_mes ?? [];
                 </div>
             </div>
         </section>
+
+        <!-- ========================================================
+             SEÇÃO: STARTUP - CLIENTES & CONTRATOS
+             ======================================================== -->
+        <section id="section-startup-clientes" class="app-section flex-1 p-4 md:p-8 space-y-5 hidden">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        👥 Clientes & Contratos
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 font-bold uppercase tracking-wider">Energia Solar</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400">Gestão de unidades consumidoras, propriedades e rateio de créditos.</p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="relative w-44 sm:w-56">
+                        <input type="text" id="startup-clientes-busca" placeholder="Buscar por nome, UC ou CPF..." class="w-full pl-8 pr-3 py-1.5 bg-zinc-900/80 border border-white/10 rounded-full text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400/80 transition-all">
+                        <svg class="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <select id="startup-clientes-status-filter" class="px-3 py-1.5 bg-zinc-900/80 border border-white/10 rounded-full text-xs text-zinc-300 focus:outline-none focus:border-emerald-400/80">
+                        <option value="">Status: Todos</option>
+                        <option value="ativo">✅ Ativos</option>
+                        <option value="suspenso">⏸️ Suspensos</option>
+                        <option value="cancelado">❌ Cancelados</option>
+                    </select>
+                    <button type="button" onclick="StartupClientes.openModal()" class="px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-200 font-bold text-xs rounded-full shadow-lg transition-all flex items-center gap-1.5 active:scale-95">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        <span>Novo Cliente</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sub-abas: Clientes | Contratos -->
+            <div class="flex items-center gap-2 border-b border-white/5 pb-2">
+                <button type="button" id="tab-btn-clientes-lista" onclick="StartupClientes.switchSubTab('clientes')" class="px-3 py-1 rounded-full text-xs font-bold transition-all bg-white/10 text-white">
+                    Lista de Clientes
+                </button>
+                <button type="button" id="tab-btn-clientes-contratos" onclick="StartupClientes.switchSubTab('contratos')" class="px-3 py-1 rounded-full text-xs font-medium text-zinc-400 hover:text-white transition-all">
+                    Gestão de Contratos
+                </button>
+            </div>
+
+            <div id="startup-clientes-container" class="space-y-3 pb-24 md:pb-8"></div>
+        </section>
+
+        <!-- ========================================================
+             SEÇÃO: STARTUP - FATURAMENTO (EMISSOR + PAINEL)
+             ======================================================== -->
+        <section id="section-startup-faturamento" class="app-section flex-1 p-4 md:p-8 space-y-5 hidden">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        🧾 Faturamento Solar
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-lime-400/10 text-lime-400 border border-lime-400/20 font-bold uppercase tracking-wider">Robô Emissor</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400">Emissão automatizada a partir da conta Energisa e gestão de faturas.</p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Tab Pills: Emissão | Painel -->
+                    <div class="inline-flex p-1 bg-zinc-900/90 rounded-full border border-white/10 gap-1 shadow-lg">
+                        <button type="button" id="btn-tab-fatura-painel" onclick="StartupFaturamento.switchTab('painel')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all glass-pill-active">
+                            Painel de Faturas
+                        </button>
+                        <button type="button" id="btn-tab-fatura-emissao" onclick="StartupFaturamento.switchTab('emissao')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition-all flex items-center gap-1.5">
+                            <span>🤖 Emissor (Robô)</span>
+                        </button>
+                    </div>
+                    <button type="button" onclick="StartupFaturamento.switchTab('emissao')" class="px-4 py-2 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-bold text-xs rounded-full shadow-lg shadow-lime-400/10 transition-all flex items-center gap-1.5 active:scale-95">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        <span>Emitir Fatura</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="startup-faturamento-container" class="space-y-4 pb-24 md:pb-8"></div>
+        </section>
+
+        <!-- ========================================================
+             SEÇÃO: STARTUP - ESTOQUE DE CRÉDITOS
+             ======================================================== -->
+        <section id="section-startup-creditos" class="app-section flex-1 p-4 md:p-8 space-y-5 hidden">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        📊 Estoque de Créditos
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 font-bold uppercase tracking-wider">Supervisão</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400">Controle de kWh gerados na usina, rateio e estimativa de duração por cliente.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="StartupCreditos.openModalNovoMes()" class="px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-200 font-bold text-xs rounded-full shadow-lg transition-all flex items-center gap-1.5 active:scale-95">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        <span>Registrar Mês de Produção</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="startup-creditos-container" class="space-y-4 pb-24 md:pb-8"></div>
+        </section>
+
+        <!-- ========================================================
+             SEÇÃO: STARTUP - FINANCEIRO (OPERACIONAL)
+             ======================================================== -->
+        <section id="section-startup-financeiro" class="app-section flex-1 p-4 md:p-8 space-y-5 hidden">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        💰 Financeiro & Fluxo de Caixa
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-orange-400/10 text-orange-400 border border-orange-400/20 font-bold uppercase tracking-wider">Operacional</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400">Entradas de faturas, custos de usina (manutenção, arrendamento) e controle de inadimplência.</p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="inline-flex p-1 bg-zinc-900/90 rounded-full border border-white/10 gap-1 shadow-lg">
+                        <button type="button" id="btn-tab-fin-fluxo" onclick="StartupFinanceiro.switchTab('fluxo')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all glass-pill-active">
+                            Movimentações
+                        </button>
+                        <button type="button" id="btn-tab-fin-inadimplencia" onclick="StartupFinanceiro.switchTab('inadimplencia')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition-all flex items-center gap-1">
+                            <span>Inadimplentes</span>
+                            <span id="badge-inadimplentes-count" class="hidden text-[9px] px-1.5 py-0.2 rounded-full bg-red-500/20 text-red-400 font-extrabold">0</span>
+                        </button>
+                    </div>
+                    <button type="button" onclick="StartupFinanceiro.openModalMovimento()" class="px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-200 font-bold text-xs rounded-full shadow-lg transition-all flex items-center gap-1.5 active:scale-95">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        <span>Novo Movimento</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="startup-financeiro-container" class="space-y-4 pb-24 md:pb-8"></div>
+        </section>
+
+        <!-- ========================================================
+             SEÇÃO: STARTUP - DASHBOARD ANALÍTICO
+             ======================================================== -->
+        <section id="section-startup-dashboard" class="app-section flex-1 p-4 md:p-8 space-y-6 hidden">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        📈 Dashboard Solar
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 font-bold uppercase tracking-wider">Visão Executiva</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400">Indicadores de rentabilidade, taxa de aproveitamento e evolução dos últimos 6 meses.</p>
+                </div>
+                <button type="button" onclick="StartupDashboard.load()" class="text-xs text-zinc-400 hover:text-white flex items-center gap-1 p-2 rounded-xl hover:bg-white/5 transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Atualizar Indicadores</span>
+                </button>
+            </div>
+
+            <div id="startup-dashboard-container" class="space-y-5 pb-24 md:pb-8"></div>
+        </section>
+
+        <!-- ========================================================
+             SEÇÃO: STARTUP - LOG DE AUDITORIA
+             ======================================================== -->
+        <section id="section-startup-auditoria" class="app-section flex-1 p-4 md:p-8 space-y-5 hidden">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        📋 Log de Auditoria
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-zinc-500/20 text-zinc-300 border border-white/10 font-bold uppercase tracking-wider">Rastreabilidade</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400">Histórico de todas as operações realizadas em clientes, faturas, créditos e financeiro.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="startup-auditoria-entidade" onchange="StartupAuditoria.load()" class="px-3 py-1.5 bg-zinc-900/80 border border-white/10 rounded-full text-xs text-zinc-300 focus:outline-none focus:border-white/40">
+                        <option value="">Todas as Entidades</option>
+                        <option value="cliente">👥 Clientes</option>
+                        <option value="fatura">🧾 Faturas</option>
+                        <option value="credito">📊 Créditos</option>
+                        <option value="pagamento">💰 Pagamentos</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="startup-auditoria-container" class="space-y-2 pb-24 md:pb-8"></div>
+        </section>
     </main>
 
     <!-- ========================================================
@@ -959,6 +1166,12 @@ $compMes = $compromissos_mes ?? [];
     <script src="assets/js/kanban.js"></script>
     <script src="assets/js/list-view.js"></script>
     <script src="assets/js/calendar-view.js"></script>
+    <script src="assets/js/startup-clientes.js"></script>
+    <script src="assets/js/startup-faturamento.js"></script>
+    <script src="assets/js/startup-creditos.js"></script>
+    <script src="assets/js/startup-financeiro.js"></script>
+    <script src="assets/js/startup-dashboard.js"></script>
+    <script src="assets/js/startup-auditoria.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 </html>

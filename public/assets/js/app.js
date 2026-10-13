@@ -23,6 +23,12 @@ const App = (() => {
         try { KanbanView?.init(document.getElementById('view-kanban-container')); } catch (e) { console.error('KanbanView erro:', e); }
         try { ListView?.init(document.getElementById('view-lista-container')); } catch (e) { console.error('ListView erro:', e); }
         try { CalendarView?.init(document.getElementById('view-calendario-container')); } catch (e) { console.error('CalendarView erro:', e); }
+        try { StartupClientes?.init(); } catch (e) { console.error('StartupClientes erro:', e); }
+        try { StartupFaturamento?.init(); } catch (e) { console.error('StartupFaturamento erro:', e); }
+        try { StartupCreditos?.init(); } catch (e) { console.error('StartupCreditos erro:', e); }
+        try { StartupFinanceiro?.init(); } catch (e) { console.error('StartupFinanceiro erro:', e); }
+        try { StartupDashboard?.init(); } catch (e) { console.error('StartupDashboard erro:', e); }
+        try { StartupAuditoria?.init(); } catch (e) { console.error('StartupAuditoria erro:', e); }
 
         // Carregar visão inicial
         try { loadSection('inicio'); } catch (e) { console.error('loadSection erro:', e); }
@@ -127,6 +133,18 @@ const App = (() => {
             renderNotes();
         } else if (section === 'dashboard') {
             renderDashboard();
+        } else if (section === 'startup-clientes') {
+            StartupClientes?.load();
+        } else if (section === 'startup-faturamento') {
+            StartupFaturamento?.load();
+        } else if (section === 'startup-creditos') {
+            StartupCreditos?.load();
+        } else if (section === 'startup-financeiro') {
+            StartupFinanceiro?.load();
+        } else if (section === 'startup-dashboard') {
+            StartupDashboard?.load();
+        } else if (section === 'startup-auditoria') {
+            StartupAuditoria?.load();
         }
     }
 

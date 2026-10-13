@@ -110,6 +110,60 @@ const API = (() => {
         getModos: () => request('/modos'),
         createModo: (payload) => request('/modos', { method: 'POST', body: payload }),
         updateModo: (id, payload) => request(`/modos/${id}`, { method: 'PUT', body: payload }),
-        deleteModo: (id) => request(`/modos/${id}`, { method: 'DELETE' })
+        deleteModo: (id) => request(`/modos/${id}`, { method: 'DELETE' }),
+
+        // Startup - Clientes
+        getStartupClientes: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/startup/clientes${query ? '?' + query : ''}`);
+        },
+        getStartupCliente: (id) => request(`/startup/clientes/${id}`),
+        createStartupCliente: (payload) => request('/startup/clientes', { method: 'POST', body: payload }),
+        updateStartupCliente: (id, payload) => request(`/startup/clientes/${id}`, { method: 'PUT', body: payload }),
+        deleteStartupCliente: (id) => request(`/startup/clientes/${id}`, { method: 'DELETE' }),
+
+        // Startup - Faturas
+        getStartupFaturas: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/startup/faturas${query ? '?' + query : ''}`);
+        },
+        getStartupFatura: (id) => request(`/startup/faturas/${id}`),
+        createStartupFatura: (payload) => request('/startup/faturas', { method: 'POST', body: payload }),
+        updateStartupFatura: (id, payload) => request(`/startup/faturas/${id}`, { method: 'PUT', body: payload }),
+        updateStartupFaturaStatus: (id, status) => request(`/startup/faturas/${id}/status`, { method: 'PATCH', body: { status } }),
+        deleteStartupFatura: (id) => request(`/startup/faturas/${id}`, { method: 'DELETE' }),
+
+        // Startup - Estoque de Créditos
+        getStartupCreditos: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/startup/creditos${query ? '?' + query : ''}`);
+        },
+        getStartupCredito: (id) => request(`/startup/creditos/${id}`),
+        createStartupCredito: (payload) => request('/startup/creditos', { method: 'POST', body: payload }),
+        updateStartupCredito: (id, payload) => request(`/startup/creditos/${id}`, { method: 'PUT', body: payload }),
+        getStartupCreditoAlocacoes: (id) => request(`/startup/creditos/${id}/alocacoes`),
+        alocarStartupCreditos: (id, payload) => request(`/startup/creditos/${id}/alocar`, { method: 'POST', body: payload }),
+
+        // Startup - Financeiro
+        getStartupFinanceiro: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/startup/financeiro${query ? '?' + query : ''}`);
+        },
+        getStartupFinanceiroResumo: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/startup/financeiro/resumo${query ? '?' + query : ''}`);
+        },
+        createStartupPagamento: (payload) => request('/startup/financeiro', { method: 'POST', body: payload }),
+        updateStartupPagamento: (id, payload) => request(`/startup/financeiro/${id}`, { method: 'PUT', body: payload }),
+        deleteStartupPagamento: (id) => request(`/startup/financeiro/${id}`, { method: 'DELETE' }),
+
+        // Startup - Dashboard Solar
+        getStartupDashboard: () => request('/startup/dashboard'),
+
+        // Startup - Log de Auditoria
+        getStartupAuditoria: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/startup/auditoria${query ? '?' + query : ''}`);
+        }
     };
 })();

@@ -29,6 +29,12 @@ use Aires\Controllers\AlertController;
 use Aires\Controllers\DashboardController;
 use Aires\Controllers\NoteController;
 use Aires\Controllers\ModeController;
+use Aires\Controllers\StartupClienteController;
+use Aires\Controllers\StartupFaturaController;
+use Aires\Controllers\StartupCreditoController;
+use Aires\Controllers\StartupFinanceiroController;
+use Aires\Controllers\StartupDashboardController;
+use Aires\Controllers\StartupAuditoriaController;
 
 // Iniciar sessões armazenadas no banco de dados MySQL
 SessionHandler::start();
@@ -118,6 +124,46 @@ $router->get('/api/notas', [NoteController::class, 'index']);
 $router->post('/api/notas', [NoteController::class, 'store']);
 $router->put('/api/notas/{id}', [NoteController::class, 'update']);
 $router->delete('/api/notas/{id}', [NoteController::class, 'destroy']);
+
+// ==========================================
+// MÓDULO STARTUP: ENERGIA SOLAR & CRÉDITOS
+// ==========================================
+
+// Clientes
+$router->get('/api/startup/clientes', [StartupClienteController::class, 'index']);
+$router->post('/api/startup/clientes', [StartupClienteController::class, 'store']);
+$router->get('/api/startup/clientes/{id}', [StartupClienteController::class, 'show']);
+$router->put('/api/startup/clientes/{id}', [StartupClienteController::class, 'update']);
+$router->delete('/api/startup/clientes/{id}', [StartupClienteController::class, 'destroy']);
+
+// Faturas
+$router->get('/api/startup/faturas', [StartupFaturaController::class, 'index']);
+$router->post('/api/startup/faturas', [StartupFaturaController::class, 'store']);
+$router->get('/api/startup/faturas/{id}', [StartupFaturaController::class, 'show']);
+$router->put('/api/startup/faturas/{id}', [StartupFaturaController::class, 'update']);
+$router->patch('/api/startup/faturas/{id}/status', [StartupFaturaController::class, 'updateStatus']);
+$router->delete('/api/startup/faturas/{id}', [StartupFaturaController::class, 'destroy']);
+
+// Estoque de Créditos
+$router->get('/api/startup/creditos', [StartupCreditoController::class, 'index']);
+$router->post('/api/startup/creditos', [StartupCreditoController::class, 'store']);
+$router->get('/api/startup/creditos/{id}', [StartupCreditoController::class, 'show']);
+$router->put('/api/startup/creditos/{id}', [StartupCreditoController::class, 'update']);
+$router->get('/api/startup/creditos/{id}/alocacoes', [StartupCreditoController::class, 'alocacoes']);
+$router->post('/api/startup/creditos/{id}/alocar', [StartupCreditoController::class, 'alocar']);
+
+// Financeiro
+$router->get('/api/startup/financeiro', [StartupFinanceiroController::class, 'index']);
+$router->get('/api/startup/financeiro/resumo', [StartupFinanceiroController::class, 'resumo']);
+$router->post('/api/startup/financeiro', [StartupFinanceiroController::class, 'store']);
+$router->put('/api/startup/financeiro/{id}', [StartupFinanceiroController::class, 'update']);
+$router->delete('/api/startup/financeiro/{id}', [StartupFinanceiroController::class, 'destroy']);
+
+// Dashboard Solar
+$router->get('/api/startup/dashboard', [StartupDashboardController::class, 'stats']);
+
+// Log de Auditoria
+$router->get('/api/startup/auditoria', [StartupAuditoriaController::class, 'index']);
 
 // Despacho da requisição
 $router->dispatch($request);
