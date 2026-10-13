@@ -52,6 +52,10 @@ const API = (() => {
                 throw error;
             }
 
+            if (data === null) {
+                throw new Error('Resposta inválida do servidor.');
+            }
+
             return data;
         } catch (err) {
             console.error(`[API Error] ${endpoint}:`, err);

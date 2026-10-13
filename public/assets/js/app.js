@@ -403,7 +403,7 @@ const App = (() => {
                 if (modeId) {
                     // Atualizar modo existente
                     const res = await API.updateModo(modeId, { nome, icone, cor });
-                    if (res.sucesso && res.modo) {
+                    if (res && res.sucesso && res.modo) {
                         const idx = modesList.findIndex(m => m.id == modeId);
                         if (idx !== -1) {
                             modesList[idx] = { ...modesList[idx], ...res.modo };
@@ -420,7 +420,7 @@ const App = (() => {
                 } else {
                     // Criar novo modo
                     const res = await API.createModo({ nome, icone, cor });
-                    if (res.sucesso && res.modo) {
+                    if (res && res.sucesso && res.modo) {
                         modesList.push(res.modo);
                         if (typeof TaskModal !== 'undefined' && TaskModal.updateModeOptions) {
                             TaskModal.updateModeOptions(modesList);
@@ -449,7 +449,7 @@ const App = (() => {
 
             try {
                 const res = await API.deleteModo(modeId);
-                if (res.sucesso) {
+                if (res && res.sucesso) {
                     if (mode && activeMode === mode.slug) {
                         activeMode = res.fallback_modo || 'todos';
                         localStorage.setItem('aires_active_mode', activeMode);

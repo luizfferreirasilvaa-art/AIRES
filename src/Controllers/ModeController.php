@@ -109,10 +109,13 @@ final class ModeController
         ], 201);
     }
 
-    public function update(Request $request, array $params = []): void
+    public function update(Request $request, string $id): void
     {
         $userId = $this->getUserId();
-        $id = (int)($params['id'] ?? $request->input('id', 0));
+        $id = (int)$id;
+        if ($id <= 0) {
+            $id = (int)$request->input('id', 0);
+        }
 
         $stmtFind = $this->pdo->prepare("SELECT * FROM modos WHERE id = :id AND usuario_id = :uid");
         $stmtFind->execute(['id' => $id, 'uid' => $userId]);
@@ -156,10 +159,13 @@ final class ModeController
         ]);
     }
 
-    public function destroy(Request $request, array $params = []): void
+    public function destroy(Request $request, string $id): void
     {
         $userId = $this->getUserId();
-        $id = (int)($params['id'] ?? $request->input('id', 0));
+        $id = (int)$id;
+        if ($id <= 0) {
+            $id = (int)$request->input('id', 0);
+        }
 
         // Buscar modo existente
         $stmtFind = $this->pdo->prepare("SELECT * FROM modos WHERE id = :id AND usuario_id = :uid");
