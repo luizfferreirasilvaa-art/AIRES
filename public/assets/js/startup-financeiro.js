@@ -145,45 +145,64 @@ const StartupFinanceiro = (() => {
                     <h4 class="font-extrabold text-sm text-white">Livro Caixa & Movimentações</h4>
                     <span class="text-xs text-zinc-400">${pagamentosList.length} lançamentos</span>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="border-b border-white/10 text-zinc-400 text-[10px] uppercase tracking-wider">
-                                <th class="pb-3 font-bold">Data</th>
-                                <th class="pb-3 font-bold">Tipo</th>
-                                <th class="pb-3 font-bold">Categoria</th>
-                                <th class="pb-3 font-bold">Descrição / Cliente</th>
-                                <th class="pb-3 font-bold">Método</th>
-                                <th class="pb-3 font-bold text-right">Valor</th>
-                                <th class="pb-3 font-bold text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
         `;
+
+        let cardsHtml = '';
+        let tableRowsHtml = '';
 
         pagamentosList.forEach(p => {
             const isEntrada = p.tipo === 'entrada';
             const catLabel = getCategoriaLabel(p.categoria);
 
-            html += `
+            // Card para telas menores/janelas minimizadas
+            cardsHtml += `
+                <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-2.5 hover:border-white/10 transition-all">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${isEntrada ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}">
+                                    ${isEntrada ? 'Entrada' : 'Saída'}
+                                </span>
+                                <span class="text-[10px] text-zinc-400 font-mono">${formatarData(p.data_pagamento)}</span>
+                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-white/5 text-zinc-400 uppercase font-mono">${escapeHtml(p.metodo_pagamento)}</span>
+                            </div>
+                            <h5 class="font-bold text-sm text-white truncate">${escapeHtml(p.descricao)}</h5>
+                            ${p.cliente_nome ? `<p class="text-[10px] text-zinc-400">Cliente: <span class="text-white font-medium">${escapeHtml(p.cliente_nome)}</span></p>` : ''}
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="text-base font-black font-mono ${isEntrada ? 'text-emerald-400' : 'text-red-400'}">
+                                ${isEntrada ? '+' : '-'} ${formatarMoeda(p.valor)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t border-white/5 text-xs text-zinc-400">
+                        <span class="text-[11px] font-medium">${catLabel}</span>
+                        <button type="button" onclick="StartupFinanceiro.excluirMovimento(${p.id})" class="p-1.5 text-zinc-500 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all" title="Excluir Lançamento">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Linha da tabela para desktop
+            tableRowsHtml += `
                 <tr class="hover:bg-white/[0.02] transition-colors">
-                    <td class="py-3 font-mono text-zinc-300">${formatarData(p.data_pagamento)}</td>
-                    <td class="py-3">
+                    <td class="py-3 px-3 font-mono text-zinc-300 whitespace-nowrap">${formatarData(p.data_pagamento)}</td>
+                    <td class="py-3 px-3 whitespace-nowrap">
                         <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${isEntrada ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}">
                             ${isEntrada ? 'Entrada' : 'Saída'}
                         </span>
                     </td>
-                    <td class="py-3 text-zinc-300 font-medium">${catLabel}</td>
-                    <td class="py-3 font-bold text-white">
-                        <div>${escapeHtml(p.descricao)}</div>
+                    <td class="py-3 px-3 text-zinc-300 font-medium whitespace-nowrap">${catLabel}</td>
+                    <td class="py-3 px-3 font-bold text-white whitespace-nowrap">
+                        <div class="max-w-[200px] truncate" title="${escapeHtml(p.descricao)}">${escapeHtml(p.descricao)}</div>
                         ${p.cliente_nome ? `<span class="text-[10px] text-zinc-500 font-normal">Cliente: ${escapeHtml(p.cliente_nome)}</span>` : ''}
                     </td>
-                    <td class="py-3 font-mono text-zinc-400 uppercase text-[11px]">${escapeHtml(p.metodo_pagamento)}</td>
-                    <td class="py-3 text-right font-black font-mono text-sm ${isEntrada ? 'text-emerald-400' : 'text-red-400'}">
+                    <td class="py-3 px-3 font-mono text-zinc-400 uppercase text-[11px] whitespace-nowrap">${escapeHtml(p.metodo_pagamento)}</td>
+                    <td class="py-3 px-3 text-right font-black font-mono text-sm ${isEntrada ? 'text-emerald-400' : 'text-red-400'} whitespace-nowrap">
                         ${isEntrada ? '+' : '-'} ${formatarMoeda(p.valor)}
                     </td>
-                    <td class="py-3 text-right">
+                    <td class="py-3 px-3 text-right whitespace-nowrap">
                         <button type="button" onclick="StartupFinanceiro.excluirMovimento(${p.id})" class="p-1.5 text-zinc-500 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all" title="Excluir Lançamento">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
@@ -193,6 +212,27 @@ const StartupFinanceiro = (() => {
         });
 
         html += `
+                <!-- Visão Mobile/Minimizada: Cards -->
+                <div class="block lg:hidden space-y-3">
+                    ${cardsHtml}
+                </div>
+
+                <!-- Visão Desktop/Maximizada: Tabela -->
+                <div class="hidden lg:block overflow-x-auto pb-1">
+                    <table class="w-full text-left text-xs min-w-[780px]">
+                        <thead>
+                            <tr class="border-b border-white/10 text-zinc-400 text-[10px] uppercase tracking-wider">
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Data</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Tipo</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Categoria</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Descrição / Cliente</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Método</th>
+                                <th class="pb-3 px-3 font-bold text-right whitespace-nowrap">Valor</th>
+                                <th class="pb-3 px-3 font-bold text-right whitespace-nowrap">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${tableRowsHtml}
                         </tbody>
                     </table>
                 </div>
@@ -221,37 +261,62 @@ const StartupFinanceiro = (() => {
                         <p class="text-xs text-zinc-400">Cobrança ativa e régua de contato para recuperação de crédito.</p>
                     </div>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="border-b border-white/10 text-zinc-400 text-[10px] uppercase tracking-wider">
-                                <th class="pb-3 font-bold">Cliente</th>
-                                <th class="pb-3 font-bold">Mês Ref.</th>
-                                <th class="pb-3 font-bold">Vencimento</th>
-                                <th class="pb-3 font-bold">Dias em Atraso</th>
-                                <th class="pb-3 font-bold">Valor em Aberto</th>
-                                <th class="pb-3 font-bold text-right">Ação de Cobrança</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
         `;
+
+        let cardsInadHtml = '';
+        let tableInadHtml = '';
 
         inadimplentesList.forEach(fat => {
             const diasAtraso = parseInt(fat.dias_atraso || 0);
             const zap = fat.whatsapp ? `https://wa.me/55${fat.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${fat.cliente_nome}, informamos que sua fatura de energia solar ref. ${fat.mes_referencia} no valor de ${formatarMoeda(fat.valor_cobrado)} venceu em ${formatarData(fat.data_vencimento)}. Segue chave PIX para quitação.`)}` : null;
 
-            html += `
+            // Card para telas menores
+            cardsInadHtml += `
+                <div class="rounded-2xl border border-red-500/20 bg-red-500/[0.03] p-4 space-y-3 hover:border-red-500/30 transition-all">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="font-mono font-bold text-xs text-lime-400 bg-lime-400/10 px-2 py-0.5 rounded-md border border-lime-400/20">${fat.mes_referencia}</span>
+                                <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
+                                    ${diasAtraso} dias de atraso
+                                </span>
+                            </div>
+                            <h5 class="font-bold text-sm text-white truncate">${escapeHtml(fat.cliente_nome)}</h5>
+                            <span class="text-[10px] font-mono text-zinc-400">UC: ${escapeHtml(fat.numero_uc || 'Sem UC')}</span>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="text-[9px] uppercase font-bold text-zinc-500 block">Valor em Aberto</span>
+                            <span class="text-base font-black text-red-400 font-mono">${formatarMoeda(fat.valor_cobrado)}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-zinc-400 pt-1">
+                        <span>Vencimento: <strong class="text-zinc-200 font-mono">${formatarData(fat.data_vencimento)}</strong></span>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/5 flex-wrap">
+                        ${zap ? `
+                            <a href="${zap}" target="_blank" class="px-3 py-1.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-1">
+                                <span>💬 Cobrar WhatsApp</span>
+                            </a>
+                        ` : ''}
+                        <button type="button" onclick="StartupFaturamento.marcarComoPaga(${fat.id})" class="px-3 py-1.5 rounded-full bg-lime-400 hover:bg-lime-300 text-black text-xs font-bold transition-all">
+                            Baixar Pagamento
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Linha da tabela
+            tableInadHtml += `
                 <tr class="hover:bg-white/[0.02] transition-colors">
-                    <td class="py-3 font-bold text-white">
+                    <td class="py-3 px-3 font-bold text-white whitespace-nowrap">
                         <div>${escapeHtml(fat.cliente_nome)}</div>
                         <span class="text-[10px] text-zinc-500 font-mono">${escapeHtml(fat.numero_uc || '')}</span>
                     </td>
-                    <td class="py-3 font-mono text-zinc-300">${fat.mes_referencia}</td>
-                    <td class="py-3 font-mono text-red-300 font-bold">${formatarData(fat.data_vencimento)}</td>
-                    <td class="py-3 font-black text-red-400">${diasAtraso} dias de atraso</td>
-                    <td class="py-3 font-black font-mono text-sm text-white">${formatarMoeda(fat.valor_cobrado)}</td>
-                    <td class="py-3 text-right">
+                    <td class="py-3 px-3 font-mono text-zinc-300 whitespace-nowrap">${fat.mes_referencia}</td>
+                    <td class="py-3 px-3 font-mono text-red-300 font-bold whitespace-nowrap">${formatarData(fat.data_vencimento)}</td>
+                    <td class="py-3 px-3 font-black text-red-400 whitespace-nowrap">${diasAtraso} dias de atraso</td>
+                    <td class="py-3 px-3 font-black font-mono text-sm text-white whitespace-nowrap">${formatarMoeda(fat.valor_cobrado)}</td>
+                    <td class="py-3 px-3 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end gap-2">
                             ${zap ? `
                                 <a href="${zap}" target="_blank" class="px-3 py-1.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold transition-all flex items-center gap-1">
@@ -268,6 +333,26 @@ const StartupFinanceiro = (() => {
         });
 
         html += `
+                <!-- Visão Mobile/Minimizada: Cards -->
+                <div class="block lg:hidden space-y-3">
+                    ${cardsInadHtml}
+                </div>
+
+                <!-- Visão Desktop/Maximizada: Tabela -->
+                <div class="hidden lg:block overflow-x-auto pb-1">
+                    <table class="w-full text-left text-xs min-w-[780px]">
+                        <thead>
+                            <tr class="border-b border-white/10 text-zinc-400 text-[10px] uppercase tracking-wider">
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Cliente</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Mês Ref.</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Vencimento</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Dias em Atraso</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Valor em Aberto</th>
+                                <th class="pb-3 px-3 font-bold text-right whitespace-nowrap">Ação de Cobrança</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${tableInadHtml}
                         </tbody>
                     </table>
                 </div>

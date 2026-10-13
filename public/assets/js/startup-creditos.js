@@ -53,7 +53,7 @@ const StartupCreditos = (() => {
 
         let html = `
             <!-- Cards de Resumo de Estoque da Usina -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div class="glass-card rounded-3xl p-5 space-y-1">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] text-zinc-400 uppercase font-bold">Total Gerado (Usina)</span>
@@ -72,7 +72,7 @@ const StartupCreditos = (() => {
                     <p class="text-[10px] text-zinc-500">Alocados para clientes cadastrados</p>
                 </div>
 
-                <div class="glass-card rounded-3xl p-5 space-y-1">
+                <div class="glass-card rounded-3xl p-5 space-y-1 sm:col-span-2 lg:col-span-1">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] text-zinc-400 uppercase font-bold">Saldo Guardado (Estoque)</span>
                         <span class="text-lime-400">📦</span>
@@ -210,29 +210,8 @@ const StartupCreditos = (() => {
                 return;
             }
 
-            let html = `
-                <div class="flex items-center justify-between pb-3 mb-2 flex-wrap gap-2">
-                    <span class="text-[11px] font-bold text-zinc-300">Estoque de Créditos & Previsão por Cliente</span>
-                    <button type="button" onclick="StartupCreditos.openModalAlocacao(${creditoId})" class="px-3 py-1 rounded-full bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 border border-cyan-400/20 text-[11px] font-bold transition-all">
-                        ⚙️ Ajustar Rateio do Mês
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="text-zinc-500 text-[10px] uppercase border-b border-white/5 pb-2">
-                                <th class="pb-2 font-bold">Cliente</th>
-                                <th class="pb-2 font-bold">Propriedades</th>
-                                <th class="pb-2 font-bold">Alocado (kWh)</th>
-                                <th class="pb-2 font-bold">Consumido (kWh)</th>
-                                <th class="pb-2 font-bold">Estoque Guardado</th>
-                                <th class="pb-2 font-bold">Previsão Duração</th>
-                                <th class="pb-2 font-bold text-right">Alerta</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
-            `;
+            let cardsHtml = '';
+            let tableRowsHtml = '';
 
             alocacoes.forEach(a => {
                 const aloc = parseFloat(a.creditos_alocados_kwh || 0);
@@ -241,22 +220,61 @@ const StartupCreditos = (() => {
                 const previsaoMeses = parseFloat(a.previsao_meses || 0);
                 const isBaixo = a.alerta_estoque_baixo;
 
-                html += `
+                // Card para telas menores/minimizadas
+                cardsHtml += `
+                    <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3.5 space-y-2.5">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <h6 class="font-bold text-xs text-white truncate">${escapeHtml(a.cliente_nome)}</h6>
+                                <span class="text-[10px] font-mono text-zinc-500">UC: ${escapeHtml(a.numero_uc || 'Sem UC')} • ${a.qtd_propriedades || 1} un</span>
+                            </div>
+                            <div>
+                                ${isBaixo ? `
+                                    <span class="px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 text-[9px] font-extrabold uppercase animate-pulse">
+                                        ⚠️ Estoque Baixo
+                                    </span>
+                                ` : `
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-bold">
+                                        ✓ Saudável
+                                    </span>
+                                `}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 p-2 rounded-lg bg-black/40 border border-white/5 text-xs font-mono">
+                            <div>
+                                <span class="text-[9px] text-zinc-500 uppercase block font-sans">Alocado / Consumido</span>
+                                <span class="text-cyan-300">${aloc.toLocaleString('pt-BR')} kWh</span>
+                                <span class="text-zinc-500 block text-[10px]">Cons: ${cons.toLocaleString('pt-BR')} kWh</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-zinc-500 uppercase block font-sans">Estoque / Previsão</span>
+                                <span class="text-lime-400 font-bold">${saldo.toLocaleString('pt-BR')} kWh</span>
+                                <span class="block text-[10px] font-sans ${isBaixo ? 'text-red-400 font-bold' : 'text-emerald-400'}">
+                                    ${previsaoMeses >= 90 ? '>3 anos' : `~${previsaoMeses} m`}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Linha da tabela para desktop
+                tableRowsHtml += `
                     <tr class="hover:bg-white/[0.02] transition-colors">
-                        <td class="py-2.5 font-bold text-white">
+                        <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap">
                             <div>${escapeHtml(a.cliente_nome)}</div>
                             <span class="text-[9px] font-mono text-zinc-500">${escapeHtml(a.numero_uc || '')}</span>
                         </td>
-                        <td class="py-2.5 text-amber-400 font-bold">${a.qtd_propriedades || 1} un</td>
-                        <td class="py-2.5 font-mono text-cyan-300">${aloc.toLocaleString('pt-BR')} kWh</td>
-                        <td class="py-2.5 font-mono text-zinc-400">${cons.toLocaleString('pt-BR')} kWh</td>
-                        <td class="py-2.5 font-mono font-bold text-lime-400">${saldo.toLocaleString('pt-BR')} kWh</td>
-                        <td class="py-2.5">
+                        <td class="py-2.5 px-3 text-amber-400 font-bold whitespace-nowrap">${a.qtd_propriedades || 1} un</td>
+                        <td class="py-2.5 px-3 font-mono text-cyan-300 whitespace-nowrap">${aloc.toLocaleString('pt-BR')} kWh</td>
+                        <td class="py-2.5 px-3 font-mono text-zinc-400 whitespace-nowrap">${cons.toLocaleString('pt-BR')} kWh</td>
+                        <td class="py-2.5 px-3 font-mono font-bold text-lime-400 whitespace-nowrap">${saldo.toLocaleString('pt-BR')} kWh</td>
+                        <td class="py-2.5 px-3 whitespace-nowrap">
                             <span class="font-extrabold ${isBaixo ? 'text-red-400' : 'text-emerald-400'}">
                                 ${previsaoMeses >= 90 ? 'Longo Prazo (>3 anos)' : `~${previsaoMeses} ${previsaoMeses === 1 ? 'mês' : 'meses'}`}
                             </span>
                         </td>
-                        <td class="py-2.5 text-right">
+                        <td class="py-2.5 px-3 text-right whitespace-nowrap">
                             ${isBaixo ? `
                                 <span class="px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 text-[9px] font-extrabold uppercase animate-pulse">
                                     ⚠️ Estoque Baixo (< 1 mês)
@@ -271,7 +289,35 @@ const StartupCreditos = (() => {
                 `;
             });
 
-            html += `
+            let html = `
+                <div class="flex items-center justify-between pb-3 mb-2 flex-wrap gap-2">
+                    <span class="text-[11px] font-bold text-zinc-300">Estoque de Créditos & Previsão por Cliente</span>
+                    <button type="button" onclick="StartupCreditos.openModalAlocacao(${creditoId})" class="px-3 py-1 rounded-full bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 border border-cyan-400/20 text-[11px] font-bold transition-all">
+                        ⚙️ Ajustar Rateio do Mês
+                    </button>
+                </div>
+
+                <!-- Visão Mobile/Minimizada: Cards -->
+                <div class="block lg:hidden space-y-2.5">
+                    ${cardsHtml}
+                </div>
+
+                <!-- Visão Desktop/Maximizada: Tabela -->
+                <div class="hidden lg:block overflow-x-auto pb-1">
+                    <table class="w-full text-left text-xs min-w-[780px]">
+                        <thead>
+                            <tr class="text-zinc-500 text-[10px] uppercase border-b border-white/5 pb-2">
+                                <th class="pb-2 px-3 font-bold whitespace-nowrap">Cliente</th>
+                                <th class="pb-2 px-3 font-bold whitespace-nowrap">Propriedades</th>
+                                <th class="pb-2 px-3 font-bold whitespace-nowrap">Alocado (kWh)</th>
+                                <th class="pb-2 px-3 font-bold whitespace-nowrap">Consumido (kWh)</th>
+                                <th class="pb-2 px-3 font-bold whitespace-nowrap">Estoque Guardado</th>
+                                <th class="pb-2 px-3 font-bold whitespace-nowrap">Previsão Duração</th>
+                                <th class="pb-2 px-3 font-bold text-right whitespace-nowrap">Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${tableRowsHtml}
                         </tbody>
                     </table>
                 </div>

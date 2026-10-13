@@ -391,7 +391,7 @@ const StartupFaturamento = (() => {
 
         let html = `
             <!-- Cards de Resumo de Faturamento -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div class="glass-card rounded-3xl p-4 space-y-1">
                     <span class="text-[10px] text-zinc-400 uppercase font-bold">Total Recebido (Pagas)</span>
                     <p class="text-2xl font-black text-emerald-400">${formatarMoeda(totalRecebido)}</p>
@@ -402,66 +402,125 @@ const StartupFaturamento = (() => {
                     <p class="text-2xl font-black text-amber-400">${formatarMoeda(totalPendente)}</p>
                     <p class="text-[10px] text-zinc-500">${pendentes.length} faturas pendentes</p>
                 </div>
-                <div class="glass-card rounded-3xl p-4 space-y-1">
+                <div class="glass-card rounded-3xl p-4 space-y-1 sm:col-span-2 lg:col-span-1">
                     <span class="text-[10px] text-zinc-400 uppercase font-bold">Total de Faturas Emitidas</span>
                     <p class="text-2xl font-black text-white">${totalFaturas}</p>
                     <p class="text-[10px] text-zinc-500">Histórico completo</p>
                 </div>
             </div>
 
-            <!-- Tabela de Faturas -->
+            <!-- Tabela e Cards de Faturas -->
             <div class="glass-card rounded-3xl p-5 space-y-4">
                 <div class="flex items-center justify-between flex-wrap gap-2">
-                    <h4 class="font-extrabold text-sm text-white">Faturas Emitidas</h4>
-                    <span class="text-xs text-zinc-400">${totalFaturas} faturas registradas</span>
+                    <div>
+                        <h4 class="font-extrabold text-sm text-white">Faturas Emitidas</h4>
+                        <span class="text-xs text-zinc-400">${totalFaturas} faturas registradas</span>
+                    </div>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="border-b border-white/10 text-zinc-400 text-[10px] uppercase tracking-wider">
-                                <th class="pb-3 font-bold">Mês Ref.</th>
-                                <th class="pb-3 font-bold">Cliente / UC</th>
-                                <th class="pb-3 font-bold">Consumo / Injetados</th>
-                                <th class="pb-3 font-bold">Valor Energisa</th>
-                                <th class="pb-3 font-bold">Desconto</th>
-                                <th class="pb-3 font-bold">A Pagar (Solar)</th>
-                                <th class="pb-3 font-bold">Vencimento</th>
-                                <th class="pb-3 font-bold">Status</th>
-                                <th class="pb-3 font-bold text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
         `;
+
+        let cardsHtml = '';
+        let tableRowsHtml = '';
 
         faturasList.forEach(fat => {
             const statusBadge = getFaturaStatusBadge(fat.status);
             const isPaga = fat.status === 'paga';
+            const consumoKwh = parseFloat(fat.consumo_kwh || 0).toFixed(0);
+            const creditosInjKwh = parseFloat(fat.creditos_injetados_kwh || 0).toFixed(0);
+            const descPct = parseFloat(fat.desconto_pct || 0).toFixed(0);
 
-            html += `
+            // Card para telas menores/janelas minimizadas
+            cardsHtml += `
+                <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-3 hover:border-white/10 transition-all">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="font-mono font-bold text-xs text-lime-400 bg-lime-400/10 px-2 py-0.5 rounded-md border border-lime-400/20">${fat.mes_referencia}</span>
+                                ${statusBadge}
+                            </div>
+                            <h5 class="font-bold text-sm text-white truncate" title="${escapeHtml(fat.cliente_nome)}">${escapeHtml(fat.cliente_nome)}</h5>
+                            <span class="text-[10px] font-mono text-zinc-400">UC: ${escapeHtml(fat.numero_uc || 'Sem UC')}</span>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="text-[9px] uppercase font-bold text-zinc-500 block">Total a Pagar</span>
+                            <span class="text-base font-black text-white tracking-tight">${formatarMoeda(fat.valor_cobrado)}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-black/40 border border-white/5 text-xs">
+                        <div>
+                            <span class="text-[9px] text-zinc-500 uppercase block font-bold">Consumo / Injetado</span>
+                            <span class="text-zinc-200 font-mono">${consumoKwh} kWh</span>
+                            <span class="text-[10px] text-lime-400 font-mono block font-bold">${creditosInjKwh} kWh inj.</span>
+                        </div>
+                        <div>
+                            <span class="text-[9px] text-zinc-500 uppercase block font-bold">Valor Energisa</span>
+                            <span class="text-zinc-300 font-mono">${formatarMoeda(fat.valor_energisa)}</span>
+                        </div>
+                        <div>
+                            <span class="text-[9px] text-zinc-500 uppercase block font-bold">Desconto Solar</span>
+                            <span class="text-emerald-400 font-mono font-bold">- ${formatarMoeda(fat.valor_desconto)} (${descPct}%)</span>
+                        </div>
+                        <div>
+                            <span class="text-[9px] text-zinc-500 uppercase block font-bold">Vencimento</span>
+                            <span class="text-zinc-200 font-mono">${formatarData(fat.data_vencimento)}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-white/5 text-xs flex-wrap gap-2">
+                        <div>
+                            ${isPaga ? `
+                                <span class="text-[10px] text-zinc-500 font-mono">Pago em ${formatarData(fat.data_pagamento)}</span>
+                            ` : `
+                                <span class="text-[10px] text-amber-400 font-medium flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                    Aguardando pagamento
+                                </span>
+                            `}
+                        </div>
+                        <div class="flex items-center gap-1.5 ml-auto">
+                            ${!isPaga ? `
+                                <button type="button" onclick="StartupFaturamento.marcarComoPaga(${fat.id})" class="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-bold text-xs transition-all flex items-center gap-1" title="Confirmar Pagamento">
+                                    ✓ Paga
+                                </button>
+                            ` : ''}
+                            <button type="button" onclick="StartupFaturamento.verEspelhoFatura(${fat.id})" class="px-2.5 py-1.5 text-zinc-300 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold transition-all flex items-center gap-1" title="Ver Espelho da Fatura">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <span>Espelho</span>
+                            </button>
+                            <button type="button" onclick="StartupFaturamento.excluirFatura(${fat.id})" class="p-1.5 text-zinc-500 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all" title="Excluir Fatura">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Linha da tabela para desktop / tela cheia
+            tableRowsHtml += `
                 <tr class="hover:bg-white/[0.02] transition-colors">
-                    <td class="py-3 font-mono font-bold text-lime-400">${fat.mes_referencia}</td>
-                    <td class="py-3">
-                        <div class="font-bold text-white truncate max-w-[160px]" title="${escapeHtml(fat.cliente_nome)}">${escapeHtml(fat.cliente_nome)}</div>
+                    <td class="py-3 px-3 font-mono font-bold text-lime-400 whitespace-nowrap">${fat.mes_referencia}</td>
+                    <td class="py-3 px-3 whitespace-nowrap">
+                        <div class="font-bold text-white truncate max-w-[180px]" title="${escapeHtml(fat.cliente_nome)}">${escapeHtml(fat.cliente_nome)}</div>
                         <span class="text-[10px] font-mono text-zinc-500">${escapeHtml(fat.numero_uc || 'Sem UC')}</span>
                     </td>
-                    <td class="py-3 text-zinc-300">
-                        <div>${parseFloat(fat.consumo_kwh).toFixed(0)} kWh</div>
-                        <span class="text-[10px] text-lime-400 font-bold">${parseFloat(fat.creditos_injetados_kwh).toFixed(0)} kWh inj.</span>
+                    <td class="py-3 px-3 text-zinc-300 whitespace-nowrap">
+                        <div>${consumoKwh} kWh</div>
+                        <span class="text-[10px] text-lime-400 font-bold">${creditosInjKwh} kWh inj.</span>
                     </td>
-                    <td class="py-3 text-zinc-400">${formatarMoeda(fat.valor_energisa)}</td>
-                    <td class="py-3 text-emerald-400 font-bold">- ${formatarMoeda(fat.valor_desconto)} (${parseFloat(fat.desconto_pct).toFixed(0)}%)</td>
-                    <td class="py-3 text-white font-black text-sm">${formatarMoeda(fat.valor_cobrado)}</td>
-                    <td class="py-3 text-zinc-300">${formatarData(fat.data_vencimento)}</td>
-                    <td class="py-3">${statusBadge}</td>
-                    <td class="py-3 text-right">
+                    <td class="py-3 px-3 text-zinc-400 font-mono whitespace-nowrap">${formatarMoeda(fat.valor_energisa)}</td>
+                    <td class="py-3 px-3 text-emerald-400 font-mono font-bold whitespace-nowrap">- ${formatarMoeda(fat.valor_desconto)} (${descPct}%)</td>
+                    <td class="py-3 px-3 text-white font-mono font-black text-sm whitespace-nowrap">${formatarMoeda(fat.valor_cobrado)}</td>
+                    <td class="py-3 px-3 text-zinc-300 font-mono whitespace-nowrap">${formatarData(fat.data_vencimento)}</td>
+                    <td class="py-3 px-3 whitespace-nowrap">${statusBadge}</td>
+                    <td class="py-3 px-3 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1">
                             ${!isPaga ? `
                                 <button type="button" onclick="StartupFaturamento.marcarComoPaga(${fat.id})" class="px-2.5 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-bold text-[10px] transition-all" title="Confirmar Pagamento">
                                     ✓ Paga
                                 </button>
                             ` : `
-                                <span class="text-[10px] text-zinc-500 px-2 py-1">Pago em ${formatarData(fat.data_pagamento)}</span>
+                                <span class="text-[10px] text-zinc-500 px-2 py-1 font-mono">Pago em ${formatarData(fat.data_pagamento)}</span>
                             `}
                             <button type="button" onclick="StartupFaturamento.verEspelhoFatura(${fat.id})" class="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 transition-all" title="Ver Espelho da Fatura">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
@@ -476,6 +535,29 @@ const StartupFaturamento = (() => {
         });
 
         html += `
+                <!-- Visão Mobile/Minimizada: Cards -->
+                <div class="block lg:hidden space-y-3">
+                    ${cardsHtml}
+                </div>
+
+                <!-- Visão Desktop/Maximizada: Tabela Completa com Scroll Suave -->
+                <div class="hidden lg:block overflow-x-auto pb-1">
+                    <table class="w-full text-left text-xs min-w-[920px]">
+                        <thead>
+                            <tr class="border-b border-white/10 text-zinc-400 text-[10px] uppercase tracking-wider">
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Mês Ref.</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Cliente / UC</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Consumo / Injetados</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Valor Energisa</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Desconto</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">A Pagar (Solar)</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Vencimento</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Status</th>
+                                <th class="pb-3 px-3 font-bold text-right whitespace-nowrap">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${tableRowsHtml}
                         </tbody>
                     </table>
                 </div>
