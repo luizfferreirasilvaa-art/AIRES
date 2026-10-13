@@ -1,5 +1,6 @@
 /**
- * AIRES - Módulo Startup: Faturamento Solar (Robô Emissor + Painel de Controle)
+ * AIRES - Módulo Startup: Faturamento Solar
+ * Robô Emissor em Tempo Real + Fatura Padrão INJETAMT + Painel de Gestão
  * Obsidian Dark Glassmorphism
  */
 
@@ -7,9 +8,25 @@ const StartupFaturamento = (() => {
     let currentTab = 'painel'; // 'painel' ou 'emissao'
     let faturasList = [];
     let clientesList = [];
+    let faturaAtualModal = null; // Dados da fatura aberta no modal para impressão
+
+    const MESES_PT = {
+        '01': 'JANEIRO',
+        '02': 'FEVEREIRO',
+        '03': 'MARÇO',
+        '04': 'ABRIL',
+        '05': 'MAIO',
+        '06': 'JUNHO',
+        '07': 'JULHO',
+        '08': 'AGOSTO',
+        '09': 'SETEMBRO',
+        '10': 'OUTUBRO',
+        '11': 'NOVEMBRO',
+        '12': 'DEZEMBRO'
+    };
 
     function init() {
-        // Eventos são disparados dinamicamente
+        // Inicialização sob demanda
     }
 
     async function load() {
@@ -85,37 +102,52 @@ const StartupFaturamento = (() => {
     }
 
     /* ========================================================
-     * VISTA 1: ROBÔ EMISSOR DE FATURAS
+     * VISTA 1: ROBÔ EMISSOR DE FATURAS + FATURA PADRÃO AO VIVO
      * ======================================================== */
     function renderEmissorRobo(container) {
         const mesAtual = new Date().toISOString().substring(0, 7);
 
         container.innerHTML = `
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                <!-- Formulário de Entrada da Fatura Energisa -->
-                <div class="lg:col-span-7 space-y-4">
-                    <div class="glass-card rounded-3xl p-6 space-y-4">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                
+                <!-- COLUNA ESQUERDA: FORMULÁRIO DO ROBÔ EMISSOR -->
+                <div class="xl:col-span-5 space-y-4">
+                    <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4 border border-lime-400/20">
+                        
+                        <!-- Topo do Card -->
                         <div class="flex items-center justify-between pb-3 border-b border-white/5">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-9 h-9 rounded-2xl bg-lime-400/10 text-lime-400 border border-lime-400/20 flex items-center justify-center text-base">
+                                <div class="w-9 h-9 rounded-2xl bg-lime-400/10 text-lime-400 border border-lime-400/20 flex items-center justify-center text-lg">
                                     🤖
                                 </div>
                                 <div>
                                     <h4 class="font-extrabold text-sm text-white">Robô de Emissão Solar</h4>
-                                    <p class="text-[11px] text-zinc-400">Insira os dados da conta da Energisa para cálculo automático do desconto.</p>
+                                    <p class="text-[11px] text-zinc-400">Preencha os dados para alimentar a fatura ao vivo.</p>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Botão de Ação Rápida: Modelo Exemplar (Ziulmar) -->
+                        <button type="button" onclick="StartupFaturamento.carregarExemplarZiulmar()" class="w-full py-2.5 px-3 bg-gradient-to-r from-lime-400/15 via-emerald-400/15 to-lime-400/15 hover:from-lime-400/25 hover:to-lime-400/25 text-lime-400 border border-lime-400/30 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm group">
+                            <span class="group-hover:rotate-12 transition-transform">⚡</span>
+                            <span>Carregar Dados da Fatura Exemplar (Ziulmar)</span>
+                        </button>
+
                         <form id="form-emissor-fatura" class="space-y-4">
+                            
                             <!-- Cliente e Mês -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
+                                <div class="sm:col-span-2">
                                     <label class="block text-xs font-semibold text-zinc-300 mb-1">Selecione o Cliente *</label>
-                                    <select id="emissao-cliente" required class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400">
+                                    <select id="emissao-cliente" required class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400 transition-colors">
                                         <option value="">Selecione um cliente...</option>
                                         ${clientesList.map(c => `
-                                            <option value="${c.id}" data-desc="${c.desconto_padrao_pct || 15}" data-uc="${escapeHtml(c.numero_uc || '')}">
+                                            <option value="${c.id}" 
+                                                data-nome="${escapeHtml(c.nome)}" 
+                                                data-endereco="${escapeHtml(c.endereco || '')}"
+                                                data-codigo="${escapeHtml(c.cpf_cnpj || '')}" 
+                                                data-uc="${escapeHtml(c.numero_uc || '')}" 
+                                                data-desc="${c.desconto_padrao_pct || 20}">
                                                 ${escapeHtml(c.nome)} (UC: ${escapeHtml(c.numero_uc || 'Sem UC')})
                                             </option>
                                         `).join('')}
@@ -123,126 +155,136 @@ const StartupFaturamento = (() => {
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-zinc-300 mb-1">Mês de Referência *</label>
-                                    <input type="month" id="emissao-mes" required value="${mesAtual}" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400">
+                                    <input type="month" id="emissao-mes" required value="${mesAtual}" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white font-mono focus:outline-none focus:border-lime-400">
                                 </div>
-                            </div>
-
-                            <!-- Dados da Conta Energisa -->
-                            <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
-                                <h5 class="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                                    <span>⚡ Dados Extraídos da Fatura Energisa</span>
-                                </h5>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Consumo Total (kWh) *</label>
-                                        <input type="number" step="0.01" min="0" id="emissao-consumo" required placeholder="Ex: 500.00" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-lime-400">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Créditos Injetados (kWh) *</label>
-                                        <input type="number" step="0.01" min="0" id="emissao-creditos" required placeholder="Ex: 500.00" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-lime-400 font-mono font-bold focus:outline-none focus:border-lime-400">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Iluminação Pública (R$) *</label>
-                                        <input type="number" step="0.01" min="0" id="emissao-iluminacao" required placeholder="Ex: 45.90" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-lime-400">
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Tarifa Média do kWh (R$)</label>
-                                        <input type="number" step="0.0001" min="0.1" id="emissao-tarifa" value="0.9500" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 font-mono focus:outline-none focus:border-lime-400">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Desconto Acordado com Cliente (%)</label>
-                                        <input type="number" step="0.5" min="1" max="100" id="emissao-desconto-pct" value="15" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-emerald-400 font-bold focus:outline-none focus:border-lime-400">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Vencimento e Status -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-zinc-300 mb-1">Data de Vencimento *</label>
-                                    <input type="date" id="emissao-vencimento" required value="${calcularDataVencimentoPadrao()}" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400">
+                                    <input type="date" id="emissao-vencimento" required value="${calcularDataVencimentoPadrao()}" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white font-mono focus:outline-none focus:border-lime-400">
                                 </div>
+                            </div>
+
+                            <!-- Dados Extraídos da Conta Energisa -->
+                            <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
+                                <h5 class="text-[10px] font-extrabold text-lime-400 uppercase tracking-wider flex items-center justify-between">
+                                    <span>⚡ Dados da Fatura Energisa</span>
+                                    <span class="text-zinc-500 font-normal">Calcula em tempo real</span>
+                                </h5>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Consumo (kWh) *</label>
+                                        <input type="number" step="0.01" min="0" id="emissao-consumo" required placeholder="Ex: 465" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-white font-mono font-bold focus:outline-none focus:border-lime-400">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Tarifa Unitária (R$ Unt) *</label>
+                                        <input type="number" step="0.0001" min="0.01" id="emissao-tarifa" required value="1.19" placeholder="Ex: 1.19" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 font-mono focus:outline-none focus:border-lime-400">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Total Consumo (R$) *</label>
+                                        <input type="number" step="0.01" min="0" id="emissao-total-consumo" required placeholder="Ex: 555.25" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-200 font-mono focus:outline-none focus:border-lime-400">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Contrib. Ilum. Pública (R$) *</label>
+                                        <input type="number" step="0.01" min="0" id="emissao-iluminacao" required placeholder="Ex: 26.62" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-lime-400">
+                                    </div>
+                                </div>
+
+                                <div class="pt-1">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-[11px] font-semibold text-zinc-300">Desconto Acordado (%) *</label>
+                                        <span class="text-xs font-black text-emerald-400 font-mono" id="label-desconto-pct">20%</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <input type="range" min="1" max="40" step="0.5" id="emissao-desconto-slider" value="20" class="flex-1 accent-lime-400">
+                                        <input type="number" min="1" max="100" step="0.5" id="emissao-desconto-pct" value="20" class="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-emerald-400 font-mono font-bold text-center focus:outline-none focus:border-lime-400">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção Retrátil: Dados Bancários e Assinatura -->
+                            <details class="group rounded-2xl bg-white/[0.02] border border-white/5 transition-all">
+                                <summary class="px-4 py-2.5 cursor-pointer text-[11px] font-bold text-zinc-400 flex items-center justify-between select-none">
+                                    <span>⚙️ Dados de Pagamento & Assinatura da Fatura</span>
+                                    <span class="group-open:rotate-180 transition-transform">▼</span>
+                                </summary>
+                                <div class="p-4 pt-1 space-y-3 border-t border-white/5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-zinc-400 mb-0.5">Instituição Financeira</label>
+                                            <input type="text" id="emissao-banco" value="NuBank" class="w-full px-2.5 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 focus:outline-none focus:border-lime-400">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-zinc-400 mb-0.5">Boleto ou Chave Pix</label>
+                                            <input type="text" id="emissao-pix" value="60366165000103" class="w-full px-2.5 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 font-mono focus:outline-none focus:border-lime-400">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-zinc-400 mb-0.5">Em Nome de (Favorecido)</label>
+                                            <input type="text" id="emissao-titular" value="Luiz Felipe Ferreira da Silva" class="w-full px-2.5 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 focus:outline-none focus:border-lime-400">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-zinc-400 mb-0.5">Nome do Assinante</label>
+                                            <input type="text" id="emissao-assinante" value="Luiz Felipe Silva" class="w-full px-2.5 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 focus:outline-none focus:border-lime-400">
+                                        </div>
+                                        <div class="sm:col-span-2">
+                                            <label class="block text-[10px] font-semibold text-zinc-400 mb-0.5">Cargo / Título</label>
+                                            <input type="text" id="emissao-cargo" value="Administrator" class="w-full px-2.5 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 focus:outline-none focus:border-lime-400">
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- Status Inicial e Ações -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                                 <div>
-                                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Status Inicial</label>
-                                    <select id="emissao-status" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400">
-                                        <option value="emitida">📄 Emitida (Aguardando envio)</option>
+                                    <label class="block text-[11px] font-semibold text-zinc-300 mb-1">Status Inicial</label>
+                                    <select id="emissao-status" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-lime-400">
+                                        <option value="emitida">📄 Emitida (Aguardando)</option>
                                         <option value="enviada">🚀 Enviada ao Cliente</option>
-                                        <option value="paga">✅ Paga (Recebimento efetuado)</option>
+                                        <option value="paga">✅ Paga (Quitação)</option>
                                         <option value="rascunho">📝 Rascunho</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            <div class="pt-2 flex items-center justify-end gap-3">
-                                <button type="button" onclick="StartupFaturamento.switchTab('painel')" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
-                                    Voltar ao Painel
-                                </button>
-                                <button type="submit" class="px-6 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center gap-1.5 active:scale-95">
-                                    <span>⚡ Gerar & Salvar Fatura</span>
-                                </button>
+                                <div class="flex items-center justify-end gap-2 pt-5">
+                                    <button type="button" onclick="StartupFaturamento.imprimirFaturaAoVivo()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs rounded-full transition-all flex items-center gap-1.5" title="Imprimir ou Salvar PDF">
+                                        <span>🖨️ Imprimir / PDF</span>
+                                    </button>
+                                    <button type="submit" class="px-5 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center gap-1.5 active:scale-95">
+                                        <span>⚡ Emitir & Salvar</span>
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- Preview / Simulador ao Vivo da Fatura -->
-                <div class="lg:col-span-5 space-y-4">
-                    <div class="glass-card rounded-3xl p-6 space-y-4 border border-lime-400/20 bg-gradient-to-b from-[#14141c] to-[#0d0d12]">
-                        <div class="flex items-center justify-between pb-3 border-b border-white/5">
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-lime-400 flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-lime-400 animate-pulse"></span>
-                                Demonstrativo em Tempo Real
+                <!-- COLUNA DIREITA: FATURA PADRÃO INJETAMT (RENDERIZAÇÃO EM TEMPO REAL) -->
+                <div class="xl:col-span-7 space-y-3">
+                    
+                    <!-- Barra de Controle do Preview -->
+                    <div class="flex items-center justify-between flex-wrap gap-2 px-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-lime-400 animate-pulse"></span>
+                                Fatura Padrão INJETAMT (Ao Vivo)
                             </span>
-                            <span class="text-[10px] text-zinc-500 font-mono" id="preview-uc-badge">UC: -</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-lime-400/10 text-lime-400 border border-lime-400/20 font-bold">
+                                Espelho Físico
+                            </span>
                         </div>
-
-                        <!-- Card de Comparação Financeira -->
-                        <div class="space-y-3">
-                            <div class="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-1">
-                                <span class="text-[10px] text-zinc-400 uppercase font-semibold">Valor da Fatura Energisa</span>
-                                <p class="text-xl font-black text-zinc-300" id="preview-valor-energisa">R$ 0,00</p>
-                                <p class="text-[10px] text-zinc-500">Total que o cliente pagaria sem a usina solar</p>
-                            </div>
-
-                            <!-- Pílula de Desconto -->
-                            <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[10px] text-emerald-300 uppercase font-extrabold">Desconto Concedido</span>
-                                    <span class="text-xs font-black text-emerald-400" id="preview-desc-badge">15%</span>
-                                </div>
-                                <p class="text-2xl font-black text-emerald-400" id="preview-valor-desconto">- R$ 0,00</p>
-                                <p class="text-[10px] text-emerald-300/80">Economia real do cliente garantida pela sua usina</p>
-                            </div>
-
-                            <!-- Total a Pagar à Empresa Solar -->
-                            <div class="p-4 rounded-2xl bg-lime-400/10 border border-lime-400/30 space-y-1">
-                                <span class="text-[10px] text-lime-300 uppercase font-black tracking-wider">Valor a Pagar (Fatura Solar)</span>
-                                <p class="text-3xl font-black text-white" id="preview-valor-cobrado">R$ 0,00</p>
-                                <p class="text-[10px] text-zinc-400">Receita bruta da sua empresa com esta unidade</p>
-                            </div>
-                        </div>
-
-                        <!-- Detalhamento dos Componentes -->
-                        <div class="text-[11px] text-zinc-400 space-y-1.5 pt-2 border-t border-white/5">
-                            <div class="flex justify-between">
-                                <span>Consumo Base:</span>
-                                <span class="font-mono text-zinc-200" id="preview-det-consumo">0 kWh</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Créditos Compensados:</span>
-                                <span class="font-mono text-lime-400" id="preview-det-creditos">0 kWh</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Taxa Iluminação Pública:</span>
-                                <span class="font-mono text-zinc-200" id="preview-det-ilum">R$ 0,00</span>
-                            </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="StartupFaturamento.imprimirFaturaAoVivo()" class="px-3.5 py-1.5 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-black text-xs rounded-full shadow-md transition-all flex items-center gap-1.5 active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                <span>Imprimir / Gerar PDF</span>
+                            </button>
                         </div>
                     </div>
+
+                    <!-- Container da Folha Físico-Digital da Fatura Padrão -->
+                    <div id="fatura-padrao-preview-container" class="transition-all">
+                        <!-- O conteúdo é preenchido dinamicamente por recalcularPreview() -->
+                    </div>
                 </div>
+
             </div>
         `;
 
@@ -251,35 +293,80 @@ const StartupFaturamento = (() => {
 
     function bindEmissorEvents() {
         const selectCli = document.getElementById('emissao-cliente');
+        const inputMes = document.getElementById('emissao-mes');
+        const inputVenc = document.getElementById('emissao-vencimento');
         const inputConsumo = document.getElementById('emissao-consumo');
-        const inputCreditos = document.getElementById('emissao-creditos');
-        const inputIlum = document.getElementById('emissao-iluminacao');
         const inputTarifa = document.getElementById('emissao-tarifa');
+        const inputTotalConsumo = document.getElementById('emissao-total-consumo');
+        const inputIlum = document.getElementById('emissao-iluminacao');
         const inputDesc = document.getElementById('emissao-desconto-pct');
+        const sliderDesc = document.getElementById('emissao-desconto-slider');
+        const inputBanco = document.getElementById('emissao-banco');
+        const inputPix = document.getElementById('emissao-pix');
+        const inputTitular = document.getElementById('emissao-titular');
+        const inputAssinante = document.getElementById('emissao-assinante');
+        const inputCargo = document.getElementById('emissao-cargo');
         const form = document.getElementById('form-emissor-fatura');
 
+        // Seleção de cliente auto-preenche dados
         selectCli?.addEventListener('change', () => {
             const opt = selectCli.selectedOptions[0];
-            if (opt) {
-                const desc = opt.dataset.desc;
-                const uc = opt.dataset.uc;
-                if (desc && inputDesc) inputDesc.value = desc;
-                const ucBadge = document.getElementById('preview-uc-badge');
-                if (ucBadge) ucBadge.innerText = `UC: ${uc || '-'}`;
+            if (opt && opt.value) {
+                const desc = parseFloat(opt.dataset.desc || '20');
+                if (inputDesc) inputDesc.value = desc;
+                if (sliderDesc) sliderDesc.value = desc;
+                const lblDesc = document.getElementById('label-desconto-pct');
+                if (lblDesc) lblDesc.innerText = `${desc}%`;
             }
             recalcularPreview();
         });
 
-        [inputConsumo, inputCreditos, inputIlum, inputTarifa, inputDesc].forEach(inp => {
-            inp?.addEventListener('input', recalcularPreview);
+        // Sincronização entre Slider e Input de Desconto
+        sliderDesc?.addEventListener('input', () => {
+            if (inputDesc) inputDesc.value = sliderDesc.value;
+            const lblDesc = document.getElementById('label-desconto-pct');
+            if (lblDesc) lblDesc.innerText = `${sliderDesc.value}%`;
+            recalcularPreview();
         });
 
-        // Quando o consumo muda, se os créditos estiverem vazios, preenche com o consumo
-        inputConsumo?.addEventListener('change', () => {
-            if (inputCreditos && !inputCreditos.value && inputConsumo.value) {
-                inputCreditos.value = inputConsumo.value;
-                recalcularPreview();
+        inputDesc?.addEventListener('input', () => {
+            if (sliderDesc) sliderDesc.value = inputDesc.value;
+            const lblDesc = document.getElementById('label-desconto-pct');
+            if (lblDesc) lblDesc.innerText = `${inputDesc.value}%`;
+            recalcularPreview();
+        });
+
+        // Quando o Consumo ou Tarifa mudam, atualiza o Total do Consumo
+        inputConsumo?.addEventListener('input', () => {
+            const consumo = parseFloat(inputConsumo.value || '0');
+            const tarifa = parseFloat(inputTarifa?.value || '1.19');
+            if (inputTotalConsumo && consumo > 0) {
+                inputTotalConsumo.value = (consumo * tarifa).toFixed(2);
             }
+            recalcularPreview();
+        });
+
+        inputTarifa?.addEventListener('input', () => {
+            const consumo = parseFloat(inputConsumo?.value || '0');
+            const tarifa = parseFloat(inputTarifa.value || '0');
+            if (inputTotalConsumo && consumo > 0 && tarifa > 0) {
+                inputTotalConsumo.value = (consumo * tarifa).toFixed(2);
+            }
+            recalcularPreview();
+        });
+
+        // Quando o Total de Consumo é digitado diretamente, recalcula a tarifa unitária
+        inputTotalConsumo?.addEventListener('input', () => {
+            const consumo = parseFloat(inputConsumo?.value || '0');
+            const total = parseFloat(inputTotalConsumo.value || '0');
+            if (consumo > 0 && total > 0 && inputTarifa) {
+                inputTarifa.value = (total / consumo).toFixed(4);
+            }
+            recalcularPreview();
+        });
+
+        [inputMes, inputVenc, inputIlum, inputBanco, inputPix, inputTitular, inputAssinante, inputCargo].forEach(inp => {
+            inp?.addEventListener('input', recalcularPreview);
         });
 
         form?.addEventListener('submit', async (e) => {
@@ -287,76 +374,381 @@ const StartupFaturamento = (() => {
             await submeterFatura();
         });
 
+        // Tentar carregar cliente Ziulmar por padrão se existir
+        const ziulmarOpt = Array.from(selectCli?.options || []).find(o => o.text.includes('ZIULMAR'));
+        if (ziulmarOpt) {
+            selectCli.value = ziulmarOpt.value;
+            selectCli.dispatchEvent(new Event('change'));
+        }
+
         recalcularPreview();
     }
 
-    function recalcularPreview() {
-        const consumo = parseFloat(document.getElementById('emissao-consumo')?.value || '0');
-        const creditos = parseFloat(document.getElementById('emissao-creditos')?.value || '0');
-        const ilum = parseFloat(document.getElementById('emissao-iluminacao')?.value || '0');
-        const tarifa = parseFloat(document.getElementById('emissao-tarifa')?.value || '0.95');
-        const descPct = parseFloat(document.getElementById('emissao-desconto-pct')?.value || '15');
+    /**
+     * Preenche automaticamente todos os dados com os valores exatos da Fatura Exemplar do usuário
+     */
+    function carregarExemplarZiulmar() {
+        const selectCli = document.getElementById('emissao-cliente');
+        const ziulmarOpt = Array.from(selectCli?.options || []).find(o => o.text.includes('ZIULMAR') || o.value === '5');
+        if (ziulmarOpt && selectCli) {
+            selectCli.value = ziulmarOpt.value;
+        }
 
-        // 1. Valor Energisa original
-        const valorEnergisa = (consumo * tarifa) + ilum;
+        const inputMes = document.getElementById('emissao-mes');
+        const inputVenc = document.getElementById('emissao-vencimento');
+        const inputConsumo = document.getElementById('emissao-consumo');
+        const inputTarifa = document.getElementById('emissao-tarifa');
+        const inputTotalConsumo = document.getElementById('emissao-total-consumo');
+        const inputIlum = document.getElementById('emissao-iluminacao');
+        const inputDesc = document.getElementById('emissao-desconto-pct');
+        const sliderDesc = document.getElementById('emissao-desconto-slider');
+        const lblDesc = document.getElementById('label-desconto-pct');
 
-        // 2. Base dos créditos = créditos injetados consumidos + iluminação pública
-        // Conforme instrução: "irá somar a quantidade consumida de créditos + iluminação publica e dará o desconto em cima do valor da soma"
-        const baseSoma = (creditos * tarifa) + ilum;
-        const valorDesconto = baseSoma * (descPct / 100);
+        if (inputMes) inputMes.value = '2026-08';
+        if (inputVenc) inputVenc.value = '2026-10-21';
+        if (inputConsumo) inputConsumo.value = '465';
+        if (inputTarifa) inputTarifa.value = '1.19';
+        if (inputTotalConsumo) inputTotalConsumo.value = '555.25';
+        if (inputIlum) inputIlum.value = '26.62';
+        if (inputDesc) inputDesc.value = '20';
+        if (sliderDesc) sliderDesc.value = '20';
+        if (lblDesc) lblDesc.innerText = '20%';
 
-        // 3. Valor cobrado pela empresa = Valor Energisa - Desconto
-        const valorCobrado = Math.max(0, valorEnergisa - valorDesconto);
-
-        // Atualizar interface de preview
-        const elEnergisa = document.getElementById('preview-valor-energisa');
-        const elDesconto = document.getElementById('preview-valor-desconto');
-        const elCobrado = document.getElementById('preview-valor-cobrado');
-        const elDescBadge = document.getElementById('preview-desc-badge');
-        const elDetConsumo = document.getElementById('preview-det-consumo');
-        const elDetCreditos = document.getElementById('preview-det-creditos');
-        const elDetIlum = document.getElementById('preview-det-ilum');
-
-        if (elEnergisa) elEnergisa.innerText = formatarMoeda(valorEnergisa);
-        if (elDesconto) elDesconto.innerText = `- ${formatarMoeda(valorDesconto)}`;
-        if (elCobrado) elCobrado.innerText = formatarMoeda(valorCobrado);
-        if (elDescBadge) elDescBadge.innerText = `${descPct.toFixed(0)}%`;
-        if (elDetConsumo) elDetConsumo.innerText = `${consumo.toFixed(1)} kWh`;
-        if (elDetCreditos) elDetCreditos.innerText = `${creditos.toFixed(1)} kWh`;
-        if (elDetIlum) elDetIlum.innerText = formatarMoeda(ilum);
+        recalcularPreview();
+        App.showToast('Dados da fatura exemplar (Ziulmar / Agosto) carregados!', 'success');
     }
 
-    async function submeterFatura() {
-        const clienteId = parseInt(document.getElementById('emissao-cliente')?.value || '0');
-        const mes = document.getElementById('emissao-mes')?.value;
-        const consumo = parseFloat(document.getElementById('emissao-consumo')?.value || '0');
-        const creditos = parseFloat(document.getElementById('emissao-creditos')?.value || '0');
-        const ilum = parseFloat(document.getElementById('emissao-iluminacao')?.value || '0');
-        const tarifa = parseFloat(document.getElementById('emissao-tarifa')?.value || '0.95');
-        const descPct = parseFloat(document.getElementById('emissao-desconto-pct')?.value || '15');
-        const vencimento = document.getElementById('emissao-vencimento')?.value;
-        const status = document.getElementById('emissao-status')?.value || 'emitida';
+    /**
+     * Extrai os dados do formulário atual e calcula todos os totais matematicamente
+     */
+    function extrairDadosFormulario() {
+        const selectCli = document.getElementById('emissao-cliente');
+        const opt = selectCli?.selectedOptions[0];
 
-        if (clienteId <= 0) {
-            App.showToast('Selecione um cliente para emissão.', 'error');
+        const clienteNome = opt?.dataset.nome || (opt?.value ? opt.text.split('(')[0].trim() : 'NOME DO CLIENTE');
+        const endereco = opt?.dataset.endereco || 'RUA OURO PRETO, SN - QD08LT13 - 78550001';
+        const codigoCliente = opt?.dataset.codigo || '1.866.806.017-50';
+        const codigoInstalacao = opt?.dataset.uc || '2077812';
+
+        const mesRef = document.getElementById('emissao-mes')?.value || '2026-08';
+        const vencimento = document.getElementById('emissao-vencimento')?.value || '2026-10-21';
+
+        const consumo = parseFloat(document.getElementById('emissao-consumo')?.value || '0');
+        const tarifa = parseFloat(document.getElementById('emissao-tarifa')?.value || '1.19');
+        let totalConsumo = parseFloat(document.getElementById('emissao-total-consumo')?.value || '0');
+        if (totalConsumo <= 0 && consumo > 0) {
+            totalConsumo = Math.round(consumo * tarifa * 100) / 100;
+        }
+
+        const iluminacao = parseFloat(document.getElementById('emissao-iluminacao')?.value || '0');
+        const descPct = parseFloat(document.getElementById('emissao-desconto-pct')?.value || '20');
+
+        // Matemática da Fatura Padrão INJETAMT:
+        // Sub Total = Total do Consumo kWh + Iluminação Pública
+        const subtotal = Math.round((totalConsumo + iluminacao) * 100) / 100;
+
+        // Desconto = Sub Total * (Desconto % / 100)
+        const valorDesconto = Math.round(subtotal * (descPct / 100) * 100) / 100;
+
+        // Total Final = Sub Total - Desconto
+        const totalCobrado = Math.max(0, Math.round((subtotal - valorDesconto) * 100) / 100);
+
+        const instituicao = document.getElementById('emissao-banco')?.value || 'NuBank';
+        const chavePix = document.getElementById('emissao-pix')?.value || '60366165000103';
+        const titular = document.getElementById('emissao-titular')?.value || 'Luiz Felipe Ferreira da Silva';
+        const assinante = document.getElementById('emissao-assinante')?.value || 'Luiz Felipe Silva';
+        const cargo = document.getElementById('emissao-cargo')?.value || 'Administrator';
+
+        return {
+            cliente_id: parseInt(selectCli?.value || '0'),
+            cliente_nome: clienteNome,
+            endereco: endereco,
+            codigo_cliente: codigoCliente,
+            codigo_instalacao: codigoInstalacao,
+            mes_referencia: mesRef,
+            mes_nome: obterNomeMes(mesRef),
+            data_vencimento: vencimento,
+            consumo_kwh: consumo,
+            tarifa_kwh: tarifa,
+            total_consumo: totalConsumo,
+            iluminacao_publica: iluminacao,
+            subtotal: subtotal,
+            desconto_pct: descPct,
+            valor_desconto: valorDesconto,
+            total_cobrado: totalCobrado,
+            instituicao: instituicao,
+            chave_pix: chavePix,
+            titular_nome: titular,
+            assinatura_nome: assinante,
+            assinatura_cargo: cargo
+        };
+    }
+
+    /**
+     * Recalcula a fatura e atualiza o espelho ao vivo em tempo real
+     */
+    function recalcularPreview() {
+        const dados = extrairDadosFormulario();
+        const containerPreview = document.getElementById('fatura-padrao-preview-container');
+        if (containerPreview) {
+            containerPreview.innerHTML = gerarFaturaPadraoHtml(dados, 'preview-live-sheet');
+        }
+    }
+
+    /**
+     * Gera o código HTML idêntico à Fatura Padrão INJETAMT física do PDF exemplar
+     */
+    function gerarFaturaPadraoHtml(dados, elementId = 'fatura-padrao-sheet') {
+        const vConsumo = formatarMoeda(dados.total_consumo);
+        const vIlum = formatarMoeda(dados.iluminacao_publica);
+        const vSubtotal = formatarMoeda(dados.subtotal);
+        const vDesconto = formatarMoeda(dados.valor_desconto);
+        const vTotal = formatarMoeda(dados.total_cobrado);
+        const vTarifa = formatarMoeda(dados.tarifa_kwh);
+        const dataVencFormatada = formatarData(dados.data_vencimento);
+
+        return `
+            <div id="${elementId}" class="fatura-padrao-sheet bg-[#faf8f4] text-zinc-950 rounded-3xl p-5 sm:p-7 md:p-8 border-2 border-zinc-950 shadow-2xl relative select-text font-sans max-w-[660px] mx-auto transition-all">
+                
+                <!-- Font do Assinante Cursiva -->
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+
+                <!-- 1. BLOCO SUPERIOR: DADOS DO CLIENTE + LOGO INJETAMT + VENCIMENTO + MÊS -->
+                <div class="border-2 border-zinc-950 rounded-2xl p-4 sm:p-5 flex items-start justify-between gap-3 bg-white/40 mb-4 sm:mb-5">
+                    <div class="min-w-0 pr-2">
+                        <h2 class="font-black text-base sm:text-lg text-zinc-950 tracking-tight uppercase leading-snug break-words">
+                            ${escapeHtml(dados.cliente_nome)}
+                        </h2>
+                        <p class="text-[10px] sm:text-[11px] text-zinc-800 font-semibold mt-1 uppercase leading-snug break-words">
+                            ${escapeHtml(dados.endereco)}
+                        </p>
+                    </div>
+
+                    <div class="text-right shrink-0">
+                        <!-- Logo INJETAMT -->
+                        <div class="flex items-center justify-end gap-1.5 mb-2">
+                            <svg class="w-5 h-5 shrink-0" viewBox="0 0 36 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 7C8 2 16 2 22 7C28 12 34 12 36 7" stroke="#06b6d4" stroke-width="2.8" stroke-linecap="round"/>
+                                <path d="M2 13C8 8 16 8 22 13C28 18 34 18 36 13" stroke="#10b981" stroke-width="2.8" stroke-linecap="round"/>
+                            </svg>
+                            <span class="font-black text-xs sm:text-sm tracking-wide text-zinc-950">INJETAMT</span>
+                        </div>
+
+                        <!-- Vencimento -->
+                        <div class="text-[9px] uppercase font-bold text-zinc-800 tracking-wider">VENCIMENTO</div>
+                        <div class="text-xs sm:text-sm font-black text-zinc-950 mb-1 font-mono">${dataVencFormatada}</div>
+
+                        <!-- Mês de Referência -->
+                        <div class="text-[9px] uppercase font-bold text-zinc-800 tracking-wider">MÊS</div>
+                        <div class="text-xs sm:text-sm font-black text-zinc-950 uppercase tracking-wide">${dados.mes_nome}</div>
+                    </div>
+                </div>
+
+                <!-- 2. BLOCO DE IDENTIFICAÇÃO E DESCONTO: CÓDIGO DO CLIENTE, INSTALAÇÃO E BADGE VERDE -->
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center mb-4 sm:mb-5">
+                    <div class="sm:col-span-4 text-left">
+                        <div class="text-[9px] sm:text-[10px] uppercase font-bold text-zinc-800 tracking-wider mb-0.5">CÓDIGO DO CLIENTE</div>
+                        <div class="text-base sm:text-lg font-black text-zinc-950 font-mono tracking-tight break-all">
+                            ${escapeHtml(dados.codigo_cliente)}
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-4 text-left sm:text-center">
+                        <div class="text-[9px] sm:text-[10px] uppercase font-bold text-zinc-800 tracking-wider mb-0.5">CÓDIGO DA INSTALAÇÃO</div>
+                        <div class="text-base sm:text-lg font-black text-zinc-950 font-mono tracking-tight">
+                            ${escapeHtml(dados.codigo_instalacao)}
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-4">
+                        <div class="bg-[#72e342] border-2 border-zinc-950 rounded-2xl py-2 px-3 text-center shadow-sm">
+                            <div class="text-[9px] uppercase font-black text-zinc-950 tracking-wider">DESCONTO</div>
+                            <div class="text-base sm:text-lg font-black text-zinc-950 font-mono tracking-tight">${vDesconto}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. TABELA DE ITENS - CABEÇALHO AMARELO -->
+                <div class="bg-[#ebfa4a] border-2 border-zinc-950 rounded-2xl px-4 sm:px-6 py-2.5 grid grid-cols-12 text-[10px] sm:text-[11px] font-black uppercase text-zinc-950 tracking-wider shadow-sm mb-2.5">
+                    <div class="col-span-5 text-left">DESCRIÇÃO</div>
+                    <div class="col-span-2 text-center">QTD</div>
+                    <div class="col-span-2 text-center">R$ Unt</div>
+                    <div class="col-span-3 text-right">Total</div>
+                </div>
+
+                <!-- 4. TABELA DE ITENS - CORPO BRANCO COM BORDA PRETA -->
+                <div class="border-2 border-zinc-950 rounded-2xl p-4 sm:p-6 bg-white/40 min-h-[160px] flex flex-col justify-start space-y-3.5 mb-4 sm:mb-5">
+                    
+                    <!-- Linha 1: Consumo em kWh -->
+                    <div class="grid grid-cols-12 text-xs font-semibold text-zinc-900 items-center">
+                        <div class="col-span-5 text-left font-medium">Consumo em kWh</div>
+                        <div class="col-span-2 text-center font-mono">${dados.consumo_kwh} kWh</div>
+                        <div class="col-span-2 text-center font-mono">${vTarifa}</div>
+                        <div class="col-span-3 text-right font-mono font-bold">${vConsumo}</div>
+                    </div>
+
+                    <!-- Linha 2: Contrib de Ilum Pub. -->
+                    <div class="grid grid-cols-12 text-xs font-semibold text-zinc-900 items-center">
+                        <div class="col-span-5 text-left font-medium">Contrib de Ilum Pub.</div>
+                        <div class="col-span-2 text-center font-mono">1</div>
+                        <div class="col-span-2 text-center font-mono">-</div>
+                        <div class="col-span-3 text-right font-mono font-bold">${vIlum}</div>
+                    </div>
+
+                </div>
+
+                <!-- 5. BLOCO INFERIOR: PAGAMENTO + ASSINATURA À ESQUERDA | TOTAIS À DIREITA -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                    
+                    <!-- Coluna Esquerda: Informações de pagamento + Assinatura -->
+                    <div class="space-y-3">
+                        <div class="border-2 border-zinc-950 rounded-2xl p-3.5 bg-white/40 space-y-1 text-xs text-zinc-900">
+                            <div class="font-black text-[11px] uppercase tracking-wide text-zinc-950 mb-1.5">Informações de pagamento</div>
+                            <div class="flex items-center gap-1.5"><span class="font-semibold text-zinc-700">Instituição:</span> <span class="font-bold text-zinc-950">${escapeHtml(dados.instituicao)}</span></div>
+                            <div class="flex items-center gap-1.5 flex-wrap"><span class="font-semibold text-zinc-700">Boleto ou Chave Pix:</span> <span class="font-mono font-bold text-zinc-950 select-all">${escapeHtml(dados.chave_pix)}</span></div>
+                            <div class="flex items-center gap-1.5"><span class="font-semibold text-zinc-700">Em Nome de:</span> <span class="font-medium text-zinc-950">${escapeHtml(dados.titular_nome)}</span></div>
+                        </div>
+
+                        <!-- Bloco de Assinatura Cursiva do Administrador -->
+                        <div class="pt-1 text-center flex flex-col items-center justify-center">
+                            <div class="text-3xl text-zinc-950 select-none tracking-wide" style="font-family: 'Dancing Script', 'Brush Script MT', 'Caveat', cursive;">LuizFS</div>
+                            <div class="font-black text-xs text-zinc-950 tracking-tight -mt-1">${escapeHtml(dados.assinatura_nome)}</div>
+                            <div class="text-[10px] text-zinc-600 font-medium">${escapeHtml(dados.assinatura_cargo)}</div>
+                        </div>
+                    </div>
+
+                    <!-- Coluna Direita: Sub Total + Desconto + Total Final Amarelo -->
+                    <div class="space-y-2.5">
+                        <div class="border-2 border-zinc-950 rounded-2xl p-3.5 bg-white/40 space-y-2 text-xs text-zinc-900">
+                            <div class="flex items-center justify-between font-bold">
+                                <span class="text-zinc-800">Sub Total</span>
+                                <span class="font-mono text-zinc-950 font-black">${vSubtotal}</span>
+                            </div>
+                            <div class="flex items-center justify-between font-bold">
+                                <span class="text-zinc-800">Desconto</span>
+                                <span class="font-mono text-zinc-950 font-black">${dados.desconto_pct}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Caixa Total Amarela com Borda Preta Grossa -->
+                        <div class="bg-[#ebfa4a] border-2 border-zinc-950 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
+                            <span class="font-black text-sm uppercase text-zinc-950">Total</span>
+                            <span class="font-black text-lg sm:text-xl font-mono text-zinc-950">${vTotal}</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+    }
+
+    /**
+     * Dispara a impressão limpa ou download em PDF da fatura ao vivo
+     */
+    function imprimirFaturaAoVivo() {
+        const dados = extrairDadosFormulario();
+        imprimirFaturaPadrao(dados);
+    }
+
+    /**
+     * Imprime a fatura atualmente em exibição no modal
+     */
+    function imprimirFaturaModal() {
+        if (!faturaAtualModal) return;
+        imprimirFaturaPadrao(faturaAtualModal);
+    }
+
+    /**
+     * Abre a janela de impressão nativa com estilo A4 limpo e cores preservadas
+     */
+    function imprimirFaturaPadrao(dados) {
+        const htmlFatura = gerarFaturaPadraoHtml(dados, 'fatura-print-target');
+        const win = window.open('', '_blank', 'width=900,height=1100');
+        if (!win) {
+            alert('Por favor, autorize pop-ups para imprimir a fatura.');
             return;
         }
 
+        win.document.write(`
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <title>Fatura Solar INJETAMT - ${dados.cliente_nome} - ${dados.mes_nome}</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+                <style>
+                    @page {
+                        size: A4 portrait;
+                        margin: 10mm;
+                    }
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    body {
+                        background: #ffffff;
+                        margin: 0;
+                        padding: 12px;
+                        font-family: ui-sans-serif, system-ui, sans-serif;
+                    }
+                    .print-wrapper {
+                        max-width: 660px;
+                        margin: 0 auto;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-wrapper">
+                    ${htmlFatura}
+                </div>
+                <script>
+                    window.addEventListener('load', () => {
+                        setTimeout(() => {
+                            window.focus();
+                            window.print();
+                        }, 500);
+                    });
+                </script>
+            </body>
+            </html>
+        `);
+        win.document.close();
+    }
+
+    async function submeterFatura() {
+        const dados = extrairDadosFormulario();
+
+        if (dados.cliente_id <= 0) {
+            App.showToast('Selecione um cliente para emitir a fatura.', 'error');
+            return;
+        }
+
+        const status = document.getElementById('emissao-status')?.value || 'emitida';
+
         const payload = {
-            cliente_id: clienteId,
-            mes_referencia: mes,
-            consumo_kwh: consumo,
-            creditos_injetados_kwh: creditos,
-            iluminacao_publica: ilum,
-            tarifa_kwh: tarifa,
-            desconto_pct: descPct,
-            data_vencimento: vencimento,
+            cliente_id: dados.cliente_id,
+            mes_referencia: dados.mes_referencia,
+            consumo_kwh: dados.consumo_kwh,
+            creditos_injetados_kwh: dados.consumo_kwh,
+            iluminacao_publica: dados.iluminacao_publica,
+            tarifa_kwh: dados.tarifa_kwh,
+            valor_energisa: dados.subtotal,
+            desconto_pct: dados.desconto_pct,
+            valor_desconto: dados.valor_desconto,
+            valor_cobrado: dados.total_cobrado,
+            data_vencimento: dados.data_vencimento,
             status: status
         };
 
         try {
             await API.createStartupFatura(payload);
-            App.showToast('Fatura solar emitida com sucesso!', 'success');
+            App.showToast('Fatura padrão INJETAMT gerada e salva com sucesso!', 'success');
             switchTab('painel');
             load();
         } catch (err) {
@@ -416,6 +808,9 @@ const StartupFaturamento = (() => {
                         <h4 class="font-extrabold text-sm text-white">Faturas Emitidas</h4>
                         <span class="text-xs text-zinc-400">${totalFaturas} faturas registradas</span>
                     </div>
+                    <button type="button" onclick="StartupFaturamento.switchTab('emissao')" class="px-3.5 py-1.5 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-bold text-xs rounded-full shadow-sm transition-all flex items-center gap-1.5">
+                        <span>+ Nova Fatura (Robô)</span>
+                    </button>
                 </div>
         `;
 
@@ -449,12 +844,11 @@ const StartupFaturamento = (() => {
 
                     <div class="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-black/40 border border-white/5 text-xs">
                         <div>
-                            <span class="text-[9px] text-zinc-500 uppercase block font-bold">Consumo / Injetado</span>
+                            <span class="text-[9px] text-zinc-500 uppercase block font-bold">Consumo</span>
                             <span class="text-zinc-200 font-mono">${consumoKwh} kWh</span>
-                            <span class="text-[10px] text-lime-400 font-mono block font-bold">${creditosInjKwh} kWh inj.</span>
                         </div>
                         <div>
-                            <span class="text-[9px] text-zinc-500 uppercase block font-bold">Valor Energisa</span>
+                            <span class="text-[9px] text-zinc-500 uppercase block font-bold">Sub Total</span>
                             <span class="text-zinc-300 font-mono">${formatarMoeda(fat.valor_energisa)}</span>
                         </div>
                         <div>
@@ -484,7 +878,7 @@ const StartupFaturamento = (() => {
                                     ✓ Paga
                                 </button>
                             ` : ''}
-                            <button type="button" onclick="StartupFaturamento.verEspelhoFatura(${fat.id})" class="px-2.5 py-1.5 text-zinc-300 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold transition-all flex items-center gap-1" title="Ver Espelho da Fatura">
+                            <button type="button" onclick="StartupFaturamento.verEspelhoFatura(${fat.id})" class="px-2.5 py-1.5 text-zinc-300 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold transition-all flex items-center gap-1" title="Ver Espelho da Fatura Padrão">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 <span>Espelho</span>
                             </button>
@@ -506,7 +900,6 @@ const StartupFaturamento = (() => {
                     </td>
                     <td class="py-3 px-3 text-zinc-300 whitespace-nowrap">
                         <div>${consumoKwh} kWh</div>
-                        <span class="text-[10px] text-lime-400 font-bold">${creditosInjKwh} kWh inj.</span>
                     </td>
                     <td class="py-3 px-3 text-zinc-400 font-mono whitespace-nowrap">${formatarMoeda(fat.valor_energisa)}</td>
                     <td class="py-3 px-3 text-emerald-400 font-mono font-bold whitespace-nowrap">- ${formatarMoeda(fat.valor_desconto)} (${descPct}%)</td>
@@ -522,7 +915,7 @@ const StartupFaturamento = (() => {
                             ` : `
                                 <span class="text-[10px] text-zinc-500 px-2 py-1 font-mono">Pago em ${formatarData(fat.data_pagamento)}</span>
                             `}
-                            <button type="button" onclick="StartupFaturamento.verEspelhoFatura(${fat.id})" class="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 transition-all" title="Ver Espelho da Fatura">
+                            <button type="button" onclick="StartupFaturamento.verEspelhoFatura(${fat.id})" class="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 transition-all" title="Ver Espelho da Fatura Padrão">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                             </button>
                             <button type="button" onclick="StartupFaturamento.excluirFatura(${fat.id})" class="p-1.5 text-zinc-500 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all" title="Excluir Fatura">
@@ -547,8 +940,8 @@ const StartupFaturamento = (() => {
                             <tr class="border-b border-white/10 text-zinc-400 text-[10px] uppercase tracking-wider">
                                 <th class="pb-3 px-3 font-bold whitespace-nowrap">Mês Ref.</th>
                                 <th class="pb-3 px-3 font-bold whitespace-nowrap">Cliente / UC</th>
-                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Consumo / Injetados</th>
-                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Valor Energisa</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Consumo</th>
+                                <th class="pb-3 px-3 font-bold whitespace-nowrap">Sub Total</th>
                                 <th class="pb-3 px-3 font-bold whitespace-nowrap">Desconto</th>
                                 <th class="pb-3 px-3 font-bold whitespace-nowrap">A Pagar (Solar)</th>
                                 <th class="pb-3 px-3 font-bold whitespace-nowrap">Vencimento</th>
@@ -612,71 +1005,92 @@ const StartupFaturamento = (() => {
         }
     }
 
+    /**
+     * Abre o modal com o espelho oficial idêntico da Fatura Padrão INJETAMT
+     */
     async function verEspelhoFatura(faturaId) {
         try {
             const resp = await API.getStartupFatura(faturaId);
             const fat = resp.fatura;
             if (!fat) return;
 
+            const dadosModal = {
+                cliente_id: fat.cliente_id,
+                cliente_nome: fat.cliente_nome || 'CLIENTE NÃO IDENTIFICADO',
+                endereco: fat.endereco || 'RUA OURO PRETO, SN - QD08LT13 - 78550001',
+                codigo_cliente: fat.cpf_cnpj || '1.866.806.017-50',
+                codigo_instalacao: fat.numero_uc || '2077812',
+                mes_referencia: fat.mes_referencia,
+                mes_nome: obterNomeMes(fat.mes_referencia),
+                data_vencimento: fat.data_vencimento,
+                consumo_kwh: parseFloat(fat.consumo_kwh || 0),
+                tarifa_kwh: parseFloat(fat.tarifa_kwh || 1.19),
+                total_consumo: Math.round(parseFloat(fat.consumo_kwh || 0) * parseFloat(fat.tarifa_kwh || 1.19) * 100) / 100,
+                iluminacao_publica: parseFloat(fat.iluminacao_publica || 0),
+                subtotal: parseFloat(fat.valor_energisa || 0),
+                desconto_pct: parseFloat(fat.desconto_pct || 20),
+                valor_desconto: parseFloat(fat.valor_desconto || 0),
+                total_cobrado: parseFloat(fat.valor_cobrado || 0),
+                instituicao: 'NuBank',
+                chave_pix: '60366165000103',
+                titular_nome: 'Luiz Felipe Ferreira da Silva',
+                assinatura_nome: 'Luiz Felipe Silva',
+                assinatura_cargo: 'Administrator'
+            };
+
+            faturaAtualModal = dadosModal;
+
             const existing = document.getElementById('modal-espelho-fatura');
             if (existing) existing.remove();
 
+            const folhaHtml = gerarFaturaPadraoHtml(dadosModal, 'modal-fatura-sheet');
+
             const modalHtml = `
-                <div id="modal-espelho-fatura" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-                    <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl space-y-5">
-                        <div class="flex items-center justify-between pb-3 border-b border-white/5">
-                            <div>
-                                <span class="text-[10px] font-extrabold text-lime-400 uppercase tracking-wider">Espelho de Cobrança</span>
-                                <h3 class="text-base font-extrabold text-white">Fatura Solar • ${fat.mes_referencia}</h3>
+                <div id="modal-espelho-fatura" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+                    <div class="max-w-3xl w-full my-auto bg-[#121217] border border-white/10 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-4">
+                        
+                        <!-- Barra Superior do Modal -->
+                        <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-extrabold text-white flex items-center gap-1.5">
+                                    <span>📄</span>
+                                    Espelho da Fatura Padrão INJETAMT • ${dadosModal.mes_referencia}
+                                </span>
+                                ${getFaturaStatusBadge(fat.status)}
                             </div>
-                            <button type="button" onclick="document.getElementById('modal-espelho-fatura').remove()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all">
-                                ✕
-                            </button>
-                        </div>
-
-                        <!-- Detalhes do Cliente -->
-                        <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-2 text-xs">
-                            <div class="flex justify-between">
-                                <span class="text-zinc-400">Cliente:</span>
-                                <span class="font-bold text-white">${escapeHtml(fat.cliente_nome)}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-zinc-400">Unidade Consumidora (UC):</span>
-                                <span class="font-mono text-emerald-400 font-bold">${escapeHtml(fat.numero_uc || '-')}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-zinc-400">Vencimento:</span>
-                                <span class="text-zinc-200 font-bold">${formatarData(fat.data_vencimento)}</span>
-                            </div>
-                        </div>
-
-                        <!-- Demonstrativo de Valores -->
-                        <div class="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2.5 text-xs">
-                            <div class="flex justify-between text-zinc-300">
-                                <span>Energisa (Sem Usina Solar):</span>
-                                <span class="font-mono">${formatarMoeda(fat.valor_energisa)}</span>
-                            </div>
-                            <div class="flex justify-between text-emerald-400 font-bold">
-                                <span>Desconto Solar (${parseFloat(fat.desconto_pct).toFixed(0)}%):</span>
-                                <span class="font-mono">- ${formatarMoeda(fat.valor_desconto)}</span>
-                            </div>
-                            <div class="h-px bg-white/10 my-1"></div>
-                            <div class="flex justify-between text-sm font-black text-white">
-                                <span>Valor Líquido a Pagar:</span>
-                                <span class="text-lime-400 font-mono text-base">${formatarMoeda(fat.valor_cobrado)}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-end gap-3 pt-2">
-                            <button type="button" onclick="document.getElementById('modal-espelho-fatura').remove()" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-full transition-all">
-                                Fechar
-                            </button>
-                            ${fat.status !== 'paga' ? `
-                                <button type="button" onclick="StartupFaturamento.marcarComoPaga(${fat.id}); document.getElementById('modal-espelho-fatura').remove();" class="px-5 py-2.5 bg-emerald-400 hover:bg-emerald-300 text-black font-extrabold text-xs rounded-full shadow-lg transition-all">
-                                    Confirmar Recebimento
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="StartupFaturamento.imprimirFaturaModal()" class="px-3.5 py-1.5 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-1.5 active:scale-95">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                    <span>Imprimir / Salvar PDF</span>
                                 </button>
-                            ` : ''}
+                                <button type="button" onclick="document.getElementById('modal-espelho-fatura').remove()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all text-base">
+                                    ✕
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Folha da Fatura Padrão Renderizada -->
+                        <div class="max-h-[75vh] overflow-y-auto pr-1 py-1">
+                            ${folhaHtml}
+                        </div>
+
+                        <!-- Barra Inferior de Ações -->
+                        <div class="flex items-center justify-between gap-3 pt-3 border-t border-white/10 flex-wrap">
+                            <div class="text-xs text-zinc-400">
+                                ${fat.status === 'paga' ? `<span class="text-emerald-400 font-bold">✓ Fatura quitada em ${formatarData(fat.data_pagamento)}</span>` : '<span class="text-amber-400 font-bold">● Aguardando pagamento</span>'}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="document.getElementById('modal-espelho-fatura').remove()" class="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-full transition-all">
+                                    Fechar
+                                </button>
+                                ${fat.status !== 'paga' ? `
+                                    <button type="button" onclick="StartupFaturamento.marcarComoPaga(${fat.id}); document.getElementById('modal-espelho-fatura').remove();" class="px-5 py-2 bg-emerald-400 hover:bg-emerald-300 text-black font-extrabold text-xs rounded-full shadow-lg transition-all">
+                                        Confirmar Pagamento
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             `;
@@ -685,6 +1099,13 @@ const StartupFaturamento = (() => {
         } catch (err) {
             App.showToast(err.message, 'error');
         }
+    }
+
+    function obterNomeMes(mesReferencia) {
+        if (!mesReferencia) return 'MÊS';
+        const parts = mesReferencia.split('-');
+        const mesDigito = parts.length > 1 ? parts[1] : parts[0];
+        return MESES_PT[mesDigito] || mesReferencia.toUpperCase();
     }
 
     function calcularDataVencimentoPadrao() {
@@ -719,6 +1140,10 @@ const StartupFaturamento = (() => {
         load,
         switchTab,
         openEmissaoParaCliente,
+        carregarExemplarZiulmar,
+        recalcularPreview,
+        imprimirFaturaAoVivo,
+        imprimirFaturaModal,
         marcarComoPaga,
         excluirFatura,
         verEspelhoFatura

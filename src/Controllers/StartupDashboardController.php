@@ -64,12 +64,12 @@ final class StartupDashboardController
         $stmtInad = $this->pdo->prepare("
             SELECT 
                 COUNT(*) AS total_faturas,
-                SUM(CASE WHEN status IN ('emitida', 'enviada', 'atrasada') AND data_vencimento < :hoje THEN 1 ELSE 0 END) AS vencidas,
-                SUM(CASE WHEN status IN ('emitida', 'enviada', 'atrasada') AND data_vencimento < :hoje THEN valor_cobrado ELSE 0 END) AS valor_vencido
+                SUM(CASE WHEN status IN ('emitida', 'enviada', 'atrasada') AND data_vencimento < CURDATE() THEN 1 ELSE 0 END) AS vencidas,
+                SUM(CASE WHEN status IN ('emitida', 'enviada', 'atrasada') AND data_vencimento < CURDATE() THEN valor_cobrado ELSE 0 END) AS valor_vencido
             FROM startup_faturas 
             WHERE usuario_id = :uid AND deletado_em IS NULL
         ");
-        $stmtInad->execute(['uid' => $userId, 'hoje' => $hoje]);
+        $stmtInad->execute(['uid' => $userId]);
         $inadData = $stmtInad->fetch(PDO::FETCH_ASSOC);
 
         $totalFaturas = (int)($inadData['total_faturas'] ?? 0);
