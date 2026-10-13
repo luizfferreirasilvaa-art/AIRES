@@ -226,17 +226,37 @@ $compMes = $compromissos_mes ?? [];
                                     </div>
                                     <span class="mode-check-indicator text-lime-400 font-black text-xs">✓</span>
                                 </button>
-                                <?php foreach (($modos ?? []) as $m): ?>
+                                <?php foreach (($modos ?? []) as $m): 
+                                    $mCor = $m['cor'] ?? 'lime';
+                                    $corBadgeMap = [
+                                        'lime' => 'bg-lime-500/15 text-lime-400 border-lime-500/30',
+                                        'purple' => 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+                                        'orange' => 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+                                        'cyan' => 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+                                        'emerald' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                                        'rose' => 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+                                    ];
+                                    $corTextMap = [
+                                        'lime' => 'text-lime-400',
+                                        'purple' => 'text-purple-400',
+                                        'orange' => 'text-orange-400',
+                                        'cyan' => 'text-cyan-400',
+                                        'emerald' => 'text-emerald-400',
+                                        'rose' => 'text-rose-400',
+                                    ];
+                                    $mBadge = $corBadgeMap[$mCor] ?? $corBadgeMap['lime'];
+                                    $mText = $corTextMap[$mCor] ?? $corTextMap['lime'];
+                                ?>
                                     <div class="mode-item-row w-full flex items-center justify-between px-3 py-1.5 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all group">
                                         <button type="button" data-mode-slug="<?= htmlspecialchars($m['slug']) ?>" class="mode-select-btn flex items-center gap-2.5 flex-1 min-w-0 text-left py-0.5">
-                                            <span class="w-7 h-7 rounded-xl bg-white/5 flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform shrink-0"><?= htmlspecialchars($m['icone']) ?></span>
+                                            <span class="w-7 h-7 rounded-xl <?= $mBadge ?> border flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform shrink-0"><?= htmlspecialchars($m['icone']) ?></span>
                                             <div class="min-w-0 truncate">
                                                 <p class="font-bold text-xs text-zinc-200 group-hover:text-white truncate"><?= htmlspecialchars($m['nome']) ?></p>
                                                 <p class="text-[9px] text-zinc-500 truncate">Filtrar por <?= htmlspecialchars($m['nome']) ?></p>
                                             </div>
                                         </button>
                                         <div class="flex items-center gap-1 shrink-0">
-                                            <span class="mode-check-indicator hidden text-lime-400 font-black text-xs mr-1">✓</span>
+                                            <span class="mode-check-indicator hidden <?= $mText ?> font-black text-xs mr-1">✓</span>
                                             <button type="button" class="btn-edit-mode text-zinc-500 hover:text-white p-1 rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" data-mode-id="<?= (int)$m['id'] ?>" title="Editar <?= htmlspecialchars($m['nome']) ?>">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                             </button>
@@ -830,7 +850,7 @@ $compMes = $compromissos_mes ?? [];
             </button>
 
             <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-lime-400/10 text-lime-400 border border-lime-400/20 flex items-center justify-center text-xl">
+                <div id="modal-mode-icon-badge" class="w-11 h-11 rounded-2xl bg-lime-400/10 text-lime-400 border border-lime-400/20 flex items-center justify-center text-xl transition-all">
                     ✨
                 </div>
                 <div>

@@ -150,6 +150,81 @@ const App = (() => {
     /* ========================================================
      * MODOS DE CONTEXTO & FOCO (Trabalho, Pessoal, Empresarial...)
      * ======================================================== */
+    const MODE_THEMES = {
+        lime: {
+            name: 'Lime',
+            btn: 'bg-lime-400 hover:bg-lime-300 text-black shadow-lime-400/25',
+            badge: 'bg-lime-500/15 text-lime-400 border-lime-500/30',
+            border: 'border-lime-500/40',
+            borderFocus: 'focus:border-lime-400/80',
+            glow: 'shadow-lime-500/20',
+            text: 'text-lime-400',
+            dot: 'bg-lime-400',
+            ring: 'ring-lime-400/50',
+            bgSubtle: 'bg-lime-500/10'
+        },
+        purple: {
+            name: 'Purple',
+            btn: 'bg-purple-500 hover:bg-purple-400 text-white shadow-purple-500/25',
+            badge: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+            border: 'border-purple-500/40',
+            borderFocus: 'focus:border-purple-400/80',
+            glow: 'shadow-purple-500/20',
+            text: 'text-purple-400',
+            dot: 'bg-purple-500',
+            ring: 'ring-purple-400/50',
+            bgSubtle: 'bg-purple-500/10'
+        },
+        orange: {
+            name: 'Orange',
+            btn: 'bg-orange-500 hover:bg-orange-400 text-white shadow-orange-500/25',
+            badge: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+            border: 'border-orange-500/40',
+            borderFocus: 'focus:border-orange-400/80',
+            glow: 'shadow-orange-500/20',
+            text: 'text-orange-400',
+            dot: 'bg-orange-500',
+            ring: 'ring-orange-400/50',
+            bgSubtle: 'bg-orange-500/10'
+        },
+        cyan: {
+            name: 'Cyan',
+            btn: 'bg-cyan-400 hover:bg-cyan-300 text-black shadow-cyan-400/25',
+            badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+            border: 'border-cyan-500/40',
+            borderFocus: 'focus:border-cyan-400/80',
+            glow: 'shadow-cyan-400/20',
+            text: 'text-cyan-400',
+            dot: 'bg-cyan-400',
+            ring: 'ring-cyan-400/50',
+            bgSubtle: 'bg-cyan-500/10'
+        },
+        emerald: {
+            name: 'Emerald',
+            btn: 'bg-emerald-400 hover:bg-emerald-300 text-black shadow-emerald-400/25',
+            badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+            border: 'border-emerald-500/40',
+            borderFocus: 'focus:border-emerald-400/80',
+            glow: 'shadow-emerald-400/20',
+            text: 'text-emerald-400',
+            dot: 'bg-emerald-400',
+            ring: 'ring-emerald-400/50',
+            bgSubtle: 'bg-emerald-500/10'
+        },
+        rose: {
+            name: 'Rose',
+            btn: 'bg-rose-500 hover:bg-rose-400 text-white shadow-rose-500/25',
+            badge: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+            border: 'border-rose-500/40',
+            borderFocus: 'focus:border-rose-400/80',
+            glow: 'shadow-rose-500/20',
+            text: 'text-rose-400',
+            dot: 'bg-rose-500',
+            ring: 'ring-rose-400/50',
+            bgSubtle: 'bg-rose-500/10'
+        }
+    };
+
     let activeMode = localStorage.getItem('aires_active_mode') || 'todos';
     let modesList = [];
 
@@ -233,17 +308,18 @@ const App = (() => {
 
         modesList.forEach(m => {
             const isSelected = activeMode === m.slug;
+            const theme = MODE_THEMES[m.cor] || MODE_THEMES.lime;
             html += `
                 <div class="mode-item-row w-full flex items-center justify-between px-3 py-1.5 rounded-2xl text-xs font-semibold hover:bg-white/5 transition-all group ${isSelected ? 'bg-white/10 text-white' : 'text-zinc-300'}">
                     <button type="button" data-mode-slug="${escapeHtml(m.slug)}" class="mode-select-btn flex items-center gap-2.5 flex-1 min-w-0 text-left py-0.5">
-                        <span class="w-7 h-7 rounded-xl bg-white/5 flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform shrink-0">${escapeHtml(m.icone || '🎯')}</span>
+                        <span class="w-7 h-7 rounded-xl ${theme.badge} border flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform shrink-0">${escapeHtml(m.icone || '🎯')}</span>
                         <div class="min-w-0 truncate">
                             <p class="font-bold text-xs ${isSelected ? 'text-white' : 'text-zinc-200 group-hover:text-white'} truncate">${escapeHtml(m.nome)}</p>
                             <p class="text-[9px] text-zinc-500 truncate">${m.tarefas_ativas !== undefined ? `${m.tarefas_ativas} ações ativas` : `Filtrar por ${escapeHtml(m.nome)}`}</p>
                         </div>
                     </button>
                     <div class="flex items-center gap-1 shrink-0">
-                        <span class="mode-check-indicator ${isSelected ? '' : 'hidden'} text-lime-400 font-black text-xs mr-1">✓</span>
+                        <span class="mode-check-indicator ${isSelected ? '' : 'hidden'} ${theme.text} font-black text-xs mr-1">✓</span>
                         <button type="button" class="btn-edit-mode text-zinc-500 hover:text-white p-1 rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" data-mode-id="${m.id}" title="Editar ${escapeHtml(m.nome)}">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </button>
@@ -290,13 +366,23 @@ const App = (() => {
     }
 
     function updateModeSwitcherUI() {
+        const btn = document.getElementById('btn-mode-switcher');
         const label = document.getElementById('mode-active-label');
         const pillDisplay = document.getElementById('mode-pill-display');
         const totalBadge = document.getElementById('mode-badge-total');
 
         if (activeMode === 'todos') {
-            if (label) label.innerText = 'Todos';
-            if (totalBadge) totalBadge.innerText = 'Todos';
+            if (btn) {
+                btn.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/90 hover:bg-zinc-800 border border-white/10 hover:border-white/20 shadow-inner transition-all select-none group';
+            }
+            if (label) {
+                label.innerText = 'Todos';
+                label.className = 'text-[10px] font-extrabold text-zinc-300 hidden sm:inline';
+            }
+            if (totalBadge) {
+                totalBadge.innerText = 'Todos';
+                totalBadge.className = 'text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-white/10 text-lime-400';
+            }
             if (pillDisplay) {
                 pillDisplay.innerHTML = `
                     <span class="w-5 h-5 rounded-full bg-purple-600/80 flex items-center justify-center text-[10px] shadow-sm">💼</span>
@@ -308,12 +394,23 @@ const App = (() => {
             const current = modesList.find(m => m.slug === activeMode);
             const nome = current ? current.nome : activeMode;
             const icone = current ? current.icone : '🎯';
+            const cor = current ? current.cor : 'lime';
+            const theme = MODE_THEMES[cor] || MODE_THEMES.lime;
 
-            if (label) label.innerText = nome;
-            if (totalBadge) totalBadge.innerText = nome;
+            if (btn) {
+                btn.className = `flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/90 hover:bg-zinc-800 border ${theme.border} shadow-sm ${theme.glow} transition-all select-none group`;
+            }
+            if (label) {
+                label.innerText = nome;
+                label.className = `text-[10px] font-extrabold ${theme.text} hidden sm:inline`;
+            }
+            if (totalBadge) {
+                totalBadge.innerText = nome;
+                totalBadge.className = `text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${theme.badge}`;
+            }
             if (pillDisplay) {
                 pillDisplay.innerHTML = `
-                    <span class="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] shadow-sm ring-1 ring-white/20">${icone}</span>
+                    <span class="w-5 h-5 rounded-full ${theme.badge} border flex items-center justify-center text-[11px] shadow-sm">${icone}</span>
                 `;
             }
         }
@@ -341,24 +438,41 @@ const App = (() => {
         const nome = found ? found.nome : slug;
         const icone = found ? found.icone : (slug === 'trabalho' ? '💼' : slug === 'pessoal' ? '👤' : slug === 'empresarial' ? '🏢' : '🎯');
         const cor = found ? found.cor : 'lime';
-
-        const colorClasses = {
-            lime: 'bg-lime-500/10 text-lime-400 border-lime-500/20',
-            purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-            orange: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-            cyan: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-            emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-            rose: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-        };
-
-        const badgeClass = colorClasses[cor] || colorClasses.lime;
+        const theme = MODE_THEMES[cor] || MODE_THEMES.lime;
 
         return `
-            <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}" title="Modo: ${escapeHtml(nome)}">
+            <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${theme.badge}" title="Modo: ${escapeHtml(nome)}">
                 <span>${icone}</span>
                 <span>${escapeHtml(nome)}</span>
             </span>
         `;
+    }
+
+    function applyModalThemeColor(color, emoji = null) {
+        const theme = MODE_THEMES[color] || MODE_THEMES.lime;
+
+        const iconBadge = document.getElementById('modal-mode-icon-badge');
+        if (iconBadge) {
+            iconBadge.className = `w-11 h-11 rounded-2xl flex items-center justify-center text-xl transition-all border ${theme.badge}`;
+            if (emoji !== null) {
+                iconBadge.innerText = emoji;
+            }
+        }
+
+        const submitBtn = document.getElementById('btn-submit-create-mode');
+        if (submitBtn) {
+            submitBtn.className = `px-5 py-2 font-extrabold text-xs rounded-full shadow-lg transition-all ${theme.btn}`;
+        }
+
+        const iconInput = document.getElementById('new-mode-icone');
+        if (iconInput) {
+            iconInput.className = `w-14 text-center py-2 bg-zinc-900 border rounded-2xl text-lg transition-all focus:outline-none ${theme.border} ${theme.bgSubtle} ${theme.borderFocus}`;
+        }
+
+        const nameInput = document.getElementById('new-mode-nome');
+        if (nameInput) {
+            nameInput.className = `w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 placeholder-zinc-500 focus:outline-none text-xs transition-all ${theme.borderFocus}`;
+        }
     }
 
     function setupCreateModeModal() {
@@ -379,9 +493,30 @@ const App = (() => {
         btnClose?.addEventListener('click', closeCreateModeModal);
         btnCancel?.addEventListener('click', closeCreateModeModal);
 
+        // Ouvir mudanças nos rádios de cor temática para alterar o modal em tempo real
+        document.querySelectorAll('input[name="new-mode-cor"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    applyModalThemeColor(e.target.value);
+                }
+            });
+        });
+
+        // Digitação no input de emoji atualiza o badge do header do modal
+        iconInput?.addEventListener('input', () => {
+            const iconBadge = document.getElementById('modal-mode-icon-badge');
+            if (iconBadge && iconInput.value.trim()) {
+                iconBadge.innerText = iconInput.value.trim();
+            }
+        });
+
         document.querySelectorAll('.mode-emoji-opt').forEach(opt => {
             opt.addEventListener('click', () => {
-                if (iconInput) iconInput.value = opt.dataset.emoji;
+                if (iconInput) {
+                    iconInput.value = opt.dataset.emoji;
+                    const iconBadge = document.getElementById('modal-mode-icon-badge');
+                    if (iconBadge) iconBadge.innerText = opt.dataset.emoji;
+                }
             });
         });
 
@@ -489,6 +624,8 @@ const App = (() => {
         const limeRadio = document.querySelector('input[name="new-mode-cor"][value="lime"]');
         if (limeRadio) limeRadio.checked = true;
 
+        applyModalThemeColor('lime', '✨');
+
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -529,8 +666,11 @@ const App = (() => {
             }
         }
 
-        const colorRadio = document.querySelector(`input[name="new-mode-cor"][value="${mode.cor}"]`);
+        const cor = mode.cor || 'lime';
+        const colorRadio = document.querySelector(`input[name="new-mode-cor"][value="${cor}"]`);
         if (colorRadio) colorRadio.checked = true;
+
+        applyModalThemeColor(cor, mode.icone || '🎯');
 
         if (modal) {
             modal.classList.remove('hidden');
