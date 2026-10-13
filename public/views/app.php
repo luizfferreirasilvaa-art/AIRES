@@ -60,8 +60,8 @@ $compMes = $compromissos_mes ?? [];
          ======================================================== -->
     <aside id="app-sidebar" class="hidden md:flex flex-col w-64 border-r border-white/5 bg-[#0b0b0e]/80 backdrop-blur-2xl p-5 sticky top-0 h-screen z-30 justify-between select-none">
         <div class="space-y-5">
-            <!-- Brand & Toggle Collapse -->
-            <div class="sidebar-brand-wrapper flex items-center justify-between px-1 py-1">
+            <!-- Brand -->
+            <div class="sidebar-brand-wrapper flex items-center px-1 py-1">
                 <div class="flex items-center gap-3 sidebar-brand-info min-w-0">
                     <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 via-purple-600 to-indigo-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-orange-500/20 shrink-0">
                         A
@@ -74,9 +74,6 @@ $compMes = $compromissos_mes ?? [];
                         <p class="text-[10px] text-zinc-400 font-medium whitespace-nowrap truncate">Segundo Cérebro • v1.0</p>
                     </div>
                 </div>
-                <button type="button" id="btn-toggle-sidebar" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all shrink-0 cursor-pointer" title="Recolher barra lateral">
-                    <svg class="w-4 h-4 sidebar-collapse-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
-                </button>
             </div>
 
             <!-- New Task Button -->
@@ -184,29 +181,33 @@ $compMes = $compromissos_mes ?? [];
             
             <!-- Top Status Bar: User Greeting + Multi-Icon Group + Streak -->
             <div class="flex items-center justify-between gap-4 mb-4">
-                <!-- User Profile / Greeting with Dropdown Trigger -->
-                <div class="relative" id="user-menu-wrapper">
-                    <button type="button" id="btn-user-menu" class="flex items-center gap-2.5 px-2.5 py-1.5 -ml-2 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-left group select-none">
-                        <div class="relative">
-                            <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-purple-500 via-orange-400 to-amber-300 p-0.5 shadow-md shadow-orange-500/10">
-                                <div class="w-full h-full rounded-full bg-[#121216] flex items-center justify-center font-bold text-xs text-white">
-                                    ⚡
-                                </div>
-                            </div>
-                            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-lime-400 ring-2 ring-[#070709]"></span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div>
-                                <h2 class="text-sm md:text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
-                                    Olá, <span id="header-user-name"><?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Administrador') ?></span>
-                                </h2>
-                            </div>
-                            <!-- Seta para baixo (Chevron Down) -->
-                            <svg id="user-menu-chevron" class="w-4 h-4 text-zinc-400 group-hover:text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </div>
+                <!-- User Profile / Greeting with Dropdown Trigger & Sidebar Toggle -->
+                <div class="flex items-center gap-2 -ml-2">
+                    <button type="button" id="btn-toggle-sidebar" class="hidden md:flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-white/[0.04] hover:bg-white/10 border border-white/5 hover:border-white/15 text-zinc-400 hover:text-white transition-all shrink-0 cursor-pointer shadow-sm group select-none" title="Recolher barra lateral">
+                        <svg class="w-4 h-4 sidebar-collapse-icon text-zinc-400 group-hover:text-lime-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
                     </button>
+                    <div class="relative" id="user-menu-wrapper">
+                        <button type="button" id="btn-user-menu" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-left group select-none">
+                            <div class="relative">
+                                <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-purple-500 via-orange-400 to-amber-300 p-0.5 shadow-md shadow-orange-500/10">
+                                    <div class="w-full h-full rounded-full bg-[#121216] flex items-center justify-center font-bold text-xs text-white">
+                                        ⚡
+                                    </div>
+                                </div>
+                                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-lime-400 ring-2 ring-[#070709]"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div>
+                                    <h2 class="text-sm md:text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
+                                        Olá, <span id="header-user-name"><?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Administrador') ?></span>
+                                    </h2>
+                                </div>
+                                <!-- Seta para baixo (Chevron Down) -->
+                                <svg id="user-menu-chevron" class="w-4 h-4 text-zinc-400 group-hover:text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </button>
 
                     <!-- Pierre Glassmorphism Dropdown Menu -->
                     <div id="user-dropdown-menu" class="hidden absolute left-0 top-full mt-2 w-64 rounded-3xl bg-[#121217]/95 border border-white/10 shadow-2xl backdrop-blur-2xl p-2 z-50">
@@ -240,6 +241,7 @@ $compMes = $compromissos_mes ?? [];
                             </div>
                         </a>
                     </div>
+                </div>
                 </div>
 
                 <!-- Right Micro Badges: Category Dots + Streak + XP -->

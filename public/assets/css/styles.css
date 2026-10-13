@@ -232,9 +232,16 @@ html.sidebar-init-collapsed #app-sidebar .sidebar-btn-new-task {
 
 #app-sidebar.sidebar-collapsed .sidebar-brand-wrapper,
 html.sidebar-init-collapsed #app-sidebar .sidebar-brand-wrapper {
-    flex-direction: column !important;
+    justify-content: center !important;
     align-items: center !important;
-    gap: 0.5rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-brand-info,
+html.sidebar-init-collapsed #app-sidebar .sidebar-brand-info {
+    justify-content: center !important;
+    width: 100% !important;
 }
 
 #app-sidebar.sidebar-collapsed .sidebar-gamification,

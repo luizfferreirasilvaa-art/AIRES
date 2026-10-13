@@ -67,11 +67,19 @@ const App = (() => {
         if (collapsed) {
             sidebar.classList.add('sidebar-collapsed');
             document.documentElement.classList.add('sidebar-init-collapsed');
-            if (btnToggle) btnToggle.title = 'Expandir barra lateral';
+            if (btnToggle) {
+                btnToggle.title = 'Expandir barra lateral';
+                btnToggle.classList.add('bg-white/10', 'text-lime-400');
+                btnToggle.classList.remove('text-zinc-400');
+            }
         } else {
             sidebar.classList.remove('sidebar-collapsed');
             document.documentElement.classList.remove('sidebar-init-collapsed');
-            if (btnToggle) btnToggle.title = 'Recolher barra lateral';
+            if (btnToggle) {
+                btnToggle.title = 'Recolher barra lateral';
+                btnToggle.classList.remove('bg-white/10', 'text-lime-400');
+                btnToggle.classList.add('text-zinc-400');
+            }
         }
 
         if (save) {
