@@ -958,7 +958,7 @@ const App = (() => {
             if (notas.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full p-12 text-center border border-dashed border-white/10 rounded-3xl">
-                        <p class="text-zinc-500 text-xs">Nenhuma anotação Zettelkasten registrada.</p>
+                        <p class="text-zinc-500 text-xs">Nenhuma anotação registrada.</p>
                         <button type="button" class="mt-3 px-5 py-2.5 bg-white text-zinc-950 font-bold text-xs rounded-full shadow-lg" onclick="App.openNoteModal()">
                             + Registrar Nota
                         </button>
