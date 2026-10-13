@@ -10,6 +10,7 @@ const App = (() => {
 
     function init() {
         try { initNavigation(); } catch (e) { console.error('initNavigation erro:', e); }
+        try { initSidebarCollapse(); } catch (e) { console.error('initSidebarCollapse erro:', e); }
         try { initUserMenu(); } catch (e) { console.error('initUserMenu erro:', e); }
         try { initModeSwitcher(); } catch (e) { console.error('initModeSwitcher erro:', e); }
         try { initTaskViewSwitcher(); } catch (e) { console.error('initTaskViewSwitcher erro:', e); }
@@ -29,6 +30,47 @@ const App = (() => {
 
         // Checagem imediata de alertas
         try { checkAlerts(); } catch (e) { console.error('checkAlerts erro:', e); }
+    }
+
+    /* ========================================================
+     * RECOLHER / EXPANDIR BARRA LATERAL (Mini Icons Mode)
+     * ======================================================== */
+    function initSidebarCollapse() {
+        const sidebar = document.getElementById('app-sidebar');
+        const btnToggle = document.getElementById('btn-toggle-sidebar');
+        if (!sidebar) return;
+
+        // Recuperar preferência salva no localStorage
+        const isCollapsed = localStorage.getItem('aires_sidebar_collapsed') === 'true';
+        if (isCollapsed) {
+            setSidebarCollapsed(true, false);
+        }
+
+        btnToggle?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currentlyCollapsed = sidebar.classList.contains('sidebar-collapsed');
+            setSidebarCollapsed(!currentlyCollapsed, true);
+        });
+    }
+
+    function setSidebarCollapsed(collapsed, save = true) {
+        const sidebar = document.getElementById('app-sidebar');
+        const btnToggle = document.getElementById('btn-toggle-sidebar');
+        if (!sidebar) return;
+
+        if (collapsed) {
+            sidebar.classList.add('sidebar-collapsed');
+            document.documentElement.classList.add('sidebar-init-collapsed');
+            if (btnToggle) btnToggle.title = 'Expandir barra lateral';
+        } else {
+            sidebar.classList.remove('sidebar-collapsed');
+            document.documentElement.classList.remove('sidebar-init-collapsed');
+            if (btnToggle) btnToggle.title = 'Recolher barra lateral';
+        }
+
+        if (save) {
+            localStorage.setItem('aires_sidebar_collapsed', collapsed ? 'true' : 'false');
+        }
     }
 
     /* ========================================================

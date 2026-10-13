@@ -47,84 +47,100 @@ $compMes = $compromissos_mes ?? [];
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/styles.css">
+    <script>
+        if (localStorage.getItem('aires_sidebar_collapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-init-collapsed');
+        }
+    </script>
 </head>
 <body class="bg-[#070709] text-zinc-100 min-h-screen flex flex-col md:flex-row antialiased selection:bg-lime-400 selection:text-black">
 
     <!-- ========================================================
          DESKTOP SIDEBAR (Sleek Obsidian Dock)
          ======================================================== -->
-    <aside class="hidden md:flex flex-col w-64 border-r border-white/5 bg-[#0b0b0e]/80 backdrop-blur-2xl p-5 sticky top-0 h-screen z-30 justify-between">
-        <div class="space-y-6">
-            <!-- Brand -->
-            <div class="flex items-center gap-3 px-1 py-1">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 via-purple-600 to-indigo-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-orange-500/20">
-                    A
+    <aside id="app-sidebar" class="hidden md:flex flex-col w-64 border-r border-white/5 bg-[#0b0b0e]/80 backdrop-blur-2xl p-5 sticky top-0 h-screen z-30 justify-between select-none">
+        <div class="space-y-5">
+            <!-- Brand & Toggle Collapse -->
+            <div class="sidebar-brand-wrapper flex items-center justify-between px-1 py-1">
+                <div class="flex items-center gap-3 sidebar-brand-info min-w-0">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 via-purple-600 to-indigo-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-orange-500/20 shrink-0">
+                        A
+                    </div>
+                    <div class="sidebar-text-collapsible overflow-hidden transition-all min-w-0">
+                        <h1 class="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5 whitespace-nowrap">
+                            AIRES
+                            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-lime-400/20 text-lime-400 font-bold uppercase tracking-wider">PRO</span>
+                        </h1>
+                        <p class="text-[10px] text-zinc-400 font-medium whitespace-nowrap truncate">Segundo Cérebro • v1.0</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
-                        AIRES
-                        <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-lime-400/20 text-lime-400 font-bold uppercase tracking-wider">PRO</span>
-                    </h1>
-                    <p class="text-[10px] text-zinc-400 font-medium">Segundo Cérebro • v1.0</p>
-                </div>
+                <button type="button" id="btn-toggle-sidebar" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all shrink-0 cursor-pointer" title="Recolher barra lateral">
+                    <svg class="w-4 h-4 sidebar-collapse-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                </button>
             </div>
 
             <!-- New Task Button -->
-            <button type="button" id="btn-desktop-new-task" class="w-full py-3 px-4 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs shadow-lg shadow-white/10 flex items-center justify-center gap-2 transition-all active:scale-95">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                <span>Criar Ação</span>
+            <button type="button" id="btn-desktop-new-task" class="sidebar-btn-new-task w-full py-3 px-4 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs shadow-lg shadow-white/10 flex items-center justify-center gap-2 transition-all active:scale-95" title="Criar Ação">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                <span class="sidebar-text-collapsible">Criar Ação</span>
             </button>
 
             <!-- Navigation Links -->
             <nav class="space-y-1">
                 <!-- Geral -->
-                <button type="button" data-nav-section="inicio" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all nav-active text-white bg-white/10 shadow-sm border border-white/5">
-                    <svg class="w-4 h-4 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                    <span>Início</span>
+                <button type="button" data-nav-section="inicio" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all nav-active text-white bg-white/10 shadow-sm border border-white/5" title="Início">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="sidebar-text-collapsible">Início</span>
                 </button>
 
                 <!-- Módulo: Produtividade -->
-                <div class="pt-3 pb-1 px-3 flex items-center gap-2 select-none">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Produtividade</span>
-                    <div class="h-px bg-white/5 flex-1"></div>
+                <div class="sidebar-section-header pt-3 pb-1 px-3 flex items-center gap-2 select-none">
+                    <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Produtividade</span>
+                    <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
                 </div>
-                <button type="button" data-nav-section="tarefas" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
-                    <svg class="w-4 h-4 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    <span>Execução & Tarefas</span>
+                <button type="button" data-nav-section="tarefas" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Execução & Tarefas">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <span class="sidebar-text-collapsible">Execução & Tarefas</span>
                 </button>
-                <button type="button" data-nav-section="missoes" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
-                    <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    <span>Missões Estratégicas</span>
+                <button type="button" data-nav-section="missoes" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Missões Estratégicas">
+                    <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span class="sidebar-text-collapsible">Missões Estratégicas</span>
                 </button>
-                <button type="button" data-nav-section="dashboard" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
-                    <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    <span>Produtividade & Foco</span>
+                <button type="button" data-nav-section="dashboard" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Produtividade & Foco">
+                    <svg class="w-4 h-4 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span class="sidebar-text-collapsible">Produtividade & Foco</span>
                 </button>
 
                 <!-- Módulo: Conhecimento -->
-                <div class="pt-3 pb-1 px-3 flex items-center gap-2 select-none">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Conhecimento</span>
-                    <div class="h-px bg-white/5 flex-1"></div>
+                <div class="sidebar-section-header pt-3 pb-1 px-3 flex items-center gap-2 select-none">
+                    <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Conhecimento</span>
+                    <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
                 </div>
-                <button type="button" data-nav-section="notas" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
-                    <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    <span>Notas</span>
+                <button type="button" data-nav-section="notas" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Notas">
+                    <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span class="sidebar-text-collapsible">Notas</span>
                 </button>
             </nav>
         </div>
 
         <!-- Gamification Capsule Bottom -->
-        <div class="p-3.5 rounded-3xl bg-zinc-900/60 border border-white/5 space-y-2">
-            <div class="flex items-center justify-between text-xs">
+        <div class="sidebar-gamification p-3.5 rounded-3xl bg-zinc-900/60 border border-white/5 space-y-2 transition-all" title="Nível <?= $level ?> • <?= $userStreak ?> dias de foco • <?= $userXp ?> XP">
+            <div class="sidebar-text-collapsible flex items-center justify-between text-xs">
                 <span class="font-bold flex items-center gap-1.5 text-orange-400">
                     🔥 <span id="stat-streak"><?= $userStreak ?> dias</span>
                 </span>
                 <span class="font-extrabold text-lime-400" id="stat-xp"><?= $userXp ?> XP</span>
             </div>
-            <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+            <div class="sidebar-text-collapsible w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                 <div id="level-progress-bar" class="bg-gradient-to-r from-orange-500 via-amber-400 to-lime-400 h-1.5 rounded-full transition-all" style="width: <?= $xpInLevel ?>%"></div>
             </div>
-            <p id="level-text" class="text-[10px] text-zinc-500 text-center font-medium">Nível <?= $level ?> • <?= $xpToNext ?> XP para o Nível <?= $level + 1 ?></p>
+            <p id="level-text" class="sidebar-text-collapsible text-[10px] text-zinc-500 text-center font-medium">Nível <?= $level ?> • <?= $xpToNext ?> XP para o Nível <?= $level + 1 ?></p>
+
+            <!-- Versão recolhida (mini) -->
+            <div class="sidebar-gamification-mini hidden flex-col items-center justify-center gap-0.5 py-1">
+                <span class="text-base leading-none">🔥</span>
+                <span class="text-[10px] font-black text-orange-400"><?= $userStreak ?>d</span>
+            </div>
         </div>
     </aside>
 

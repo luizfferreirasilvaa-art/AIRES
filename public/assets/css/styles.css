@@ -164,3 +164,87 @@ body {
 .safe-bottom {
     padding-bottom: max(var(--sab), 16px);
 }
+
+/* ========================================================
+   Sidebar Collapsed Mode (Mini Icons Only)
+   ======================================================== */
+#app-sidebar {
+    transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), padding 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#app-sidebar.sidebar-collapsed,
+html.sidebar-init-collapsed #app-sidebar {
+    width: 4.75rem !important; /* ~76px */
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-text-collapsible,
+html.sidebar-init-collapsed #app-sidebar .sidebar-text-collapsible {
+    display: none !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-header-divider,
+html.sidebar-init-collapsed #app-sidebar .sidebar-header-divider {
+    display: none !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-section-header,
+html.sidebar-init-collapsed #app-sidebar .sidebar-section-header {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.25rem !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-section-header::after,
+html.sidebar-init-collapsed #app-sidebar .sidebar-section-header::after {
+    content: '';
+    display: block;
+    width: 1.5rem;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 0.125rem auto;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-nav-btn,
+html.sidebar-init-collapsed #app-sidebar .sidebar-nav-btn {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    border-radius: 1rem !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-btn-new-task,
+html.sidebar-init-collapsed #app-sidebar .sidebar-btn-new-task {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    padding: 0 !important;
+    border-radius: 1rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-brand-wrapper,
+html.sidebar-init-collapsed #app-sidebar .sidebar-brand-wrapper {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-gamification,
+html.sidebar-init-collapsed #app-sidebar .sidebar-gamification {
+    padding: 0.5rem 0.25rem !important;
+    border-radius: 1.25rem !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-gamification-mini,
+html.sidebar-init-collapsed #app-sidebar .sidebar-gamification-mini {
+    display: flex !important;
+}
+
