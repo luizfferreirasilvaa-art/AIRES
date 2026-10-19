@@ -153,6 +153,7 @@ $router->get('/api/startup/creditos/{id}', [StartupCreditoController::class, 'sh
 $router->put('/api/startup/creditos/{id}', [StartupCreditoController::class, 'update']);
 $router->get('/api/startup/creditos/{id}/alocacoes', [StartupCreditoController::class, 'alocacoes']);
 $router->post('/api/startup/creditos/{id}/alocar', [StartupCreditoController::class, 'alocar']);
+$router->delete('/api/startup/creditos/{id}', [StartupCreditoController::class, 'destroy']);
 
 // Financeiro
 $router->get('/api/startup/financeiro', [StartupFinanceiroController::class, 'index']);

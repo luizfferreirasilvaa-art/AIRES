@@ -147,6 +147,14 @@ const StartupCreditos = (() => {
                                 <span class="text-[10px] text-zinc-500 uppercase block font-sans">Saldo</span>
                                 <span class="text-lime-400 font-bold">${saldo.toLocaleString('pt-BR')} kWh</span>
                             </div>
+                            <div class="flex items-center gap-1 pl-2 border-l border-white/10" onclick="event.stopPropagation()">
+                                <button type="button" onclick="StartupCreditos.openModalEditarMes(${cred.id})" class="p-1.5 text-zinc-400 hover:text-amber-400 rounded-xl hover:bg-amber-400/10 transition-all" title="Editar Produção do Mês">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </button>
+                                <button type="button" onclick="StartupCreditos.deleteMes(${cred.id}, '${escapeHtml(cred.mes_referencia)}')" class="p-1.5 text-zinc-500 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all" title="Excluir Mês">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
                             <button type="button" class="p-2 text-zinc-400 hover:text-white transition-transform" id="chevron-mes-${cred.id}">
                                 ▼
                             </button>
@@ -407,6 +415,102 @@ const StartupCreditos = (() => {
         });
     }
 
+    async function openModalEditarMes(creditoId) {
+        try {
+            const resp = await API.getStartupCredito(creditoId);
+            const cred = resp.credito;
+            if (!cred) return;
+
+            const existing = document.getElementById('modal-editar-mes-credito');
+            if (existing) existing.remove();
+
+            const modalHtml = `
+                <div id="modal-editar-mes-credito" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <div class="max-w-md w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5">
+                        <div class="flex items-center justify-between pb-3 border-b border-white/5">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-2xl bg-amber-400/10 text-amber-400 border border-amber-400/20 flex items-center justify-center text-base">
+                                    ✏️
+                                </div>
+                                <div>
+                                    <h4 class="font-extrabold text-sm text-white">Editar Produção do Mês</h4>
+                                    <p class="text-[11px] text-zinc-400">${formatarMesNome(cred.mes_referencia)} (${cred.mes_referencia})</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="document.getElementById('modal-editar-mes-credito').remove()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all">
+                                ✕
+                            </button>
+                        </div>
+
+                        <form id="form-editar-mes-credito" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-zinc-300 mb-1">Créditos Gerados na Usina (kWh) *</label>
+                                <input type="number" step="0.01" min="1" id="edit-cred-gerados" required value="${parseFloat(cred.creditos_gerados_kwh || 0)}" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-cyan-300 font-mono font-bold focus:outline-none focus:border-cyan-400">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-zinc-300 mb-1">Créditos Distribuídos (kWh)</label>
+                                <input type="number" step="0.01" min="0" id="edit-cred-dist" value="${parseFloat(cred.creditos_distribuidos_kwh || 0)}" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-emerald-400 font-mono font-bold focus:outline-none focus:border-cyan-400">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-zinc-300 mb-1">Observações da Operação</label>
+                                <textarea id="edit-cred-obs" rows="2" placeholder="Notas sobre a produção..." class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-cyan-400">${escapeHtml(cred.observacoes || '')}</textarea>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-3 pt-2">
+                                <button type="button" onclick="document.getElementById('modal-editar-mes-credito').remove()" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-full transition-all">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="px-6 py-2.5 bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-amber-400/20 transition-all">
+                                    Atualizar Produção
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            document.getElementById('form-editar-mes-credito')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const gerados = parseFloat(document.getElementById('edit-cred-gerados')?.value || '0');
+                const dist = parseFloat(document.getElementById('edit-cred-dist')?.value || '0');
+                const obs = document.getElementById('edit-cred-obs')?.value.trim();
+
+                try {
+                    await API.updateStartupCredito(creditoId, {
+                        creditos_gerados_kwh: gerados,
+                        creditos_distribuidos_kwh: dist,
+                        observacoes: obs
+                    });
+                    App.showToast('Produção mensal atualizada com sucesso!', 'success');
+                    document.getElementById('modal-editar-mes-credito')?.remove();
+                    await load();
+                } catch (err) {
+                    App.showToast(err.message, 'error');
+                }
+            });
+        } catch (err) {
+            App.showToast(err.message, 'error');
+        }
+    }
+
+    async function deleteMes(creditoId, mesNome) {
+        if (!confirm(`Deseja realmente excluir o registro de produção de ${formatarMesNome(mesNome)} (${mesNome})? Esta ação removerá também as alocações deste mês.`)) {
+            return;
+        }
+
+        try {
+            await API.deleteStartupCredito(creditoId);
+            App.showToast('Mês de produção excluído com sucesso!', 'success');
+            await load();
+        } catch (err) {
+            App.showToast(err.message, 'error');
+        }
+    }
+
     async function openModalAlocacao(creditoId) {
         try {
             const resp = await API.getStartupCredito(creditoId);
@@ -540,6 +644,8 @@ const StartupCreditos = (() => {
         load,
         toggleMes,
         openModalNovoMes,
+        openModalEditarMes,
+        deleteMes,
         openModalAlocacao,
         salvarAlocacoesModal
     };

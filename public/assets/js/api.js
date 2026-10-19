@@ -145,6 +145,7 @@ const API = (() => {
         updateStartupCredito: (id, payload) => request(`/startup/creditos/${id}`, { method: 'PUT', body: payload }),
         getStartupCreditoAlocacoes: (id) => request(`/startup/creditos/${id}/alocacoes`),
         alocarStartupCreditos: (id, payload) => request(`/startup/creditos/${id}/alocar`, { method: 'POST', body: payload }),
+        deleteStartupCredito: (id) => request(`/startup/creditos/${id}`, { method: 'DELETE' }),
 
         // Startup - Financeiro
         getStartupFinanceiro: (params = {}) => {

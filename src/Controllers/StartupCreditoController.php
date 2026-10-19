@@ -304,4 +304,29 @@ final class StartupCreditoController
             ]);
         }, $rows);
     }
+
+    public function destroy(Request $request, string $id): void
+    {
+        $userId = $this->getUserId();
+        $creditoId = (int)$id;
+
+        $stmtCheck = $this->pdo->prepare("SELECT * FROM startup_creditos WHERE id = :id AND usuario_id = :uid AND deletado_em IS NULL");
+        $stmtCheck->execute(['id' => $creditoId, 'uid' => $userId]);
+        $existing = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+        if (!$existing) {
+            Response::error('Registro de crédito não encontrado.', 404);
+            return;
+        }
+
+        // Soft delete do registro de crédito
+        $this->pdo->prepare("UPDATE startup_creditos SET deletado_em = NOW() WHERE id = :id AND usuario_id = :uid")
+            ->execute(['id' => $creditoId, 'uid' => $userId]);
+
+        $this->auditoria->registrar($userId, 'excluir', 'credito', $creditoId, [
+            'mes_referencia' => $existing['mes_referencia']
+        ]);
+
+        Response::success(null, 'Mês de crédito excluído com sucesso!');
+    }
 }

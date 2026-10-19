@@ -1282,58 +1282,57 @@ const StartupFaturamento = (() => {
             // Linha da tabela para desktop / tela cheia (>= 768px)
             tableRowsHtml += `
                 <tr class="hover:bg-white/[0.03] transition-colors group">
-                    <td class="py-3.5 px-3.5 whitespace-nowrap">
+                    <td class="py-2.5 px-2.5 sm:px-3 whitespace-nowrap">
                         <span class="px-2 py-0.5 rounded-lg bg-lime-400/10 text-lime-400 font-mono font-bold text-[11px] border border-lime-400/20">
                             ${fat.mes_referencia}
                         </span>
                     </td>
-                    <td class="py-3.5 px-3.5 whitespace-nowrap">
-                        <div class="font-bold text-white truncate max-w-[200px]" title="${escapeHtml(fat.cliente_nome)}">${escapeHtml(fat.cliente_nome)}</div>
+                    <td class="py-2.5 px-2.5 sm:px-3 whitespace-nowrap">
+                        <div class="font-bold text-white truncate max-w-[180px]" title="${escapeHtml(fat.cliente_nome)}">${escapeHtml(fat.cliente_nome)}</div>
                         <span class="text-[10px] font-mono text-zinc-400">UC: ${escapeHtml(fat.numero_uc || 'Sem UC')}</span>
                     </td>
-                    <td class="py-3.5 px-3.5 text-zinc-300 whitespace-nowrap font-mono">
+                    <td class="py-2.5 px-2.5 sm:px-3 text-zinc-300 whitespace-nowrap font-mono text-xs">
                         <div>${consumoKwh} kWh</div>
                     </td>
-                    <td class="py-3.5 px-3.5 text-zinc-400 font-mono whitespace-nowrap">${formatarMoeda(fat.valor_energisa)}</td>
-                    <td class="py-3.5 px-3.5 text-emerald-400 font-mono font-bold whitespace-nowrap">
-                        - ${formatarMoeda(fat.valor_desconto)} <span class="text-[10px] text-emerald-500/80">(${descPct}%)</span>
+                    <td class="py-2.5 px-2.5 sm:px-3 text-zinc-400 font-mono text-xs whitespace-nowrap">${formatarMoeda(fat.valor_energisa)}</td>
+                    <td class="py-2.5 px-2.5 sm:px-3 text-emerald-400 font-mono font-bold text-xs whitespace-nowrap">
+                        -${formatarMoeda(fat.valor_desconto)} <span class="text-[10px] text-emerald-500/80">(${descPct}%)</span>
                     </td>
-                    <td class="py-3.5 px-3.5 text-white font-mono font-black text-sm whitespace-nowrap">
+                    <td class="py-2.5 px-2.5 sm:px-3 text-white font-mono font-black text-sm whitespace-nowrap">
                         ${formatarMoeda(fat.valor_cobrado)}
                     </td>
-                    <td class="py-3.5 px-3.5 text-zinc-300 font-mono whitespace-nowrap">${formatarData(fat.data_vencimento)}</td>
-                    <td class="py-3.5 px-3.5 whitespace-nowrap">${statusBadge}</td>
-                    <td class="py-3.5 px-3.5 text-right whitespace-nowrap">
-                        <div class="flex items-center justify-end gap-1.5">
+                    <td class="py-2.5 px-2.5 sm:px-3 text-zinc-300 font-mono text-xs whitespace-nowrap">${formatarData(fat.data_vencimento)}</td>
+                    <td class="py-2.5 px-2.5 sm:px-3 whitespace-nowrap">${statusBadge}</td>
+                    <!-- Coluna de Ações Sticky Fixa à Direita: Sempre visível -->
+                    <td class="py-2.5 px-2.5 sm:px-3 text-right whitespace-nowrap sticky right-0 bg-[#0d0d12]/95 backdrop-blur-md border-l border-white/10 shadow-[-8px_0_12px_rgba(0,0,0,0.5)] z-10">
+                        <div class="flex items-center justify-end gap-1">
                             ${!isPaga ? `
-                                <button type="button" onclick="StartupFaturamento.marcarComoPaga(${fat.id})" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-bold text-xs transition-all flex items-center gap-1 shadow-sm border border-emerald-500/20" title="Confirmar Pagamento">
-                                    ✓ Paga
+                                <button type="button" onclick="StartupFaturamento.marcarComoPaga(${fat.id})" class="px-2 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-bold text-[10px] transition-all flex items-center gap-1 border border-emerald-500/20" title="Marcar como Paga">
+                                    ✓ Pagar
                                 </button>
                             ` : `
-                                <span class="text-[10px] text-zinc-400 px-2 py-1 font-mono">Pago em ${formatarData(fat.data_pagamento)}</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden sm:inline" title="Quitada em ${formatarData(fat.data_pagamento)}">✓</span>
                             `}
                             ${fat.arquivo_anexo ? `
-                                <button type="button" onclick="StartupFaturamento.abrirVisualizadorAnexo('${fat.arquivo_anexo}', '${escapeHtml(fat.nome_arquivo_anexo || 'Fatura Energisa')}')" class="px-2.5 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm" title="Ver Conta Energisa Original Anexada">
+                                <button type="button" onclick="StartupFaturamento.abrirVisualizadorAnexo('${fat.arquivo_anexo}', '${escapeHtml(fat.nome_arquivo_anexo || 'Fatura Energisa')}')" class="p-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/25 rounded-xl text-xs font-bold transition-all" title="Ver Anexo Original">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                    <span>Anexo</span>
                                 </button>
                             ` : `
-                                <button type="button" onclick="StartupFaturamento.anexarFaturaDireta(${fat.id})" class="p-1.5 text-zinc-400 hover:text-cyan-400 rounded-xl hover:bg-cyan-500/10 transition-all" title="Anexar PDF da Conta Energisa">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                <button type="button" onclick="StartupFaturamento.anexarFaturaDireta(${fat.id})" class="p-1.5 text-zinc-500 hover:text-cyan-400 rounded-xl hover:bg-cyan-500/10 transition-all" title="Anexar Conta Energisa">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                 </button>
                             `}
-                            <button type="button" onclick="StartupFaturamento.editarFatura(${fat.id})" class="p-1.5 text-zinc-400 hover:text-amber-400 rounded-xl hover:bg-amber-400/10 transition-all" title="Editar Fatura">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <button type="button" onclick="StartupFaturamento.editarFatura(${fat.id})" class="p-1.5 text-amber-300 hover:text-white rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/20 text-xs font-semibold transition-all" title="Editar Fatura">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             </button>
-                            <button type="button" onclick="StartupFaturamento.verEspelhoFatura(${fat.id})" class="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 transition-all" title="Ver Espelho da Fatura Padrão">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <button type="button" onclick="StartupFaturamento.verEspelhoFatura(${fat.id})" class="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 transition-all" title="Ver Espelho da Fatura">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                             </button>
-                            <button type="button" onclick="StartupFaturamento.imprimirFaturaPorId(${fat.id})" class="px-2.5 py-1.5 bg-lime-400/15 hover:bg-lime-400/25 text-lime-400 border border-lime-400/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95" title="Imprimir / Salvar PDF">
+                            <button type="button" onclick="StartupFaturamento.imprimirFaturaPorId(${fat.id})" class="p-1.5 bg-lime-400/15 hover:bg-lime-400/25 text-lime-400 border border-lime-400/25 rounded-xl text-xs font-bold transition-all active:scale-95" title="Imprimir / Salvar PDF">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                <span>PDF</span>
                             </button>
-                            <button type="button" onclick="StartupFaturamento.excluirFatura(${fat.id})" class="p-1.5 text-zinc-500 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all" title="Excluir Fatura">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <button type="button" onclick="StartupFaturamento.excluirFatura(${fat.id})" class="p-1.5 text-zinc-500 hover:text-red-400 rounded-xl hover:bg-red-500/15 transition-all" title="Excluir Fatura">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
                     </td>
@@ -1348,19 +1347,19 @@ const StartupFaturamento = (() => {
                 </div>
 
                 <!-- Visão Tablet/Desktop (>= 768px): Tabela Completa com Scroll Suave -->
-                <div class="hidden md:block overflow-x-auto pb-1">
-                    <table class="w-full text-left text-xs min-w-[940px]">
+                <div class="hidden md:block overflow-x-auto pb-1 relative">
+                    <table class="w-full text-left text-xs min-w-[780px]">
                         <thead>
                             <tr class="border-b border-white/10 text-zinc-400 text-[10px] uppercase tracking-wider bg-white/[0.01]">
-                                <th class="py-3 px-3.5 font-bold whitespace-nowrap">Mês Ref.</th>
-                                <th class="py-3 px-3.5 font-bold whitespace-nowrap">Cliente / UC</th>
-                                <th class="py-3 px-3.5 font-bold whitespace-nowrap">Consumo</th>
-                                <th class="py-3 px-3.5 font-bold whitespace-nowrap">Energisa</th>
-                                <th class="py-3 px-3.5 font-bold whitespace-nowrap">Desconto Solar</th>
-                                <th class="py-3 px-3.5 font-bold whitespace-nowrap">Total a Pagar</th>
-                                <th class="py-3 px-3.5 font-bold whitespace-nowrap">Vencimento</th>
-                                <th class="py-3 px-3.5 font-bold whitespace-nowrap">Status</th>
-                                <th class="py-3 px-3.5 font-bold text-right whitespace-nowrap">Ações</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold whitespace-nowrap">Mês Ref.</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold whitespace-nowrap">Cliente / UC</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold whitespace-nowrap">Consumo</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold whitespace-nowrap">Energisa</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold whitespace-nowrap">Desconto</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold whitespace-nowrap">A Pagar</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold whitespace-nowrap">Vencimento</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold whitespace-nowrap">Status</th>
+                                <th class="py-3 px-2.5 sm:px-3 font-bold text-right whitespace-nowrap sticky right-0 bg-[#0d0d12]/95 backdrop-blur-md border-l border-white/10 shadow-[-8px_0_12px_rgba(0,0,0,0.5)] z-20">Ações</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5">
