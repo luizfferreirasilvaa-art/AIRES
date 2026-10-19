@@ -32,6 +32,15 @@ final class Database
             PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
         ];
 
+        // Suporte automático a conexões TLS/SSL (exigido por TiDB Cloud, Aiven, etc.)
+        $caBundle = '/etc/ssl/certs/ca-certificates.crt';
+        if (getenv('DB_SSL') === 'true' || DB_PORT === 4000 || (file_exists($caBundle) && DB_HOST !== '127.0.0.1' && DB_HOST !== 'localhost')) {
+            if (file_exists($caBundle)) {
+                $options[PDO::MYSQL_ATTR_SSL_CA] = $caBundle;
+            }
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+
         try {
             $this->connection = new PDO($dsn, DB_USER, DB_PASS, $options);
         } catch (PDOException $e) {

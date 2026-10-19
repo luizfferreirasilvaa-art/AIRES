@@ -1,7 +1,7 @@
 FROM php:8.3-cli-alpine
 
 # Instala extensões PDO MySQL e dependências necessárias
-RUN apk add --no-cache bash curl libpng-dev libjpeg-turbo-dev freetype-dev \
+RUN apk add --no-cache bash curl ca-certificates libpng-dev libjpeg-turbo-dev freetype-dev \
     && docker-php-ext-install pdo pdo_mysql
 
 # Define o diretório de trabalho
@@ -23,3 +23,4 @@ EXPOSE 10000
 
 # Executa o Start Command
 CMD ["/var/www/html/start.sh"]
+
