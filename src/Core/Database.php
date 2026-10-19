@@ -33,9 +33,20 @@ final class Database
         ];
 
         // Suporte automático a conexões TLS/SSL (exigido por TiDB Cloud, Aiven, etc.)
-        $caBundle = '/etc/ssl/certs/ca-certificates.crt';
-        if (getenv('DB_SSL') === 'true' || DB_PORT === 4000 || (file_exists($caBundle) && DB_HOST !== '127.0.0.1' && DB_HOST !== 'localhost')) {
-            if (file_exists($caBundle)) {
+        $caPaths = [
+            '/etc/ssl/certs/ca-certificates.crt', // Linux / Docker (Alpine, Ubuntu, Render)
+            'C:\\laragon\\etc\\ssl\\cacert.pem',  // Windows / Laragon
+        ];
+        $caBundle = null;
+        foreach ($caPaths as $path) {
+            if (file_exists($path)) {
+                $caBundle = $path;
+                break;
+            }
+        }
+
+        if (getenv('DB_SSL') === 'true' || DB_PORT === 4000 || ($caBundle !== null && DB_HOST !== '127.0.0.1' && DB_HOST !== 'localhost')) {
+            if ($caBundle !== null) {
                 $options[PDO::MYSQL_ATTR_SSL_CA] = $caBundle;
             }
             $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
@@ -98,3 +109,4 @@ final class Database
         throw new RuntimeException("Não é permitido desserializar Singleton.");
     }
 }
+
