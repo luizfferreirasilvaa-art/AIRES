@@ -58,21 +58,23 @@ $compMes = $compromissos_mes ?? [];
         }
     </script>
 </head>
-<body class="bg-[#070709] text-zinc-100 min-h-screen flex flex-col md:flex-row antialiased selection:bg-lime-400 selection:text-black">
+<body class="bg-[#070709] text-zinc-100 h-full h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col md:flex-row antialiased selection:bg-lime-400 selection:text-black">
 
     <!-- ========================================================
-         DESKTOP SIDEBAR (Sleek Obsidian Dock)
+         DESKTOP / LANDSCAPE SIDEBAR (Sleek Obsidian Dock)
          ======================================================== -->
-    <aside id="app-sidebar" class="hidden md:flex flex-col w-64 border-r border-white/5 bg-[#0b0b0e]/80 backdrop-blur-2xl p-5 sticky top-0 h-screen z-30 justify-between select-none">
-        <div class="space-y-5">
+    <aside id="app-sidebar" class="hidden md:flex flex-col w-64 border-r border-white/5 bg-[#0b0b0e]/80 backdrop-blur-2xl sticky top-0 h-full h-[100dvh] max-h-[100dvh] z-30 select-none overflow-hidden safe-sidebar">
+        
+        <!-- Top: Brand & Action (Fixed / shrink-0) -->
+        <div class="sidebar-top-section shrink-0 px-4 pt-4 pb-3 space-y-3.5">
             <!-- Brand -->
-            <div class="sidebar-brand-wrapper flex items-center px-1 py-1">
+            <div class="sidebar-brand-wrapper flex items-center px-1">
                 <div class="flex items-center gap-3 sidebar-brand-info min-w-0">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 via-purple-600 to-indigo-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-orange-500/20 shrink-0">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-orange-500 via-purple-600 to-indigo-500 flex items-center justify-center text-white font-black text-base shadow-lg shadow-orange-500/20 shrink-0">
                         A
                     </div>
                     <div class="sidebar-text-collapsible overflow-hidden transition-all min-w-0">
-                        <h1 class="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5 whitespace-nowrap">
+                        <h1 class="font-extrabold text-sm tracking-tight text-white flex items-center gap-1.5 whitespace-nowrap">
                             AIRES
                             <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-lime-400/20 text-lime-400 font-bold uppercase tracking-wider">PRO</span>
                         </h1>
@@ -82,96 +84,98 @@ $compMes = $compromissos_mes ?? [];
             </div>
 
             <!-- New Task Button -->
-            <button type="button" id="btn-desktop-new-task" class="sidebar-btn-new-task w-full py-3 px-4 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs shadow-lg shadow-white/10 flex items-center justify-center gap-2 transition-all active:scale-95" title="Criar Ação">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+            <button type="button" id="btn-desktop-new-task" class="sidebar-btn-new-task w-full py-2.5 px-3.5 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs shadow-lg shadow-white/10 flex items-center justify-center gap-2 transition-all active:scale-95" title="Criar Ação">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                 <span class="sidebar-text-collapsible">Criar Ação</span>
             </button>
-
-            <!-- Navigation Links -->
-            <nav class="space-y-1">
-                <!-- Geral -->
-                <button type="button" data-nav-section="inicio" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all nav-active text-white bg-white/10 shadow-sm border border-white/5" title="Início">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                    <span class="sidebar-text-collapsible">Início</span>
-                </button>
-
-                <!-- Módulo: Produtividade -->
-                <div class="sidebar-section-header pt-3 pb-1 px-3 flex items-center gap-2 select-none">
-                    <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Produtividade</span>
-                    <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
-                </div>
-                <button type="button" data-nav-section="tarefas" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Execução & Tarefas">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    <span class="sidebar-text-collapsible">Execução & Tarefas</span>
-                </button>
-                <button type="button" data-nav-section="missoes" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Missões Estratégicas">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    <span class="sidebar-text-collapsible">Missões Estratégicas</span>
-                </button>
-                <button type="button" data-nav-section="dashboard" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Produtividade & Foco">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    <span class="sidebar-text-collapsible">Produtividade & Foco</span>
-                </button>
-
-                <!-- Módulo: Conhecimento -->
-                <div class="sidebar-section-header pt-3 pb-1 px-3 flex items-center gap-2 select-none">
-                    <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Conhecimento</span>
-                    <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
-                </div>
-                <button type="button" data-nav-section="notas" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Notas">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    <span class="sidebar-text-collapsible">Notas</span>
-                </button>
-
-                <!-- Módulo: Startup (Energia Solar) -->
-                <div class="sidebar-section-header pt-3 pb-1 px-3 flex items-center gap-2 select-none">
-                    <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Startup</span>
-                    <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
-                </div>
-                <button type="button" data-nav-section="startup-clientes" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Clientes & Contratos">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <span class="sidebar-text-collapsible">Clientes</span>
-                </button>
-                <button type="button" data-nav-section="startup-faturamento" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Emissor & Painel de Faturas">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
-                    <span class="sidebar-text-collapsible">Faturamento</span>
-                </button>
-                <button type="button" data-nav-section="startup-creditos" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Estoque de Créditos">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    <span class="sidebar-text-collapsible">Créditos</span>
-                </button>
-                <button type="button" data-nav-section="startup-financeiro" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Financeiro & Inadimplência">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span class="sidebar-text-collapsible">Financeiro</span>
-                </button>
-                <button type="button" data-nav-section="startup-dashboard" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Dashboard Solar">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <span class="sidebar-text-collapsible">Dashboard Solar</span>
-                </button>
-                <button type="button" data-nav-section="startup-auditoria" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Log de Auditoria">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span class="sidebar-text-collapsible">Auditoria</span>
-                </button>
-            </nav>
         </div>
 
-        <!-- Gamification Capsule Bottom -->
-        <div class="sidebar-gamification p-3.5 rounded-3xl bg-zinc-900/60 border border-white/5 space-y-2 transition-all" title="Nível <?= $level ?> • <?= $userStreak ?> dias de foco • <?= $userXp ?> XP">
-            <div class="sidebar-text-collapsible flex items-center justify-between text-xs">
-                <span class="font-bold flex items-center gap-1.5 text-orange-400">
-                    🔥 <span id="stat-streak"><?= $userStreak ?> dias</span>
-                </span>
-                <span class="font-extrabold text-lime-400" id="stat-xp"><?= $userXp ?> XP</span>
-            </div>
-            <div class="sidebar-text-collapsible w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                <div id="level-progress-bar" class="bg-gradient-to-r from-orange-500 via-amber-400 to-lime-400 h-1.5 rounded-full transition-all" style="width: <?= $xpInLevel ?>%"></div>
-            </div>
-            <p id="level-text" class="sidebar-text-collapsible text-[10px] text-zinc-500 text-center font-medium">Nível <?= $level ?> • <?= $xpToNext ?> XP para o Nível <?= $level + 1 ?></p>
+        <!-- Middle: Navigation Links (Scrollable flex-1 min-h-0 overscroll-contain) -->
+        <nav class="sidebar-nav-container flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-1 space-y-1 overscroll-contain">
+            <!-- Geral -->
+            <button type="button" data-nav-section="inicio" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all nav-active text-white bg-white/10 shadow-sm border border-white/5" title="Início">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="sidebar-text-collapsible">Início</span>
+            </button>
 
-            <!-- Versão recolhida (mini) -->
-            <div class="sidebar-gamification-mini hidden flex-col items-center justify-center gap-0.5 py-1">
-                <span class="text-base leading-none">🔥</span>
-                <span class="text-[10px] font-black text-orange-400"><?= $userStreak ?>d</span>
+            <!-- Módulo: Produtividade -->
+            <div class="sidebar-section-header pt-2.5 pb-1 px-3 flex items-center gap-2 select-none">
+                <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Produtividade</span>
+                <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
+            </div>
+            <button type="button" data-nav-section="tarefas" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Execução & Tarefas">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                <span class="sidebar-text-collapsible">Execução & Tarefas</span>
+            </button>
+            <button type="button" data-nav-section="missoes" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Missões Estratégicas">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="sidebar-text-collapsible">Missões Estratégicas</span>
+            </button>
+            <button type="button" data-nav-section="dashboard" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Produtividade & Foco">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span class="sidebar-text-collapsible">Produtividade & Foco</span>
+            </button>
+
+            <!-- Módulo: Conhecimento -->
+            <div class="sidebar-section-header pt-2.5 pb-1 px-3 flex items-center gap-2 select-none">
+                <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Conhecimento</span>
+                <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
+            </div>
+            <button type="button" data-nav-section="notas" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Notas">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <span class="sidebar-text-collapsible">Notas</span>
+            </button>
+
+            <!-- Módulo: Startup (Energia Solar) -->
+            <div class="sidebar-section-header pt-2.5 pb-1 px-3 flex items-center gap-2 select-none">
+                <span class="sidebar-text-collapsible text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Startup</span>
+                <div class="h-px bg-white/5 flex-1 sidebar-header-divider"></div>
+            </div>
+            <button type="button" data-nav-section="startup-clientes" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Clientes & Contratos">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="sidebar-text-collapsible">Clientes</span>
+            </button>
+            <button type="button" data-nav-section="startup-faturamento" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Emissor & Painel de Faturas">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+                <span class="sidebar-text-collapsible">Faturamento</span>
+            </button>
+            <button type="button" data-nav-section="startup-creditos" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Estoque de Créditos">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="sidebar-text-collapsible">Créditos</span>
+            </button>
+            <button type="button" data-nav-section="startup-financeiro" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Financeiro & Inadimplência">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="sidebar-text-collapsible">Financeiro</span>
+            </button>
+            <button type="button" data-nav-section="startup-dashboard" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Dashboard Solar">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span class="sidebar-text-collapsible">Dashboard Solar</span>
+            </button>
+            <button type="button" data-nav-section="startup-auditoria" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Log de Auditoria">
+                <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span class="sidebar-text-collapsible">Auditoria</span>
+            </button>
+        </nav>
+
+        <!-- Bottom: Gamification Capsule (Fixed / shrink-0) -->
+        <div class="sidebar-bottom-section shrink-0 px-4 pt-2.5 pb-4 border-t border-white/[0.04]">
+            <div class="sidebar-gamification p-3 rounded-2xl bg-zinc-900/60 border border-white/5 space-y-1.5 transition-all" title="Nível <?= $level ?> • <?= $userStreak ?> dias de foco • <?= $userXp ?> XP">
+                <div class="sidebar-text-collapsible flex items-center justify-between text-xs">
+                    <span class="font-bold flex items-center gap-1.5 text-orange-400">
+                        🔥 <span id="stat-streak"><?= $userStreak ?> dias</span>
+                    </span>
+                    <span class="font-extrabold text-lime-400" id="stat-xp"><?= $userXp ?> XP</span>
+                </div>
+                <div class="sidebar-text-collapsible w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                    <div id="level-progress-bar" class="bg-gradient-to-r from-orange-500 via-amber-400 to-lime-400 h-1.5 rounded-full transition-all" style="width: <?= $xpInLevel ?>%"></div>
+                </div>
+                <p id="level-text" class="sidebar-text-collapsible text-[10px] text-zinc-500 text-center font-medium">Nível <?= $level ?> • <?= $xpToNext ?> XP para o Nível <?= $level + 1 ?></p>
+
+                <!-- Versão recolhida (mini) -->
+                <div class="sidebar-gamification-mini hidden flex-col items-center justify-center gap-0.5 py-1">
+                    <span class="text-base leading-none">🔥</span>
+                    <span class="text-[10px] font-black text-orange-400"><?= $userStreak ?>d</span>
+                </div>
             </div>
         </div>
     </aside>
@@ -179,10 +183,10 @@ $compMes = $compromissos_mes ?? [];
     <!-- ========================================================
          MAIN CANVAS (Ambient Atmosphere & Content)
          ======================================================== -->
-    <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative">
+    <main class="flex-1 flex flex-col min-w-0 h-full h-[100dvh] max-h-[100dvh] overflow-y-auto overscroll-contain relative safe-main">
         
         <!-- Ambient Art Glow Background Header (Top Sunset Gradient) -->
-        <div class="ambient-glow-header pt-6 pb-4 px-4 md:px-8 border-b border-white/[0.04] safe-top relative">
+        <div class="ambient-glow-header pt-3 sm:pt-6 pb-4 px-4 md:px-8 border-b border-white/[0.04] safe-top relative">
             
             <!-- Top Status Bar: User Greeting + Multi-Icon Group + Streak -->
             <div class="flex items-center justify-between gap-4 mb-4">
@@ -190,6 +194,10 @@ $compMes = $compromissos_mes ?? [];
                 <div class="flex items-center gap-2 -ml-2">
                     <button type="button" id="btn-toggle-sidebar" class="hidden md:flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-white/[0.04] hover:bg-white/10 border border-white/5 hover:border-white/15 text-zinc-400 hover:text-white transition-all shrink-0 cursor-pointer shadow-sm group select-none" title="Recolher barra lateral">
                         <svg class="w-4 h-4 sidebar-collapse-icon text-zinc-400 group-hover:text-lime-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                    </button>
+                    <!-- Mobile Hamburger Button (Celular / Drawer) -->
+                    <button type="button" id="btn-mobile-menu" class="md:hidden flex items-center justify-center w-9 h-9 rounded-2xl bg-white/[0.04] hover:bg-white/10 border border-white/5 text-zinc-400 hover:text-white transition-all shrink-0 select-none active:scale-95" title="Menu de Módulos">
+                        <svg class="w-4 h-4 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
                     <div class="relative" id="user-menu-wrapper">
                         <button type="button" id="btn-user-menu" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all text-left group select-none">
@@ -354,9 +362,10 @@ $compMes = $compromissos_mes ?? [];
                     </div>
                 </div>
             </div>
+        </div>
 
         <!-- SEÇÃO: INÍCIO (Home / Landing) -->
-        <section id="section-inicio" class="app-section flex-1 p-4 md:p-8 space-y-5">
+        <section id="section-inicio" class="app-section flex-1 p-4 md:p-8 space-y-5 pb-36 md:pb-8">
             <!-- Bento Summary Cards (Directly inspired by Image 1 & 2) -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-5">
                 
@@ -476,7 +485,7 @@ $compMes = $compromissos_mes ?? [];
         <!-- ========================================================
              SEÇÃO DINÂMICA: TAREFAS (Kanban, Lista, Calendário)
              ======================================================== -->
-        <section id="section-tarefas" class="app-section flex-1 p-4 md:p-8 space-y-4 hidden">
+        <section id="section-tarefas" class="app-section flex-1 p-4 md:p-8 space-y-4 pb-36 md:pb-8 hidden">
             <!-- View Switcher Pills (Inspired by Pierre: Conexões | Cartão | Investimentos) -->
             <div class="flex items-center justify-between gap-3 flex-wrap">
                 <div class="inline-flex p-1 bg-zinc-900/90 rounded-full border border-white/10 gap-1 shadow-lg">
@@ -527,7 +536,7 @@ $compMes = $compromissos_mes ?? [];
                 </button>
             </div>
 
-            <div id="missions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-24 md:pb-8"></div>
+            <div id="missions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-36 md:pb-8"></div>
         </section>
 
         <!-- ========================================================
@@ -544,7 +553,7 @@ $compMes = $compromissos_mes ?? [];
                 </button>
             </div>
 
-            <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-24 md:pb-8"></div>
+            <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-36 md:pb-8"></div>
         </section>
 
         <!-- ========================================================
@@ -620,7 +629,7 @@ $compMes = $compromissos_mes ?? [];
                 </button>
             </div>
 
-            <div id="startup-clientes-container" class="space-y-3 pb-24 md:pb-8"></div>
+            <div id="startup-clientes-container" class="space-y-3 pb-36 md:pb-8"></div>
         </section>
 
         <!-- ========================================================
@@ -650,7 +659,7 @@ $compMes = $compromissos_mes ?? [];
                 </div>
             </div>
 
-            <div id="startup-faturamento-container" class="space-y-4 pb-24 md:pb-8"></div>
+            <div id="startup-faturamento-container" class="space-y-4 pb-36 md:pb-8"></div>
         </section>
 
         <!-- ========================================================
@@ -673,7 +682,7 @@ $compMes = $compromissos_mes ?? [];
                 </div>
             </div>
 
-            <div id="startup-creditos-container" class="space-y-4 pb-24 md:pb-8"></div>
+            <div id="startup-creditos-container" class="space-y-4 pb-36 md:pb-8"></div>
         </section>
 
         <!-- ========================================================
@@ -705,7 +714,7 @@ $compMes = $compromissos_mes ?? [];
                 </div>
             </div>
 
-            <div id="startup-financeiro-container" class="space-y-4 pb-24 md:pb-8"></div>
+            <div id="startup-financeiro-container" class="space-y-4 pb-36 md:pb-8"></div>
         </section>
 
         <!-- ========================================================
@@ -726,7 +735,7 @@ $compMes = $compromissos_mes ?? [];
                 </button>
             </div>
 
-            <div id="startup-dashboard-container" class="space-y-5 pb-24 md:pb-8"></div>
+            <div id="startup-dashboard-container" class="space-y-5 pb-36 md:pb-8"></div>
         </section>
 
         <!-- ========================================================
@@ -752,40 +761,151 @@ $compMes = $compromissos_mes ?? [];
                 </div>
             </div>
 
-            <div id="startup-auditoria-container" class="space-y-2 pb-24 md:pb-8"></div>
+            <div id="startup-auditoria-container" class="space-y-2 pb-36 md:pb-8"></div>
         </section>
     </main>
 
     <!-- ========================================================
          FLOATING BOTTOM DOCK (Signature Pierre / iOS Capsule Dock)
          ======================================================== -->
-    <div class="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-sm w-[92%]">
-        <nav class="floating-dock rounded-full px-5 py-2.5 flex items-center justify-between safe-bottom">
+    <div id="mobile-bottom-dock" class="md:hidden fixed dock-container left-1/2 -translate-x-1/2 z-40 max-w-xs w-[88%] select-none">
+        <nav class="floating-dock rounded-full px-4 py-1.5 flex items-center justify-between shadow-2xl">
             <!-- Tab 1: Início -->
-            <button type="button" data-nav-section="inicio" class="flex flex-col items-center justify-center p-1 text-lime-400 transition-colors">
+            <button type="button" data-nav-section="inicio" class="flex flex-col items-center justify-center p-1.5 text-lime-400 transition-colors" title="Início">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
             </button>
 
             <!-- Tab 2: Tarefas -->
-            <button type="button" data-nav-section="tarefas" class="flex flex-col items-center justify-center p-1 text-zinc-400 hover:text-white transition-colors">
+            <button type="button" data-nav-section="tarefas" class="flex flex-col items-center justify-center p-1.5 text-zinc-400 hover:text-white transition-colors" title="Tarefas">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
             </button>
 
             <!-- Central Floating (+) Action Button with Glow -->
-            <button type="button" id="btn-quick-capture" class="w-11 h-11 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 flex items-center justify-center shadow-lg shadow-white/20 active:scale-95 transition-transform" title="Nova Tarefa">
+            <button type="button" id="btn-quick-capture" class="w-10 h-10 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 flex items-center justify-center shadow-lg shadow-white/20 active:scale-95 transition-transform shrink-0 -my-1" title="Nova Tarefa">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
             </button>
 
             <!-- Tab 3: Notas -->
-            <button type="button" data-nav-section="notas" class="flex flex-col items-center justify-center p-1 text-zinc-400 hover:text-white transition-colors">
+            <button type="button" data-nav-section="notas" class="flex flex-col items-center justify-center p-1.5 text-zinc-400 hover:text-white transition-colors" title="Notas">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
             </button>
 
-            <!-- Tab 4: Métricas -->
-            <button type="button" data-nav-section="dashboard" class="flex flex-col items-center justify-center p-1 text-zinc-400 hover:text-white transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <!-- Tab 4: Menu Geral & Módulos (Abre o Drawer Completo) -->
+            <button type="button" id="btn-dock-menu" class="flex flex-col items-center justify-center p-1.5 text-zinc-400 hover:text-white transition-colors group relative" title="Menu e Módulos">
+                <svg class="w-5 h-5 group-hover:text-lime-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-lime-400 ring-2 ring-[#0b0b0e]"></span>
             </button>
         </nav>
+    </div>
+
+    <!-- ========================================================
+         MOBILE NAVIGATION DRAWER (Menu Lateral Completo para Celular)
+         ======================================================== -->
+    <div id="mobile-drawer-container" class="fixed inset-0 z-50 md:hidden hidden">
+        <!-- Backdrop -->
+        <div id="mobile-drawer-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0"></div>
+
+        <!-- Drawer Sheet (Left Slide-in) -->
+        <aside id="mobile-drawer-sheet" class="fixed inset-y-0 left-0 w-[84%] max-w-xs bg-[#0b0b0e]/95 border-r border-white/10 shadow-2xl flex flex-col h-full h-[100dvh] max-h-[100dvh] transition-transform duration-300 -translate-x-full z-10 safe-mobile-drawer select-none">
+            
+            <!-- Top Header: Brand + Close button -->
+            <div class="px-5 pt-4 pb-3 border-b border-white/5 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-orange-500 via-purple-600 to-indigo-500 flex items-center justify-center text-white font-black text-base shadow-md shadow-orange-500/20 shrink-0">
+                        A
+                    </div>
+                    <div>
+                        <h2 class="font-extrabold text-sm tracking-tight text-white flex items-center gap-1.5">
+                            AIRES
+                            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-lime-400/20 text-lime-400 font-bold uppercase tracking-wider">PRO</span>
+                        </h2>
+                        <p class="text-[10px] text-zinc-400 font-medium">Menu Principal</p>
+                    </div>
+                </div>
+                <button type="button" id="btn-close-mobile-drawer" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition-colors">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Scrollable Nav List -->
+            <nav class="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-1 overscroll-contain">
+                <!-- Geral -->
+                <button type="button" data-nav-section="inicio" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-white/10 shadow-sm border border-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span>Início</span>
+                </button>
+
+                <!-- Produtividade -->
+                <div class="pt-3 pb-1 px-3 flex items-center gap-2 select-none">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Produtividade</span>
+                    <div class="h-px bg-white/5 flex-1"></div>
+                </div>
+                <button type="button" data-nav-section="tarefas" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <span>Execução & Tarefas</span>
+                </button>
+                <button type="button" data-nav-section="missoes" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>Missões Estratégicas</span>
+                </button>
+                <button type="button" data-nav-section="dashboard" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span>Produtividade & Foco</span>
+                </button>
+
+                <!-- Conhecimento -->
+                <div class="pt-3 pb-1 px-3 flex items-center gap-2 select-none">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Conhecimento</span>
+                    <div class="h-px bg-white/5 flex-1"></div>
+                </div>
+                <button type="button" data-nav-section="notas" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>Notas (Zettelkasten)</span>
+                </button>
+
+                <!-- Startup -->
+                <div class="pt-3 pb-1 px-3 flex items-center gap-2 select-none">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">Startup Solar</span>
+                    <div class="h-px bg-white/5 flex-1"></div>
+                </div>
+                <button type="button" data-nav-section="startup-clientes" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span>Clientes & Contratos</span>
+                </button>
+                <button type="button" data-nav-section="startup-faturamento" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+                    <span>Faturamento Solar</span>
+                </button>
+                <button type="button" data-nav-section="startup-creditos" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>Estoque de Créditos</span>
+                </button>
+                <button type="button" data-nav-section="startup-financeiro" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Financeiro & Fluxo</span>
+                </button>
+                <button type="button" data-nav-section="startup-dashboard" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span>Dashboard Solar</span>
+                </button>
+                <button type="button" data-nav-section="startup-auditoria" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Auditoria</span>
+                </button>
+            </nav>
+
+            <!-- Bottom: User Actions & Settings -->
+            <div class="p-4 border-t border-white/5 shrink-0 space-y-2">
+                <button type="button" onclick="App.openSettingsModal(); App.closeMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/10 transition-all text-left">
+                    <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span>Configurações</span>
+                </button>
+                <a href="<?= htmlspecialchars(\Aires\Core\Request::getBasePath() . '/logout') ?>" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">
+                    <svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>Sair da Conta</span>
+                </a>
+            </div>
+        </aside>
     </div>
 
     <!-- ========================================================

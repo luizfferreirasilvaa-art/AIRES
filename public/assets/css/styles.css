@@ -16,7 +16,24 @@
     --neon-purple: #c084fc;
 }
 
+/* ========================================================
+   Root Layout & iOS Viewport Isolation
+   Prevents entire window/document from scrolling into "limbo"
+   ======================================================== */
+html {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
+    height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: var(--bg-base);
     color: #f4f4f5;
@@ -24,6 +41,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
     letter-spacing: -0.015em;
+    touch-action: manipulation;
 }
 
 /* Ambient Top Artistic Glow (Sunset/Dusk gradient inspired by Pierre mockups) */
@@ -164,11 +182,62 @@ body {
 
 /* Safe areas */
 .safe-top {
-    padding-top: max(var(--sat), 12px);
+    padding-top: calc(max(var(--sat), 12px) + 0.625rem);
 }
 
 .safe-bottom {
-    padding-bottom: max(var(--sab), 16px);
+    padding-bottom: max(var(--sab), 12px);
+}
+
+.safe-sidebar {
+    padding-left: max(var(--sal), 0px);
+    padding-top: max(var(--sat), 0px);
+    padding-bottom: max(var(--sab), 0px);
+}
+
+.safe-main {
+    padding-right: max(var(--sar), 0px);
+    padding-bottom: max(var(--sab), 0px);
+}
+
+.safe-mobile-drawer {
+    padding-left: max(var(--sal), 0px);
+    padding-top: max(var(--sat), 0.5rem);
+    padding-bottom: max(var(--sab), 0.5rem);
+}
+
+/* iOS Safari Date & Month Picker Styling */
+input[type="date"],
+input[type="month"],
+input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.6rem;
+}
+
+input[type="date"]::-webkit-date-and-time-value,
+input[type="month"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value {
+    text-align: left;
+    padding-left: 0.125rem;
+}
+
+/* Floating Bottom Dock Positioning */
+.dock-container {
+    bottom: max(var(--sab), 10px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.dock-container.dock-hidden {
+    transform: translate(-50%, 150%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Independent Pane Scrolling with Overscroll Contain */
+.overscroll-contain {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* ========================================================
@@ -181,8 +250,16 @@ body {
 #app-sidebar.sidebar-collapsed,
 html.sidebar-init-collapsed #app-sidebar {
     width: 4.75rem !important; /* ~76px */
-    padding-left: 0.625rem !important;
-    padding-right: 0.625rem !important;
+}
+
+#app-sidebar.sidebar-collapsed .sidebar-top-section,
+#app-sidebar.sidebar-collapsed .sidebar-nav-container,
+#app-sidebar.sidebar-collapsed .sidebar-bottom-section,
+html.sidebar-init-collapsed #app-sidebar .sidebar-top-section,
+html.sidebar-init-collapsed #app-sidebar .sidebar-nav-container,
+html.sidebar-init-collapsed #app-sidebar .sidebar-bottom-section {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
 }
 
 #app-sidebar.sidebar-collapsed .sidebar-text-collapsible,
@@ -259,5 +336,42 @@ html.sidebar-init-collapsed #app-sidebar .sidebar-gamification {
 #app-sidebar.sidebar-collapsed .sidebar-gamification-mini,
 html.sidebar-init-collapsed #app-sidebar .sidebar-gamification-mini {
     display: flex !important;
+}
+
+/* ========================================================
+   Mobile Landscape & Short Screen Optimizations (iPhone 16, etc.)
+   ======================================================== */
+@media (max-height: 520px) {
+    .sidebar-top-section {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.25rem !important;
+        space-y: 0.35rem !important;
+    }
+    .sidebar-brand-wrapper {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    .sidebar-btn-new-task {
+        padding-top: 0.4rem !important;
+        padding-bottom: 0.4rem !important;
+    }
+    .sidebar-bottom-section {
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    .sidebar-nav-btn {
+        padding-top: 0.35rem !important;
+        padding-bottom: 0.35rem !important;
+        font-size: 0.72rem !important;
+        border-radius: 0.75rem !important;
+    }
+    .sidebar-section-header {
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.1rem !important;
+    }
+    .ambient-glow-header {
+        padding-top: max(var(--sat), 0.5rem) !important;
+        padding-bottom: 0.5rem !important;
+    }
 }
 

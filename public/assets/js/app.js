@@ -10,6 +10,7 @@ const App = (() => {
 
     function init() {
         try { initNavigation(); } catch (e) { console.error('initNavigation erro:', e); }
+        try { initMobileDrawer(); } catch (e) { console.error('initMobileDrawer erro:', e); }
         try { initSidebarCollapse(); } catch (e) { console.error('initSidebarCollapse erro:', e); }
         try { initUserMenu(); } catch (e) { console.error('initUserMenu erro:', e); }
         try { initModeSwitcher(); } catch (e) { console.error('initModeSwitcher erro:', e); }
@@ -88,7 +89,92 @@ const App = (() => {
     }
 
     /* ========================================================
-     * NAVEGAÇÃO ENTRE SEÇÕES (Mobile Dock + Desktop Sidebar)
+     * MENU LATERAL MOBILE (Drawer Completo para Celular)
+     * ======================================================== */
+    function initMobileDrawer() {
+        const btnOpen = document.getElementById('btn-mobile-menu');
+        const btnDock = document.getElementById('btn-dock-menu');
+        const btnClose = document.getElementById('btn-close-mobile-drawer');
+        const backdrop = document.getElementById('mobile-drawer-backdrop');
+
+        btnOpen?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openMobileDrawer();
+        });
+
+        btnDock?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openMobileDrawer();
+        });
+
+        btnClose?.addEventListener('click', () => closeMobileDrawer());
+        backdrop?.addEventListener('click', () => closeMobileDrawer());
+
+        // Tecla ESC fecha o drawer
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMobileDrawer();
+        });
+
+        // Ocultar dock flutuante quando o teclado virtual estiver ativo no celular
+        initDockKeyboardHandler();
+
+        // Evitar descolamento de tela ao girar celular
+        window.addEventListener('resize', () => window.scrollTo(0, 0));
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => window.scrollTo(0, 0), 100);
+        });
+    }
+
+    function openMobileDrawer() {
+        const container = document.getElementById('mobile-drawer-container');
+        const backdrop = document.getElementById('mobile-drawer-backdrop');
+        const sheet = document.getElementById('mobile-drawer-sheet');
+        if (!container || !sheet) return;
+
+        container.classList.remove('hidden');
+        // Force reflow
+        void container.offsetWidth;
+        backdrop?.classList.remove('opacity-0');
+        backdrop?.classList.add('opacity-100');
+        sheet.classList.remove('-translate-x-full');
+        sheet.classList.add('translate-x-0');
+    }
+
+    function closeMobileDrawer() {
+        const container = document.getElementById('mobile-drawer-container');
+        const backdrop = document.getElementById('mobile-drawer-backdrop');
+        const sheet = document.getElementById('mobile-drawer-sheet');
+        if (!container || !sheet || container.classList.contains('hidden')) return;
+
+        backdrop?.classList.remove('opacity-100');
+        backdrop?.classList.add('opacity-0');
+        sheet.classList.remove('translate-x-0');
+        sheet.classList.add('-translate-x-full');
+
+        setTimeout(() => {
+            container.classList.add('hidden');
+        }, 300);
+    }
+
+    function initDockKeyboardHandler() {
+        const dock = document.getElementById('mobile-bottom-dock');
+        if (!dock) return;
+
+        document.addEventListener('focusin', (e) => {
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+                dock.classList.add('dock-hidden');
+            }
+        });
+
+        document.addEventListener('focusout', (e) => {
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+                dock.classList.remove('dock-hidden');
+            }
+        });
+    }
+
+    /* ========================================================
+     * NAVEGAÇÃO ENTRE SEÇÕES (Mobile Dock + Desktop Sidebar + Mobile Drawer)
      * ======================================================== */
     function initNavigation() {
         document.querySelectorAll('[data-nav-section]').forEach(btn => {
@@ -102,9 +188,13 @@ const App = (() => {
     function loadSection(section) {
         currentSection = section;
 
+        // Se o drawer mobile estiver aberto, fecha suavemente ao selecionar qualquer seção
+        closeMobileDrawer();
+
         document.querySelectorAll('[data-nav-section]').forEach(btn => {
             const isActive = btn.dataset.navSection === section;
-            const isDesktopSidebar = btn.closest('aside') !== null;
+            const isDesktopSidebar = btn.closest('#app-sidebar') !== null;
+            const isMobileDrawer = btn.closest('#mobile-drawer-sheet') !== null;
 
             if (isDesktopSidebar) {
                 // Desktop sidebar: toggle background/border/text
@@ -113,6 +203,15 @@ const App = (() => {
                     btn.classList.remove('text-zinc-400', 'hover:text-white', 'hover:bg-white/5');
                 } else {
                     btn.classList.remove('nav-active', 'text-white', 'bg-white/10', 'shadow-sm', 'border', 'border-white/5');
+                    btn.classList.add('text-zinc-400', 'hover:text-white', 'hover:bg-white/5');
+                }
+            } else if (isMobileDrawer) {
+                // Mobile drawer: toggle background/border/text
+                if (isActive) {
+                    btn.classList.add('text-white', 'bg-white/10', 'border', 'border-white/5');
+                    btn.classList.remove('text-zinc-400', 'hover:text-white', 'hover:bg-white/5');
+                } else {
+                    btn.classList.remove('text-white', 'bg-white/10', 'border', 'border-white/5');
                     btn.classList.add('text-zinc-400', 'hover:text-white', 'hover:bg-white/5');
                 }
             } else {
@@ -1247,6 +1346,8 @@ const App = (() => {
         },
         openSettingsModal,
         closeSettingsModal,
+        openMobileDrawer,
+        closeMobileDrawer,
         getModes: () => modesList,
         getActiveMode: () => activeMode,
         getModeName,
