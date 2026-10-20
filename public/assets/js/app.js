@@ -30,6 +30,7 @@ const App = (() => {
         try { StartupFinanceiro?.init(); } catch (e) { console.error('StartupFinanceiro erro:', e); }
         try { StartupDashboard?.init(); } catch (e) { console.error('StartupDashboard erro:', e); }
         try { StartupAuditoria?.init(); } catch (e) { console.error('StartupAuditoria erro:', e); }
+        try { StartupProtocolos?.init(); } catch (e) { console.error('StartupProtocolos erro:', e); }
 
         // Carregar visão inicial
         try { loadSection('inicio'); } catch (e) { console.error('loadSection erro:', e); }
@@ -248,6 +249,8 @@ const App = (() => {
             StartupCreditos?.load();
         } else if (section === 'startup-financeiro') {
             StartupFinanceiro?.load();
+        } else if (section === 'startup-protocolos') {
+            StartupProtocolos?.load();
         } else if (section === 'startup-dashboard') {
             StartupDashboard?.load();
         } else if (section === 'startup-auditoria') {

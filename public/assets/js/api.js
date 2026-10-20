@@ -160,6 +160,18 @@ const API = (() => {
         updateStartupPagamento: (id, payload) => request(`/startup/financeiro/${id}`, { method: 'PUT', body: payload }),
         deleteStartupPagamento: (id) => request(`/startup/financeiro/${id}`, { method: 'DELETE' }),
 
+        // Startup - Protocolos & Chamados
+        getStartupProtocolos: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/startup/protocolos${query ? '?' + query : ''}`);
+        },
+        getStartupProtocolo: (id) => request(`/startup/protocolos/${id}`),
+        createStartupProtocolo: (payload) => request('/startup/protocolos', { method: 'POST', body: payload }),
+        updateStartupProtocolo: (id, payload) => request(`/startup/protocolos/${id}`, { method: 'PUT', body: payload }),
+        updateStartupProtocoloStatus: (id, status) => request(`/startup/protocolos/${id}/status`, { method: 'PATCH', body: { status } }),
+        addStartupProtocoloAndamento: (id, payload) => request(`/startup/protocolos/${id}/andamento`, { method: 'POST', body: payload }),
+        deleteStartupProtocolo: (id) => request(`/startup/protocolos/${id}`, { method: 'DELETE' }),
+
         // Startup - Dashboard Solar
         getStartupDashboard: () => request('/startup/dashboard'),
 

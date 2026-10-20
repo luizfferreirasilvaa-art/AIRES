@@ -162,7 +162,39 @@ CREATE TABLE IF NOT EXISTS `startup_auditoria` (
 ");
 echo "✓ Tabela startup_auditoria verificada/criada.\n";
 
-// 7. Seed de dados iniciais de demonstração (se a tabela de clientes estiver vazia)
+// 7. Tabela startup_protocolos (Protocolos, chamados e pontos de atenção vinculados a clientes)
+$pdo->exec("
+CREATE TABLE IF NOT EXISTS `startup_protocolos` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `usuario_id` INT NOT NULL,
+    `cliente_id` INT NOT NULL,
+    `numero_protocolo` VARCHAR(100) NOT NULL,
+    `titulo` VARCHAR(255) NOT NULL,
+    `canal` VARCHAR(100) NOT NULL DEFAULT 'Energisa',
+    `categoria` VARCHAR(50) NOT NULL DEFAULT 'geral',
+    `prioridade` ENUM('baixa', 'media', 'alta', 'urgente') NOT NULL DEFAULT 'media',
+    `status` ENUM('aberto', 'em_andamento', 'aguardando_cliente', 'concluido', 'cancelado') NOT NULL DEFAULT 'aberto',
+    `data_abertura` DATE NOT NULL,
+    `data_vencimento` DATE NULL,
+    `data_conclusao` DATE NULL,
+    `alerta_atencao` TINYINT(1) NOT NULL DEFAULT 0,
+    `observacoes` TEXT NULL,
+    `historico_andamentos` JSON NULL,
+    `arquivo_anexo` VARCHAR(500) NULL DEFAULT NULL,
+    `nome_arquivo_anexo` VARCHAR(255) NULL DEFAULT NULL,
+    `criado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `atualizado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deletado_em` TIMESTAMP NULL DEFAULT NULL,
+    INDEX `idx_st_prot_usuario_status` (`usuario_id`, `status`),
+    INDEX `idx_st_prot_cliente` (`cliente_id`),
+    INDEX `idx_st_prot_vencimento` (`data_vencimento`),
+    INDEX `idx_st_prot_numero` (`numero_protocolo`),
+    INDEX `idx_st_prot_atencao` (`usuario_id`, `alerta_atencao`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+");
+echo "✓ Tabela startup_protocolos verificada/criada.\n";
+
+// 8. Seed de dados iniciais de demonstração (se a tabela de clientes estiver vazia)
 $totalClientes = (int)$pdo->query("SELECT COUNT(*) FROM startup_clientes WHERE deletado_em IS NULL")->fetchColumn();
 if ($totalClientes === 0) {
     $userId = (int)$pdo->query("SELECT id FROM usuarios LIMIT 1")->fetchColumn() ?: 1;

@@ -164,9 +164,14 @@ const StartupClientes = (() => {
                     <!-- Footer Action -->
                     <div class="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-xs">
                         <span class="text-[10px] text-zinc-500">Adesão: ${formatarData(cli.data_adesao)}</span>
-                        <button type="button" onclick="StartupFaturamento.openEmissaoParaCliente(${cli.id})" class="px-3 py-1 rounded-full bg-emerald-400/10 hover:bg-emerald-400/20 text-emerald-400 border border-emerald-400/20 font-bold text-[11px] transition-all flex items-center gap-1">
-                            <span>⚡ Emitir Fatura</span>
-                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="App.loadSection('startup-protocolos'); setTimeout(() => StartupProtocolos.openModalNovo(${cli.id}), 150);" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-lime-400 border border-white/10 font-bold text-[11px] transition-all flex items-center gap-1" title="Registrar Protocolo / Ponto de Atenção para este cliente">
+                                <span>📋 Protocolo</span>
+                            </button>
+                            <button type="button" onclick="StartupFaturamento.openEmissaoParaCliente(${cli.id})" class="px-3 py-1 rounded-full bg-emerald-400/10 hover:bg-emerald-400/20 text-emerald-400 border border-emerald-400/20 font-bold text-[11px] transition-all flex items-center gap-1">
+                                <span>⚡ Emitir Fatura</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;

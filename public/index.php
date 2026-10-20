@@ -35,6 +35,7 @@ use Aires\Controllers\StartupCreditoController;
 use Aires\Controllers\StartupFinanceiroController;
 use Aires\Controllers\StartupDashboardController;
 use Aires\Controllers\StartupAuditoriaController;
+use Aires\Controllers\StartupProtocoloController;
 
 // Iniciar sessões armazenadas no banco de dados MySQL
 SessionHandler::start();
@@ -161,6 +162,15 @@ $router->get('/api/startup/financeiro/resumo', [StartupFinanceiroController::cla
 $router->post('/api/startup/financeiro', [StartupFinanceiroController::class, 'store']);
 $router->put('/api/startup/financeiro/{id}', [StartupFinanceiroController::class, 'update']);
 $router->delete('/api/startup/financeiro/{id}', [StartupFinanceiroController::class, 'destroy']);
+
+// Protocolos & Chamados
+$router->get('/api/startup/protocolos', [StartupProtocoloController::class, 'index']);
+$router->post('/api/startup/protocolos', [StartupProtocoloController::class, 'store']);
+$router->get('/api/startup/protocolos/{id}', [StartupProtocoloController::class, 'show']);
+$router->put('/api/startup/protocolos/{id}', [StartupProtocoloController::class, 'update']);
+$router->patch('/api/startup/protocolos/{id}/status', [StartupProtocoloController::class, 'updateStatus']);
+$router->post('/api/startup/protocolos/{id}/andamento', [StartupProtocoloController::class, 'adicionarAndamento']);
+$router->delete('/api/startup/protocolos/{id}', [StartupProtocoloController::class, 'destroy']);
 
 // Dashboard Solar
 $router->get('/api/startup/dashboard', [StartupDashboardController::class, 'stats']);
