@@ -162,40 +162,103 @@ final class StartupFaturaController
             }
         }
 
-        $stmt = $this->pdo->prepare("
-            INSERT INTO startup_faturas (
-                usuario_id, cliente_id, mes_referencia, consumo_kwh, creditos_injetados_kwh,
-                iluminacao_publica, tarifa_kwh, valor_energisa, desconto_pct, valor_desconto,
-                valor_cobrado, status, data_emissao, data_vencimento, data_pagamento, observacoes,
-                arquivo_anexo, nome_arquivo_anexo
-            ) VALUES (
-                :uid, :cid, :mes, :consumo, :creditos,
-                :ilum, :tarifa, :v_energisa, :desc_pct, :v_desconto,
-                :v_cobrado, :status, :emissao, :vencimento, :pagamento, :obs,
-                :anexo, :nome_anexo
-            )
-        ");
+        try {
+            $stmt = $this->pdo->prepare("
+                INSERT INTO startup_faturas (
+                    usuario_id, cliente_id, mes_referencia, consumo_kwh, creditos_injetados_kwh,
+                    iluminacao_publica, tarifa_kwh, valor_energisa, desconto_pct, valor_desconto,
+                    valor_cobrado, status, data_emissao, data_vencimento, data_pagamento, observacoes,
+                    arquivo_anexo, nome_arquivo_anexo
+                ) VALUES (
+                    :uid, :cid, :mes, :consumo, :creditos,
+                    :ilum, :tarifa, :v_energisa, :desc_pct, :v_desconto,
+                    :v_cobrado, :status, :emissao, :vencimento, :pagamento, :obs,
+                    :anexo, :nome_anexo
+                )
+            ");
 
-        $stmt->execute([
-            'uid'        => $userId,
-            'cid'        => $clienteId,
-            'mes'        => $mesReferencia,
-            'consumo'    => $consumoKwh,
-            'creditos'   => $creditosInjetados,
-            'ilum'       => $iluminacaoPublica,
-            'tarifa'     => $tarifaKwh,
-            'v_energisa' => $valorEnergisa,
-            'desc_pct'   => $descontoPct,
-            'v_desconto' => $valorDesconto,
-            'v_cobrado'  => $valorCobrado,
-            'status'     => $status,
-            'emissao'    => $dataEmissao,
-            'vencimento' => $dataVencimento,
-            'pagamento'  => $dataPagamento,
-            'obs'        => $observacoes,
-            'anexo'      => $arquivoAnexo,
-            'nome_anexo' => $nomeArquivoAnexo
-        ]);
+            $stmt->execute([
+                'uid'        => $userId,
+                'cid'        => $clienteId,
+                'mes'        => $mesReferencia,
+                'consumo'    => $consumoKwh,
+                'creditos'   => $creditosInjetados,
+                'ilum'       => $iluminacaoPublica,
+                'tarifa'     => $tarifaKwh,
+                'v_energisa' => $valorEnergisa,
+                'desc_pct'   => $descontoPct,
+                'v_desconto' => $valorDesconto,
+                'v_cobrado'  => $valorCobrado,
+                'status'     => $status,
+                'emissao'    => $dataEmissao,
+                'vencimento' => $dataVencimento,
+                'pagamento'  => $dataPagamento,
+                'obs'        => $observacoes,
+                'anexo'      => $arquivoAnexo,
+                'nome_anexo' => $nomeArquivoAnexo
+            ]);
+        } catch (\PDOException $e) {
+            // Se as colunas de anexo não existirem no banco, tenta adicioná-las ou faz fallback seguro
+            if (str_contains($e->getMessage(), 'arquivo_anexo') || str_contains($e->getMessage(), 'nome_arquivo_anexo')) {
+                try {
+                    $this->pdo->exec("ALTER TABLE `startup_faturas` ADD COLUMN `arquivo_anexo` VARCHAR(500) NULL DEFAULT NULL");
+                    $this->pdo->exec("ALTER TABLE `startup_faturas` ADD COLUMN `nome_arquivo_anexo` VARCHAR(255) NULL DEFAULT NULL");
+                    $stmt->execute([
+                        'uid'        => $userId,
+                        'cid'        => $clienteId,
+                        'mes'        => $mesReferencia,
+                        'consumo'    => $consumoKwh,
+                        'creditos'   => $creditosInjetados,
+                        'ilum'       => $iluminacaoPublica,
+                        'tarifa'     => $tarifaKwh,
+                        'v_energisa' => $valorEnergisa,
+                        'desc_pct'   => $descontoPct,
+                        'v_desconto' => $valorDesconto,
+                        'v_cobrado'  => $valorCobrado,
+                        'status'     => $status,
+                        'emissao'    => $dataEmissao,
+                        'vencimento' => $dataVencimento,
+                        'pagamento'  => $dataPagamento,
+                        'obs'        => $observacoes,
+                        'anexo'      => $arquivoAnexo,
+                        'nome_anexo' => $nomeArquivoAnexo
+                    ]);
+                } catch (\Throwable $ex) {
+                    $stmtFallback = $this->pdo->prepare("
+                        INSERT INTO startup_faturas (
+                            usuario_id, cliente_id, mes_referencia, consumo_kwh, creditos_injetados_kwh,
+                            iluminacao_publica, tarifa_kwh, valor_energisa, desconto_pct, valor_desconto,
+                            valor_cobrado, status, data_emissao, data_vencimento, data_pagamento, observacoes
+                        ) VALUES (
+                            :uid, :cid, :mes, :consumo, :creditos,
+                            :ilum, :tarifa, :v_energisa, :desc_pct, :v_desconto,
+                            :v_cobrado, :status, :emissao, :vencimento, :pagamento, :obs
+                        )
+                    ");
+                    $stmtFallback->execute([
+                        'uid'        => $userId,
+                        'cid'        => $clienteId,
+                        'mes'        => $mesReferencia,
+                        'consumo'    => $consumoKwh,
+                        'creditos'   => $creditosInjetados,
+                        'ilum'       => $iluminacaoPublica,
+                        'tarifa'     => $tarifaKwh,
+                        'v_energisa' => $valorEnergisa,
+                        'desc_pct'   => $descontoPct,
+                        'v_desconto' => $valorDesconto,
+                        'v_cobrado'  => $valorCobrado,
+                        'status'     => $status,
+                        'emissao'    => $dataEmissao,
+                        'vencimento' => $dataVencimento,
+                        'pagamento'  => $dataPagamento,
+                        'obs'        => $observacoes
+                    ]);
+                }
+            } else {
+                Response::error('Erro ao registrar fatura no banco de dados: ' . $e->getMessage(), 500);
+                return;
+            }
+        }
 
         $faturaId = (int)$this->pdo->lastInsertId();
 
@@ -278,44 +341,108 @@ final class StartupFaturaController
             }
         }
 
-        $stmt = $this->pdo->prepare("
-            UPDATE startup_faturas SET
-                consumo_kwh = :consumo,
-                creditos_injetados_kwh = :creditos,
-                iluminacao_publica = :ilum,
-                tarifa_kwh = :tarifa,
-                valor_energisa = :v_energisa,
-                desconto_pct = :desc_pct,
-                valor_desconto = :v_desconto,
-                valor_cobrado = :v_cobrado,
-                status = :status,
-                data_vencimento = :vencimento,
-                data_pagamento = :pagamento,
-                observacoes = :obs,
-                arquivo_anexo = :anexo,
-                nome_arquivo_anexo = :nome_anexo,
-                atualizado_em = NOW()
-            WHERE id = :id AND usuario_id = :uid
-        ");
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE startup_faturas SET
+                    consumo_kwh = :consumo,
+                    creditos_injetados_kwh = :creditos,
+                    iluminacao_publica = :ilum,
+                    tarifa_kwh = :tarifa,
+                    valor_energisa = :v_energisa,
+                    desconto_pct = :desc_pct,
+                    valor_desconto = :v_desconto,
+                    valor_cobrado = :v_cobrado,
+                    status = :status,
+                    data_vencimento = :vencimento,
+                    data_pagamento = :pagamento,
+                    observacoes = :obs,
+                    arquivo_anexo = :anexo,
+                    nome_arquivo_anexo = :nome_anexo,
+                    atualizado_em = NOW()
+                WHERE id = :id AND usuario_id = :uid
+            ");
 
-        $stmt->execute([
-            'consumo'    => $consumoKwh,
-            'creditos'   => $creditosInjetados,
-            'ilum'       => $iluminacaoPublica,
-            'tarifa'     => $tarifaKwh,
-            'v_energisa' => $valorEnergisa,
-            'desc_pct'   => $descontoPct,
-            'v_desconto' => $valorDesconto,
-            'v_cobrado'  => $valorCobrado,
-            'status'     => $status,
-            'vencimento' => $dataVencimento,
-            'pagamento'  => $dataPagamento,
-            'obs'        => $observacoes,
-            'anexo'      => $arquivoAnexo,
-            'nome_anexo' => $nomeArquivoAnexo,
-            'id'         => $faturaId,
-            'uid'        => $userId
-        ]);
+            $stmt->execute([
+                'consumo'    => $consumoKwh,
+                'creditos'   => $creditosInjetados,
+                'ilum'       => $iluminacaoPublica,
+                'tarifa'     => $tarifaKwh,
+                'v_energisa' => $valorEnergisa,
+                'desc_pct'   => $descontoPct,
+                'v_desconto' => $valorDesconto,
+                'v_cobrado'  => $valorCobrado,
+                'status'     => $status,
+                'vencimento' => $dataVencimento,
+                'pagamento'  => $dataPagamento,
+                'obs'        => $observacoes,
+                'anexo'      => $arquivoAnexo,
+                'nome_anexo' => $nomeArquivoAnexo,
+                'id'         => $faturaId,
+                'uid'        => $userId
+            ]);
+        } catch (\PDOException $e) {
+            if (str_contains($e->getMessage(), 'arquivo_anexo') || str_contains($e->getMessage(), 'nome_arquivo_anexo')) {
+                try {
+                    $this->pdo->exec("ALTER TABLE `startup_faturas` ADD COLUMN `arquivo_anexo` VARCHAR(500) NULL DEFAULT NULL");
+                    $this->pdo->exec("ALTER TABLE `startup_faturas` ADD COLUMN `nome_arquivo_anexo` VARCHAR(255) NULL DEFAULT NULL");
+                    $stmt->execute([
+                        'consumo'    => $consumoKwh,
+                        'creditos'   => $creditosInjetados,
+                        'ilum'       => $iluminacaoPublica,
+                        'tarifa'     => $tarifaKwh,
+                        'v_energisa' => $valorEnergisa,
+                        'desc_pct'   => $descontoPct,
+                        'v_desconto' => $valorDesconto,
+                        'v_cobrado'  => $valorCobrado,
+                        'status'     => $status,
+                        'vencimento' => $dataVencimento,
+                        'pagamento'  => $dataPagamento,
+                        'obs'        => $observacoes,
+                        'anexo'      => $arquivoAnexo,
+                        'nome_anexo' => $nomeArquivoAnexo,
+                        'id'         => $faturaId,
+                        'uid'        => $userId
+                    ]);
+                } catch (\Throwable $ex) {
+                    $stmtFallback = $this->pdo->prepare("
+                        UPDATE startup_faturas SET
+                            consumo_kwh = :consumo,
+                            creditos_injetados_kwh = :creditos,
+                            iluminacao_publica = :ilum,
+                            tarifa_kwh = :tarifa,
+                            valor_energisa = :v_energisa,
+                            desconto_pct = :desc_pct,
+                            valor_desconto = :v_desconto,
+                            valor_cobrado = :v_cobrado,
+                            status = :status,
+                            data_vencimento = :vencimento,
+                            data_pagamento = :pagamento,
+                            observacoes = :obs,
+                            atualizado_em = NOW()
+                        WHERE id = :id AND usuario_id = :uid
+                    ");
+                    $stmtFallback->execute([
+                        'consumo'    => $consumoKwh,
+                        'creditos'   => $creditosInjetados,
+                        'ilum'       => $iluminacaoPublica,
+                        'tarifa'     => $tarifaKwh,
+                        'v_energisa' => $valorEnergisa,
+                        'desc_pct'   => $descontoPct,
+                        'v_desconto' => $valorDesconto,
+                        'v_cobrado'  => $valorCobrado,
+                        'status'     => $status,
+                        'vencimento' => $dataVencimento,
+                        'pagamento'  => $dataPagamento,
+                        'obs'        => $observacoes,
+                        'id'         => $faturaId,
+                        'uid'        => $userId
+                    ]);
+                }
+            } else {
+                Response::error('Erro ao atualizar fatura: ' . $e->getMessage(), 500);
+                return;
+            }
+        }
 
         $this->auditoria->registrar($userId, 'editar', 'fatura', $faturaId, [
             'status'        => $status,

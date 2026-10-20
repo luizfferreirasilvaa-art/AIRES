@@ -93,6 +93,8 @@ CREATE TABLE IF NOT EXISTS `startup_faturas` (
     `data_vencimento` DATE NULL,
     `data_pagamento` DATE NULL,
     `observacoes` TEXT NULL,
+    `arquivo_anexo` VARCHAR(500) NULL DEFAULT NULL,
+    `nome_arquivo_anexo` VARCHAR(255) NULL DEFAULT NULL,
     `criado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `atualizado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletado_em` TIMESTAMP NULL DEFAULT NULL,
@@ -102,6 +104,23 @@ CREATE TABLE IF NOT EXISTS `startup_faturas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ");
 echo "✓ Tabela startup_faturas verificada/criada.\n";
+
+// Garantir colunas de anexo na tabela startup_faturas se ela já existia
+try {
+    $cols = $pdo->query("SHOW COLUMNS FROM `startup_faturas` LIKE 'arquivo_anexo'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE `startup_faturas` ADD COLUMN `arquivo_anexo` VARCHAR(500) NULL DEFAULT NULL");
+        echo "✓ Coluna arquivo_anexo adicionada em startup_faturas.\n";
+    }
+} catch (\Throwable $e) {}
+
+try {
+    $cols = $pdo->query("SHOW COLUMNS FROM `startup_faturas` LIKE 'nome_arquivo_anexo'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE `startup_faturas` ADD COLUMN `nome_arquivo_anexo` VARCHAR(255) NULL DEFAULT NULL");
+        echo "✓ Coluna nome_arquivo_anexo adicionada em startup_faturas.\n";
+    }
+} catch (\Throwable $e) {}
 
 // 5. Tabela startup_pagamentos
 $pdo->exec("
