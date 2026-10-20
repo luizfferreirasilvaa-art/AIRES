@@ -32,7 +32,8 @@ final class StartupCreditoController
         $sql = "
             SELECT sc.*,
                    (SELECT COUNT(*) FROM startup_creditos_cliente scc WHERE scc.credito_id = sc.id) AS total_clientes_alocados,
-                   (SELECT COALESCE(SUM(scc.saldo_acumulado_kwh), 0) FROM startup_creditos_cliente scc WHERE scc.credito_id = sc.id) AS total_saldo_acumulado
+                   (SELECT COALESCE(SUM(scc.saldo_acumulado_kwh), 0) FROM startup_creditos_cliente scc WHERE scc.credito_id = sc.id) AS total_saldo_acumulado,
+                   (SELECT COALESCE(SUM(scc.creditos_consumidos_kwh), 0) FROM startup_creditos_cliente scc WHERE scc.credito_id = sc.id) AS total_consumido_clientes
             FROM startup_creditos sc
             WHERE sc.usuario_id = :uid AND sc.deletado_em IS NULL
             ORDER BY sc.mes_referencia DESC
@@ -42,17 +43,38 @@ final class StartupCreditoController
         $stmt->execute(['uid' => $userId]);
         $creditos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Resumo geral
+        // Resumo geral com métricas executivas da usina
         $stmtResumo = $this->pdo->prepare("
             SELECT 
                 COALESCE(SUM(creditos_gerados_kwh), 0) AS total_gerado,
                 COALESCE(SUM(creditos_distribuidos_kwh), 0) AS total_distribuido,
-                COALESCE(SUM(saldo_kwh), 0) AS total_saldo
+                COALESCE(SUM(saldo_kwh), 0) AS total_saldo,
+                COUNT(*) AS total_meses,
+                COALESCE(AVG(creditos_gerados_kwh), 0) AS media_geracao,
+                (SELECT COUNT(*) FROM startup_clientes WHERE usuario_id = :uid1 AND status = 'ativo' AND deletado_em IS NULL) AS total_clientes_ativos,
+                (SELECT COALESCE(SUM(qtd_propriedades), 0) FROM startup_clientes WHERE usuario_id = :uid2 AND status = 'ativo' AND deletado_em IS NULL) AS total_propriedades,
+                (SELECT COALESCE(AVG(tarifa_kwh), 0.95) FROM startup_faturas WHERE usuario_id = :uid3 AND deletado_em IS NULL) AS tarifa_media
             FROM startup_creditos 
             WHERE usuario_id = :uid AND deletado_em IS NULL
         ");
-        $stmtResumo->execute(['uid' => $userId]);
-        $resumo = $stmtResumo->fetch(PDO::FETCH_ASSOC);
+        $stmtResumo->execute([
+            'uid'  => $userId,
+            'uid1' => $userId,
+            'uid2' => $userId,
+            'uid3' => $userId
+        ]);
+        $resumo = $stmtResumo->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        $totalGerado = (float)($resumo['total_gerado'] ?? 0);
+        $totalDist = (float)($resumo['total_distribuido'] ?? 0);
+        $totalSaldo = (float)($resumo['total_saldo'] ?? 0);
+        $tarifaMedia = (float)($resumo['tarifa_media'] ?? 0.95);
+        if ($tarifaMedia <= 0) $tarifaMedia = 0.95;
+
+        $resumo['tarifa_media'] = $tarifaMedia;
+        $resumo['valor_estimado_sobra'] = round($totalSaldo * $tarifaMedia, 2);
+        $resumo['taxa_retencao_usina'] = $totalGerado > 0 ? round(($totalSaldo / $totalGerado) * 100, 1) : 0;
+        $resumo['taxa_distribuicao'] = $totalGerado > 0 ? round(($totalDist / $totalGerado) * 100, 1) : 0;
 
         Response::json([
             'sucesso'  => true,
@@ -290,17 +312,42 @@ final class StartupCreditoController
         $stmt->execute(['cid' => $creditoId, 'uid' => $userId]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Calcular previsão em meses baseada na média de consumo dos últimos 3 meses
+        // Calcular previsão em meses e status contextual de estoque
         return array_map(function ($row) {
             $consumo = (float)$row['creditos_consumidos_kwh'];
+            $alocado = (float)$row['creditos_alocados_kwh'];
             $saldo = (float)$row['saldo_acumulado_kwh'];
 
-            $mesesPrevisao = ($consumo > 0) ? round($saldo / $consumo, 1) : ($saldo > 0 ? 99 : 0);
-            $alertaEstoqueBaixo = ($mesesPrevisao < 1.0);
+            if ($consumo > 0) {
+                $mesesPrevisao = round($saldo / $consumo, 1);
+            } elseif ($saldo > 0) {
+                $mesesPrevisao = 99; // Reserva disponível sem consumo registrado ainda
+            } else {
+                $mesesPrevisao = 0;
+            }
+
+            // Status contextual inteligente
+            if ($alocado == 0 && $consumo == 0 && $saldo == 0) {
+                $statusEstoque = 'aguardando'; // Novo cliente ou rateio não preenchido
+                $alertaEstoqueBaixo = false;
+            } elseif ($consumo > 0 && $saldo == 0) {
+                $statusEstoque = 'zerado'; // Esgotou todos os créditos
+                $alertaEstoqueBaixo = true;
+            } elseif ($consumo > 0 && $mesesPrevisao < 1.0) {
+                $statusEstoque = 'baixo'; // Menos de 1 mês de autonomia
+                $alertaEstoqueBaixo = true;
+            } elseif ($saldo > 0 && $consumo == 0) {
+                $statusEstoque = 'reservado'; // Crédito pronto sem consumo
+                $alertaEstoqueBaixo = false;
+            } else {
+                $statusEstoque = 'saudavel'; // Autonomia adequada
+                $alertaEstoqueBaixo = false;
+            }
 
             return array_merge($row, [
                 'previsao_meses'       => $mesesPrevisao,
-                'alerta_estoque_baixo' => $alertaEstoqueBaixo
+                'alerta_estoque_baixo' => $alertaEstoqueBaixo,
+                'status_estoque'       => $statusEstoque
             ]);
         }, $rows);
     }
