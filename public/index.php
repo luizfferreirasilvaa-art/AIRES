@@ -25,6 +25,7 @@ use Aires\Controllers\AuthController;
 use Aires\Controllers\TaskController;
 use Aires\Controllers\SubtaskController;
 use Aires\Controllers\MissionController;
+use Aires\Controllers\MissionBudgetController;
 use Aires\Controllers\AlertController;
 use Aires\Controllers\DashboardController;
 use Aires\Controllers\NoteController;
@@ -115,6 +116,14 @@ $router->get('/api/missoes', [MissionController::class, 'index']);
 $router->post('/api/missoes', [MissionController::class, 'store']);
 $router->put('/api/missoes/{id}', [MissionController::class, 'update']);
 $router->delete('/api/missoes/{id}', [MissionController::class, 'destroy']);
+
+// Orçamento & Planejamento Financeiro de Missões (Previsões Futuras & Parcelamento)
+$router->get('/api/missoes/orcamento', [MissionBudgetController::class, 'index']);
+$router->get('/api/missoes/orcamento/resumo', [MissionBudgetController::class, 'resumo']);
+$router->get('/api/missoes/orcamento/projecao', [MissionBudgetController::class, 'projecao']);
+$router->post('/api/missoes/orcamento', [MissionBudgetController::class, 'store']);
+$router->put('/api/missoes/orcamento/{id}', [MissionBudgetController::class, 'update']);
+$router->delete('/api/missoes/orcamento/{id}', [MissionBudgetController::class, 'destroy']);
 
 // Inteligência Ativa: Alertas e Notificações com Cálculo de Viagem (Pilar 3)
 $router->get('/api/alertas/pendentes', [AlertController::class, 'pending']);

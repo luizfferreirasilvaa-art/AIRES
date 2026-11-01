@@ -10,6 +10,7 @@ if [ -n "$DB_HOST" ]; then
     php database/seed_admin.php || echo "Aviso: seed_admin.php finalizou"
     php database/migration_modos.php || echo "Aviso: migration_modos.php finalizou"
     php database/migration_startup.php || echo "Aviso: migration_startup.php finalizou"
+    php database/migration_missao_orcamento.php || echo "Aviso: migration_missao_orcamento.php finalizou"
 fi
 
 # Define a porta injetada pelo Render ou padrão 10000

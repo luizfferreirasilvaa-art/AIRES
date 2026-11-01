@@ -530,17 +530,44 @@ $compMes = $compromissos_mes ?? [];
              SEÇÃO: MISSÕES ESTRATÉGICAS
              ======================================================== -->
         <section id="section-missoes" class="app-section flex-1 p-4 md:p-8 space-y-6 hidden">
-            <div class="flex items-center justify-between">
+            <!-- Header com Título, Sub-abas e Ações -->
+            <div class="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <h3 class="text-lg font-extrabold text-white">Missões Estratégicas</h3>
-                    <p class="text-xs text-zinc-400">Alocação de energia em projetos de alto impacto.</p>
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        🎯 Missões Estratégicas
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-lime-400/10 text-lime-400 border border-lime-400/20 font-bold uppercase tracking-wider">Planos & Orçamentos</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400">Alocação de energia em projetos de alto impacto, orçamentos por plano e previsão de parcelamentos.</p>
                 </div>
-                <button type="button" onclick="App.openMissionModal()" class="px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-200 font-bold text-xs rounded-full shadow-lg transition-all flex items-center gap-1.5">
-                    + Nova Missão
-                </button>
+
+                <!-- Alternador de Sub-Abas: Planos & Metas vs Financeiro & Orçamento -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="inline-flex p-1 bg-zinc-900/90 rounded-full border border-white/10 gap-1 shadow-lg backdrop-blur-md">
+                        <button type="button" id="btn-tab-missoes-planos" onclick="App.switchMissionSubTab('planos')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all glass-pill-active flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span>Planos & Metas</span>
+                        </button>
+                        <button type="button" id="btn-tab-missoes-financeiro" onclick="App.switchMissionSubTab('financeiro')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition-all flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>Financeiro & Orçamento</span>
+                        </button>
+                    </div>
+
+                    <button type="button" id="btn-action-missoes-novo" onclick="App.handleMissionActionClick()" class="px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-200 font-bold text-xs rounded-full shadow-lg transition-all flex items-center gap-1.5 active:scale-95">
+                        <span id="btn-action-missoes-texto">+ Nova Missão</span>
+                    </button>
+                </div>
             </div>
 
-            <div id="missions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-36 md:pb-8"></div>
+            <!-- Conteúdo da Aba 1: Planos & Metas (Grid de Missões) -->
+            <div id="missoes-planos-view" class="space-y-4">
+                <div id="missions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-36 md:pb-8"></div>
+            </div>
+
+            <!-- Conteúdo da Aba 2: Financeiro, Orçamento & Previsão Futura -->
+            <div id="missoes-financeiro-view" class="space-y-4 hidden pb-36 md:pb-8">
+                <div id="missoes-financeiro-container"></div>
+            </div>
         </section>
 
         <!-- ========================================================
@@ -1329,6 +1356,7 @@ $compMes = $compromissos_mes ?? [];
     <script src="assets/js/startup-dashboard.js?v=<?= time() ?>"></script>
     <script src="assets/js/startup-auditoria.js?v=<?= time() ?>"></script>
     <script src="assets/js/startup-protocolos.js?v=<?= time() ?>"></script>
+    <script src="assets/js/mission-budget.js?v=<?= time() ?>"></script>
     <script src="assets/js/app.js?v=<?= time() ?>"></script>
 </body>
 </html>

@@ -95,6 +95,23 @@ const API = (() => {
         updateMissao: (id, payload) => request(`/missoes/${id}`, { method: 'PUT', body: payload }),
         deleteMissao: (id) => request(`/missoes/${id}`, { method: 'DELETE' }),
 
+        // Missões - Orçamento & Planejamento Financeiro
+        getMissoesOrcamento: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/missoes/orcamento${query ? '?' + query : ''}`);
+        },
+        getMissoesOrcamentoResumo: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/missoes/orcamento/resumo${query ? '?' + query : ''}`);
+        },
+        getMissoesOrcamentoProjecao: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/missoes/orcamento/projecao${query ? '?' + query : ''}`);
+        },
+        createMissaoOrcamentoItem: (payload) => request('/missoes/orcamento', { method: 'POST', body: payload }),
+        updateMissaoOrcamentoItem: (id, payload) => request(`/missoes/orcamento/${id}`, { method: 'PUT', body: payload }),
+        deleteMissaoOrcamentoItem: (id) => request(`/missoes/orcamento/${id}`, { method: 'DELETE' }),
+
         getAlertasPendentes: () => request('/alertas/pendentes'),
         markAlertaLido: (id) => request(`/alertas/${id}/lido`, { method: 'PATCH' }),
 

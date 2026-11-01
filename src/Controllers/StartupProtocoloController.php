@@ -545,3 +545,4 @@ final class StartupProtocoloController
         Response::success(null, 'Protocolo excluído com sucesso!');
     }
 }
+

@@ -6,6 +6,7 @@
 const App = (() => {
     let currentSection = 'inicio';
     let currentTaskView = 'kanban';
+    let currentMissionSubTab = 'planos';
     let alertInterval = null;
 
     function init() {
@@ -31,6 +32,7 @@ const App = (() => {
         try { StartupDashboard?.init(); } catch (e) { console.error('StartupDashboard erro:', e); }
         try { StartupAuditoria?.init(); } catch (e) { console.error('StartupAuditoria erro:', e); }
         try { StartupProtocolos?.init(); } catch (e) { console.error('StartupProtocolos erro:', e); }
+        try { MissionBudget?.init(); } catch (e) { console.error('MissionBudget erro:', e); }
 
         // Carregar visão inicial
         try { loadSection('inicio'); } catch (e) { console.error('loadSection erro:', e); }
@@ -236,7 +238,11 @@ const App = (() => {
         } else if (section === 'tarefas') {
             loadTaskView(currentTaskView);
         } else if (section === 'missoes') {
-            renderMissions();
+            if (currentMissionSubTab === 'financeiro') {
+                MissionBudget?.load();
+            } else {
+                renderMissions();
+            }
         } else if (section === 'notas') {
             renderNotes();
         } else if (section === 'dashboard') {
@@ -1044,8 +1050,150 @@ const App = (() => {
     }
 
     /* ========================================================
-     * SEÇÃO: MISSÕES ESTRATÉGICAS (Pilar 1 - Bento Grid)
+     * SEÇÃO: MISSÕES ESTRATÉGICAS & FINANCEIRO DE PLANOS
      * ======================================================== */
+    function switchMissionSubTab(tab) {
+        currentMissionSubTab = tab;
+        const btnPlanos = document.getElementById('btn-tab-missoes-planos');
+        const btnFin = document.getElementById('btn-tab-missoes-financeiro');
+        const viewPlanos = document.getElementById('missoes-planos-view');
+        const viewFin = document.getElementById('missoes-financeiro-view');
+        const btnActionTxt = document.getElementById('btn-action-missoes-texto');
+
+        if (tab === 'financeiro') {
+            btnFin?.classList.add('glass-pill-active', 'text-white');
+            btnFin?.classList.remove('text-zinc-400');
+            btnPlanos?.classList.remove('glass-pill-active', 'text-white');
+            btnPlanos?.classList.add('text-zinc-400');
+
+            viewPlanos?.classList.add('hidden');
+            viewFin?.classList.remove('hidden');
+
+            if (btnActionTxt) btnActionTxt.innerText = '+ Orçar Item';
+            MissionBudget?.load();
+        } else {
+            btnPlanos?.classList.add('glass-pill-active', 'text-white');
+            btnPlanos?.classList.remove('text-zinc-400');
+            btnFin?.classList.remove('glass-pill-active', 'text-white');
+            btnFin?.classList.add('text-zinc-400');
+
+            viewFin?.classList.add('hidden');
+            viewPlanos?.classList.remove('hidden');
+
+            if (btnActionTxt) btnActionTxt.innerText = '+ Nova Missão';
+            renderMissions();
+        }
+    }
+
+    function handleMissionActionClick() {
+        if (currentMissionSubTab === 'financeiro') {
+            MissionBudget?.openModalItem();
+        } else {
+            openMissionModal();
+        }
+    }
+
+    function openMissionModal() {
+        const existing = document.getElementById('modal-nova-missao');
+        if (existing) existing.remove();
+
+        const modalHtml = `
+            <div id="modal-nova-missao" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md">
+                <div class="max-w-md w-full bg-[#121217] border border-white/10 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-white/5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center text-base">
+                                🎯
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-sm sm:text-base text-white">Nova Missão Estratégica</h4>
+                                <p class="text-[11px] text-zinc-400">Defina os objetivos centrais e o teto orçamentário.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="document.getElementById('modal-nova-missao').remove()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all">
+                            ✕
+                        </button>
+                    </div>
+
+                    <form id="form-nova-missao" class="space-y-3.5 text-xs">
+                        <div>
+                            <label class="block font-semibold text-zinc-300 mb-1">Título do Plano / Missão *</label>
+                            <input type="text" id="nova-missao-titulo" required placeholder="Ex: Expansão Usina Pantanal II, Automação 2027..." class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400">
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-zinc-300 mb-1">Teto Orçado Estimado (R$)</label>
+                            <input type="number" step="0.01" min="0" id="nova-missao-orcamento" placeholder="Ex: 50000.00" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-lime-400 font-mono font-bold focus:outline-none focus:border-lime-400">
+                            <span class="text-[10px] text-zinc-500 mt-0.5 block">Valor total que o plano tem como teto para contratações e compras.</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-semibold text-zinc-300 mb-1">Prazo / Data Limite</label>
+                                <input type="date" id="nova-missao-data" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-zinc-300 mb-1">Cor Temática</label>
+                                <select id="nova-missao-cor" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400">
+                                    <option value="lime">Lime Neon</option>
+                                    <option value="indigo" selected>Indigo</option>
+                                    <option value="purple">Purple</option>
+                                    <option value="emerald">Emerald</option>
+                                    <option value="cyan">Cyan</option>
+                                    <option value="orange">Orange</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-zinc-300 mb-1">Descrição / Metas de Sucesso</label>
+                            <textarea id="nova-missao-desc" rows="2" placeholder="Descreva os resultados-chave esperados com este plano..." class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-2 border-t border-white/5">
+                            <button type="button" onclick="document.getElementById('modal-nova-missao').remove()" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-full transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="px-6 py-2.5 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-extrabold text-xs rounded-full shadow-lg transition-all">
+                                Criar Missão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('form-nova-missao')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const titulo = document.getElementById('nova-missao-titulo')?.value.trim();
+            const orcamento = parseFloat(document.getElementById('nova-missao-orcamento')?.value || '0');
+            const dataLimite = document.getElementById('nova-missao-data')?.value || null;
+            const cor = document.getElementById('nova-missao-cor')?.value || 'indigo';
+            const descricao = document.getElementById('nova-missao-desc')?.value.trim();
+
+            try {
+                await API.createMissao({
+                    titulo: titulo,
+                    orcamento_estimado: orcamento,
+                    data_limite: dataLimite,
+                    cor: cor,
+                    descricao: descricao
+                });
+                showToast('Missão criada com sucesso!', 'success');
+                document.getElementById('modal-nova-missao')?.remove();
+                if (currentMissionSubTab === 'financeiro') {
+                    MissionBudget?.load();
+                } else {
+                    renderMissions();
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+    }
+
     async function renderMissions() {
         const container = document.getElementById('missions-grid');
         if (!container) return;
@@ -1099,7 +1247,7 @@ const App = (() => {
                         </div>
 
                         <div class="pt-3 border-t border-white/[0.04] flex items-center justify-between text-xs">
-                            <span class="text-zinc-500">Orçamento: R$ ${parseFloat(m.orcamento_estimado).toFixed(2)}</span>
+                            <button type="button" onclick="App.switchMissionSubTab('financeiro'); setTimeout(() => MissionBudget.filtrarPorMissao(${m.id}), 100);" class="text-xs text-cyan-400 hover:underline font-bold flex items-center gap-1" title="Ver orçamento detalhado e parcelamentos deste plano"><span>💰 R$ ${parseFloat(m.orcamento_estimado || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span></button>
                             <button type="button" class="text-lime-400 hover:underline font-bold" onclick="App.filterTasksByMission(${m.id})">
                                 Ver Ações →
                             </button>
@@ -1328,6 +1476,9 @@ const App = (() => {
         updateStats,
         showToast,
         filterTasksByMission,
+        switchMissionSubTab,
+        handleMissionActionClick,
+        openMissionModal,
         openMissionModal: () => {
             const title = prompt('Título da Missão Estratégica:');
             if (title) {
