@@ -39,7 +39,7 @@ final class AuthController
         }
 
         // Permitir login tanto com email completo (ex: admin@aires.io) quanto com alias ("admin")
-        $stmt = $this->pdo->prepare("SELECT id, nome, email, senha_hash FROM usuarios 
+        $stmt = $this->pdo->prepare("SELECT id, nome, email, senha_hash, perfil, status, paginas_permitidas FROM usuarios 
             WHERE (email = :login OR (email = 'admin@aires.io' AND :login_alias = 'admin')) 
               AND deletado_em IS NULL 
             LIMIT 1");
@@ -55,10 +55,18 @@ final class AuthController
             return;
         }
 
+        // Verifica se a conta do usuário está ativa
+        if (($user['status'] ?? 'ativo') === 'inativo') {
+            Response::error('Sua conta foi desativada pelo administrador do sistema.', 403);
+            return;
+        }
+
         // Iniciar dados de autenticação na sessão
         $_SESSION['usuario_id'] = (int)$user['id'];
         $_SESSION['usuario_nome'] = $user['nome'];
         $_SESSION['usuario_email'] = $user['email'];
+        $_SESSION['usuario_perfil'] = $user['perfil'] ?? 'usuario';
+        $_SESSION['usuario_paginas'] = $user['paginas_permitidas'] ?? null;
 
         $redirectUrl = Request::getBasePath() . '/';
 
@@ -67,9 +75,10 @@ final class AuthController
             'mensagem'     => 'Acesso autorizado. Bem-vindo ao AIRES!',
             'redirecionar' => $redirectUrl,
             'usuario'      => [
-                'id'    => (int)$user['id'],
-                'nome'  => $user['nome'],
-                'email' => $user['email']
+                'id'     => (int)$user['id'],
+                'nome'   => $user['nome'],
+                'email'  => $user['email'],
+                'perfil' => $user['perfil'] ?? 'usuario'
             ]
         ]);
     }

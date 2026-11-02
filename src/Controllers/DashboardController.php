@@ -26,7 +26,7 @@ final class DashboardController
     {
         $userId = $userId ?? $this->getUserId();
 
-        $stmtUser = $this->pdo->prepare("SELECT nome, xp, streak_dias, ultimo_dia_produtivo FROM usuarios WHERE id = :id");
+        $stmtUser = $this->pdo->prepare("SELECT id, nome, email, perfil, status, paginas_permitidas, xp, streak_dias, ultimo_dia_produtivo FROM usuarios WHERE id = :id");
         $stmtUser->execute(['id' => $userId]);
         $user = $stmtUser->fetch() ?: ['nome' => 'Comandante', 'xp' => 0, 'streak_dias' => 0];
 

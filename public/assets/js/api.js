@@ -226,6 +226,18 @@ const API = (() => {
         getStartupAuditoria: (params = {}) => {
             const query = new URLSearchParams(params).toString();
             return request(`/startup/auditoria${query ? '?' + query : ''}`);
-        }
+        },
+
+        // Administração - Gestão de Usuários & Acessos
+        getAdminUsuarios: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/admin/usuarios${query ? '?' + query : ''}`);
+        },
+        getAdminModulosDisponiveis: () => request('/admin/usuarios/modulos'),
+        getAdminUsuario: (id) => request(`/admin/usuarios/${id}`),
+        createAdminUsuario: (payload) => request('/admin/usuarios', { method: 'POST', body: payload }),
+        updateAdminUsuario: (id, payload) => request(`/admin/usuarios/${id}`, { method: 'PUT', body: payload }),
+        deleteAdminUsuario: (id) => request(`/admin/usuarios/${id}`, { method: 'DELETE' }),
+        toggleAdminUsuarioStatus: (id) => request(`/admin/usuarios/${id}/toggle-status`, { method: 'POST' })
     };
 })();

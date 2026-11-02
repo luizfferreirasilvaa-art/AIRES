@@ -38,6 +38,7 @@ use Aires\Controllers\StartupFinanceiroController;
 use Aires\Controllers\StartupDashboardController;
 use Aires\Controllers\StartupAuditoriaController;
 use Aires\Controllers\StartupProtocoloController;
+use Aires\Controllers\AdminUsuarioController;
 
 // Iniciar sessões armazenadas no banco de dados MySQL
 SessionHandler::start();
@@ -208,6 +209,17 @@ $router->get('/api/startup/dashboard', [StartupDashboardController::class, 'stat
 
 // Log de Auditoria
 $router->get('/api/startup/auditoria', [StartupAuditoriaController::class, 'index']);
+
+// ==========================================
+// ADMINISTRAÇÃO: GESTÃO DE USUÁRIOS & PERMISSÕES
+// ==========================================
+$router->get('/api/admin/usuarios', [AdminUsuarioController::class, 'index']);
+$router->get('/api/admin/usuarios/modulos', [AdminUsuarioController::class, 'modulosDisponiveis']);
+$router->get('/api/admin/usuarios/{id}', [AdminUsuarioController::class, 'show']);
+$router->post('/api/admin/usuarios', [AdminUsuarioController::class, 'store']);
+$router->put('/api/admin/usuarios/{id}', [AdminUsuarioController::class, 'update']);
+$router->delete('/api/admin/usuarios/{id}', [AdminUsuarioController::class, 'destroy']);
+$router->post('/api/admin/usuarios/{id}/toggle-status', [AdminUsuarioController::class, 'toggleStatus']);
 
 // Despacho da requisição
 $router->dispatch($request);

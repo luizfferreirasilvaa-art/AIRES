@@ -9,12 +9,26 @@ $level = (int)floor($userXp / 100) + 1;
 $xpInLevel = $userXp % 100;
 $xpToNext = 100 - $xpInLevel;
 $compMes = $compromissos_mes ?? [];
+$userPerfil = $usuario['perfil'] ?? 'usuario';
+$isAdmin = ($userPerfil === 'admin') || ((int)($usuario['id'] ?? 0) === 1);
+$userPaginasRaw = $usuario['paginas_permitidas'] ?? null;
+$userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, true) : null;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script>
+        window.AIRES_CURRENT_USER = <?= json_encode([
+            'id' => (int)($usuario['id'] ?? 1),
+            'nome' => $usuario['nome'] ?? 'Usuário',
+            'email' => $usuario['email'] ?? '',
+            'perfil' => $userPerfil,
+            'isAdmin' => $isAdmin,
+            'paginasPermitidas' => $userPaginas
+        ], JSON_UNESCAPED_UNICODE) ?>;
+    </script>
     <title>AIRES — Execution Engine & Segundo Cérebro</title>
     
     <!-- Google Fonts: Outfit (Arredondada), Plus Jakarta Sans e Dancing Script -->
@@ -238,6 +252,19 @@ $compMes = $compromissos_mes ?? [];
                             <p class="text-xs font-bold text-white"><?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Administrador') ?></p>
                             <p class="text-[10px] text-zinc-500 font-medium truncate"><?= htmlspecialchars($_SESSION['usuario_email'] ?? 'admin@aires.io') ?></p>
                         </div>
+
+                        <?php if ($isAdmin): ?>
+                        <!-- Option: Gestão de Usuários (Admin) -->
+                        <button type="button" onclick="loadSection('admin-usuarios'); document.getElementById('user-dropdown-menu').classList.add('hidden');" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/10 transition-all text-left group">
+                            <div class="w-7 h-7 rounded-xl bg-lime-400/10 text-lime-400 flex items-center justify-center transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            </div>
+                            <div>
+                                <p class="font-bold text-xs text-zinc-200 group-hover:text-white">Usuários & Acessos</p>
+                                <p class="text-[10px] text-zinc-500">Painel Administrativo</p>
+                            </div>
+                        </button>
+                        <?php endif; ?>
 
                         <!-- Option: Configurações -->
                         <button type="button" onclick="App.openSettingsModal()" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/10 transition-all text-left group">
@@ -1773,6 +1800,7 @@ $compMes = $compromissos_mes ?? [];
     <script src="assets/js/startup-protocolos.js?v=<?= time() ?>"></script>
     <script src="assets/js/mission-budget.js?v=<?= time() ?>"></script>
     <script src="assets/js/personal-finance.js?v=<?= time() ?>"></script>
+    <script src="assets/js/admin-usuarios.js?v=<?= time() ?>"></script>
 
     <script src="assets/js/app.js?v=<?= time() ?>"></script>
 </body>

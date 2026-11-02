@@ -34,6 +34,9 @@ const App = (() => {
         try { StartupProtocolos?.init(); } catch (e) { console.error('StartupProtocolos erro:', e); }
         try { MissionBudget?.init(); } catch (e) { console.error('MissionBudget erro:', e); }
 
+        // Aplicar controle de acessos por usuário
+        try { applyUserPermissions(); } catch (e) { console.error('applyUserPermissions erro:', e); }
+
         // Carregar visão inicial
         try { loadSection('inicio'); } catch (e) { console.error('loadSection erro:', e); }
         updateStats();
@@ -176,6 +179,43 @@ const App = (() => {
         });
     }
 
+
+    /* ========================================================
+     * CONTROLE DE ACESSO & PERMISSÕES GRANULARES POR USUÁRIO
+     * ======================================================== */
+    function applyUserPermissions() {
+        const user = window.AIRES_CURRENT_USER;
+        if (!user) return;
+        if (user.isAdmin) return; // Admin master possui acesso irrestrito
+
+        const permitidas = Array.isArray(user.paginasPermitidas) ? user.paginasPermitidas : null;
+        if (!permitidas) return; // Sem restrições específicas
+
+        // Oculta botões de navegação não permitidos
+        document.querySelectorAll('[data-nav-section]').forEach(btn => {
+            const sec = btn.dataset.navSection;
+            if (sec === 'admin-usuarios' || !permitidas.includes(sec)) {
+                btn.classList.add('hidden');
+                btn.style.display = 'none';
+            } else {
+                btn.classList.remove('hidden');
+                btn.style.display = '';
+            }
+        });
+
+        // Oculta elementos restritos a administradores
+        document.querySelectorAll('[data-admin-only="true"]').forEach(el => {
+            el.classList.add('hidden');
+            el.style.display = 'none';
+        });
+
+        // Redireciona para a primeira página permitida se a atual não for autorizada
+        if (!permitidas.includes(currentSection)) {
+            const primeira = permitidas[0] || 'inicio';
+            loadSection(primeira);
+        }
+    }
+
     /* ========================================================
      * NAVEGAÇÃO ENTRE SEÇÕES (Mobile Dock + Desktop Sidebar + Mobile Drawer)
      * ======================================================== */
@@ -189,6 +229,18 @@ const App = (() => {
     }
 
     function loadSection(section) {
+        const currentUser = window.AIRES_CURRENT_USER;
+        if (currentUser && !currentUser.isAdmin && Array.isArray(currentUser.paginasPermitidas)) {
+            if (!currentUser.paginasPermitidas.includes(section)) {
+                console.warn(`[AIRES] Acesso restrito à seção: ${section}`);
+                const fallback = currentUser.paginasPermitidas[0] || 'inicio';
+                if (fallback !== section) {
+                    loadSection(fallback);
+                    return;
+                }
+            }
+        }
+
         currentSection = section;
 
         // Se o drawer mobile estiver aberto, fecha suavemente ao selecionar qualquer seção
@@ -263,6 +315,8 @@ const App = (() => {
             StartupAuditoria?.load();
         } else if (section === 'financas-pessoais') {
             PersonalFinance?.load();
+        } else if (section === 'admin-usuarios') {
+            AdminUsuarios?.load();
         }
     }
 
