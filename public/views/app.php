@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $userStreak = (int)($usuario['streak_dias'] ?? 0);
 $userXp = (int)($usuario['xp'] ?? 0);
 $totalActiveTasks = (int)(($metricas['planejamento'] ?? 0) + ($metricas['a_fazer'] ?? 0) + ($metricas['em_andamento'] ?? 0));
@@ -580,7 +580,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                             <span>Planos & Metas</span>
                         </button>
                         <button type="button" id="btn-tab-missoes-financeiro" onclick="App.switchMissionSubTab('financeiro')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition-all flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             <span>Financeiro & Orçamento</span>
                         </button>
                     </div>
@@ -742,7 +742,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                             <span>Painel de Faturas</span>
                         </button>
                         <button type="button" id="btn-tab-fatura-emissao" onclick="StartupFaturamento.switchTab('emissao')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition-all flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                             <span>Robô de Emissão</span>
                         </button>
                     </div>
@@ -1190,7 +1190,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                 <!-- 4. Alertas & Saída -->
                 <div class="p-4 rounded-3xl bg-zinc-900/40 border border-white/5 space-y-3">
                     <span class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                         Alertas & Notificação de Saída
                     </span>
 
@@ -1514,14 +1514,18 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                             <option value="4">4x</option>
                             <option value="5">5x</option>
                             <option value="6">6x</option>
+                            <option value="7">7x</option>
                             <option value="8">8x</option>
-                            <option value="10" selected>10x</option>
-                            <option value="12">12x</option>
-                            <option value="18">18x</option>
-                            <option value="24">24x</option>
-                            <option value="36">36x</option>
-                            <option value="48">48x</option>
+                            <option value="9">9x</option>
+                            <option value="10">10x</option>
+                            <option value="11">11x</option>
+                            <option value="12" selected>12x</option>
+                            <option value="outro">Outro número (digitar)...</option>
                         </select>
+                        <div id="container-parcelas-custom" class="mt-2 hidden">
+                            <label class="block text-[10px] font-semibold text-lime-400 mb-1 uppercase tracking-wider">Quantidade Personalizada</label>
+                            <input type="number" id="pessoal-item-parcelas-custom" min="1" max="120" placeholder="Ex: 15, 18, 24, 36..." oninput="PersonalFinance.calcularPreviaParcelaModal()" class="w-full px-3.5 py-2 bg-zinc-900/90 border border-lime-400/50 rounded-2xl text-xs text-zinc-100 font-mono focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400/50 transition-all">
+                        </div>
                     </div>
 
                     <div id="container-campos-fixo" class="hidden">

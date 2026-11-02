@@ -699,14 +699,18 @@ const MissionBudget = (() => {
                                         <option value="4" ${itemData.qtd_parcelas == 4 ? 'selected' : ''}>4x</option>
                                         <option value="5" ${itemData.qtd_parcelas == 5 ? 'selected' : ''}>5x</option>
                                         <option value="6" ${itemData.qtd_parcelas == 6 ? 'selected' : ''}>6x</option>
+                                        <option value="7" ${itemData.qtd_parcelas == 7 ? 'selected' : ''}>7x</option>
+                                        <option value="8" ${itemData.qtd_parcelas == 8 ? 'selected' : ''}>8x</option>
+                                        <option value="9" ${itemData.qtd_parcelas == 9 ? 'selected' : ''}>9x</option>
                                         <option value="10" ${itemData.qtd_parcelas == 10 ? 'selected' : ''}>10x</option>
+                                        <option value="11" ${itemData.qtd_parcelas == 11 ? 'selected' : ''}>11x</option>
                                         <option value="12" ${itemData.qtd_parcelas == 12 ? 'selected' : ''}>12x (1 ano)</option>
-                                        <option value="18" ${itemData.qtd_parcelas == 18 ? 'selected' : ''}>18x</option>
-                                        <option value="24" ${itemData.qtd_parcelas == 24 ? 'selected' : ''}>24x (2 anos)</option>
-                                        <option value="36" ${itemData.qtd_parcelas == 36 ? 'selected' : ''}>36x (3 anos)</option>
-                                        <option value="48" ${itemData.qtd_parcelas == 48 ? 'selected' : ''}>48x (4 anos)</option>
-                                        <option value="60" ${itemData.qtd_parcelas == 60 ? 'selected' : ''}>60x (5 anos)</option>
+                                        <option value="outro" ${itemData.qtd_parcelas > 12 ? 'selected' : ''}>Outro número (digitar)...</option>
                                     </select>
+                                    <div id="container-item-parcelas-custom" class="mt-2 ${itemData.qtd_parcelas > 12 ? '' : 'hidden'}">
+                                        <label class="block text-[10px] font-semibold text-lime-400 mb-1 uppercase tracking-wider">Quantidade Personalizada</label>
+                                        <input type="number" id="item-qtd-parcelas-custom" min="1" max="120" value="${itemData.qtd_parcelas > 12 ? itemData.qtd_parcelas : ''}" placeholder="Ex: 15, 18, 24, 36..." class="w-full px-3.5 py-2 bg-zinc-900/90 border border-lime-400/50 rounded-2xl text-xs text-white font-mono focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400/50 transition-all">
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-zinc-300 mb-1">1º Vencimento *</label>
@@ -771,11 +775,22 @@ const MissionBudget = (() => {
         // Recálculo ao vivo do valor da parcela no modal
         const inpTotal = document.getElementById('item-valor-total');
         const selParc = document.getElementById('item-qtd-parcelas');
+        const custCont = document.getElementById('container-item-parcelas-custom');
+        const custInp = document.getElementById('item-qtd-parcelas-custom');
         const prevParc = document.getElementById('item-preview-parcela');
 
         function recalcularPreview() {
             const tot = parseFloat(inpTotal?.value || '0');
-            const parc = parseInt(selParc?.value || '1');
+            let parc = 1;
+            if (selParc?.value === 'outro') {
+                if (custCont) custCont.classList.remove('hidden');
+                parc = parseInt(custInp?.value || '0', 10);
+                if (parc <= 0) parc = 1;
+            } else {
+                if (custCont) custCont.classList.add('hidden');
+                parc = parseInt(selParc?.value || '1', 10);
+            }
+
             if (tot > 0 && parc > 0) {
                 const v = tot / parc;
                 if (prevParc) {
@@ -788,6 +803,7 @@ const MissionBudget = (() => {
 
         inpTotal?.addEventListener('input', recalcularPreview);
         selParc?.addEventListener('change', recalcularPreview);
+        custInp?.addEventListener('input', recalcularPreview);
         recalcularPreview();
 
         document.getElementById('form-orcamento-item')?.addEventListener('submit', async (e) => {
@@ -797,7 +813,13 @@ const MissionBudget = (() => {
             const categoria = document.getElementById('item-categoria')?.value;
             const fornecedor = document.getElementById('item-fornecedor')?.value.trim();
             const valorTotal = parseFloat(document.getElementById('item-valor-total')?.value || '0');
-            const qtdParcelas = parseInt(document.getElementById('item-qtd-parcelas')?.value || '1');
+            let qtdParcelas = 1;
+            if (selParc?.value === 'outro') {
+                qtdParcelas = parseInt(custInp?.value || '1', 10);
+                if (qtdParcelas < 1) qtdParcelas = 1;
+            } else {
+                qtdParcelas = parseInt(selParc?.value || '1', 10);
+            }
             const dataVenc = document.getElementById('item-data-vencimento')?.value;
             const status = document.getElementById('item-status')?.value;
             const formaPagamento = document.getElementById('item-forma-pagamento')?.value;

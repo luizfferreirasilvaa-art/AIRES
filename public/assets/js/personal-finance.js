@@ -1285,13 +1285,18 @@ const PersonalFinance = (() => {
                                     <option value="4">4x</option>
                                     <option value="5">5x</option>
                                     <option value="6">6x</option>
+                                    <option value="7">7x</option>
+                                    <option value="8">8x</option>
+                                    <option value="9">9x</option>
                                     <option value="10" selected>10x</option>
+                                    <option value="11">11x</option>
                                     <option value="12">12x</option>
-                                    <option value="18">18x</option>
-                                    <option value="24">24x</option>
-                                    <option value="36">36x</option>
-                                    <option value="48">48x</option>
+                                    <option value="outro">Outro número...</option>
                                 </select>
+                                <div id="container-sim-parcelas-custom" class="mt-2 hidden">
+                                    <label class="block text-[10px] font-semibold text-lime-400 mb-1 uppercase tracking-wider">Quantidade Personalizada</label>
+                                    <input type="number" id="sim-parcelas-custom" min="1" max="120" placeholder="Ex: 15, 18, 24, 36..." oninput="PersonalFinance.calcularPreviaParcelaSim()" class="w-full px-3.5 py-2 bg-zinc-900/90 border border-lime-400/50 rounded-2xl text-xs text-white font-mono focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400/50 transition-all">
+                                </div>
                             </div>
                         </div>
 
@@ -1334,7 +1339,20 @@ const PersonalFinance = (() => {
 
     function calcularPreviaParcelaSim() {
         const vTot = parseFloat(document.getElementById('sim-valor')?.value || 0);
-        const qtdP = parseInt(document.getElementById('sim-parcelas')?.value || 1, 10);
+        const selectEl = document.getElementById('sim-parcelas');
+        const customContainer = document.getElementById('container-sim-parcelas-custom');
+        const customInput = document.getElementById('sim-parcelas-custom');
+
+        let qtdP = 1;
+        if (selectEl?.value === 'outro') {
+            if (customContainer) customContainer.classList.remove('hidden');
+            qtdP = parseInt(customInput?.value || 0, 10);
+            if (qtdP <= 0) qtdP = 1;
+        } else {
+            if (customContainer) customContainer.classList.add('hidden');
+            qtdP = parseInt(selectEl?.value || 1, 10);
+        }
+
         const textoEl = document.getElementById('sim-previa-valor-texto');
         if (textoEl && vTot > 0 && qtdP > 0) {
             const vParc = (vTot / qtdP);
@@ -1352,7 +1370,14 @@ const PersonalFinance = (() => {
         const nome = document.getElementById('sim-nome')?.value || 'Compra Simulada';
         const categoria = document.getElementById('sim-categoria')?.value || 'eletrodomestico';
         const valorTotal = parseFloat(document.getElementById('sim-valor')?.value || 0);
-        const qtdParcelas = parseInt(document.getElementById('sim-parcelas')?.value || 1, 10);
+        let qtdParcelas = 1;
+        const simSelect = document.getElementById('sim-parcelas')?.value;
+        if (simSelect === 'outro') {
+            qtdParcelas = parseInt(document.getElementById('sim-parcelas-custom')?.value || 1, 10);
+            if (qtdParcelas < 1) qtdParcelas = 1;
+        } else {
+            qtdParcelas = parseInt(simSelect || 1, 10);
+        }
         const dataVenc = document.getElementById('sim-vencimento')?.value || new Date().toISOString().substring(0, 10);
 
         if (btn) {
@@ -1528,6 +1553,14 @@ const PersonalFinance = (() => {
         document.getElementById('modal-pessoal-item-title').textContent = 'Nova Despesa ou Compra de Meta';
         document.getElementById('pessoal-item-vencimento').value = new Date().toISOString().substring(0, 10);
         document.getElementById('pessoal-item-tipo').value = 'parcelado';
+
+        const selectEl = document.getElementById('pessoal-item-parcelas');
+        if (selectEl) selectEl.value = '1';
+        const customContainer = document.getElementById('container-parcelas-custom');
+        if (customContainer) customContainer.classList.add('hidden');
+        const customInput = document.getElementById('pessoal-item-parcelas-custom');
+        if (customInput) customInput.value = '';
+
         personalFinanceToggleTipoCampos();
         calcularPreviaParcelaModal();
 
@@ -1549,7 +1582,22 @@ const PersonalFinance = (() => {
         document.getElementById('pessoal-item-tipo').value = item.tipo;
         document.getElementById('pessoal-item-categoria').value = item.categoria;
         document.getElementById('pessoal-item-valor').value = item.valor_total;
-        document.getElementById('pessoal-item-parcelas').value = item.qtd_parcelas;
+
+        const parcelas = parseInt(item.qtd_parcelas || 1, 10);
+        const editSelectEl = document.getElementById('pessoal-item-parcelas');
+        const editCustomContainer = document.getElementById('container-parcelas-custom');
+        const editCustomInput = document.getElementById('pessoal-item-parcelas-custom');
+
+        if (parcelas >= 1 && parcelas <= 12) {
+            if (editSelectEl) editSelectEl.value = String(parcelas);
+            if (editCustomContainer) editCustomContainer.classList.add('hidden');
+            if (editCustomInput) editCustomInput.value = '';
+        } else {
+            if (editSelectEl) editSelectEl.value = 'outro';
+            if (editCustomContainer) editCustomContainer.classList.remove('hidden');
+            if (editCustomInput) editCustomInput.value = parcelas;
+        }
+
         document.getElementById('pessoal-item-pagas').value = item.parcelas_pagas;
         document.getElementById('pessoal-item-vencimento').value = item.data_primeiro_vencimento;
         document.getElementById('pessoal-item-dia-fixo').value = item.dia_vencimento_fixo || 10;
@@ -1595,7 +1643,20 @@ const PersonalFinance = (() => {
     function calcularPreviaParcelaModal() {
         const tipo = document.getElementById('pessoal-item-tipo')?.value || 'parcelado';
         const vTot = parseFloat(document.getElementById('pessoal-item-valor')?.value || 0);
-        const qtdP = parseInt(document.getElementById('pessoal-item-parcelas')?.value || 1, 10);
+        const selectEl = document.getElementById('pessoal-item-parcelas');
+        const customContainer = document.getElementById('container-parcelas-custom');
+        const customInput = document.getElementById('pessoal-item-parcelas-custom');
+
+        let qtdP = 1;
+        if (selectEl?.value === 'outro') {
+            if (customContainer) customContainer.classList.remove('hidden');
+            qtdP = parseInt(customInput?.value || 0, 10);
+            if (qtdP <= 0) qtdP = 1;
+        } else {
+            if (customContainer) customContainer.classList.add('hidden');
+            qtdP = parseInt(selectEl?.value || 1, 10);
+        }
+
         const previewBox = document.getElementById('pessoal-modal-preview-box');
         const previewTexto = document.getElementById('pessoal-modal-preview-texto');
 
@@ -1621,7 +1682,14 @@ const PersonalFinance = (() => {
         const tipo = document.getElementById('pessoal-item-tipo')?.value;
         const categoria = document.getElementById('pessoal-item-categoria')?.value;
         const valorTotal = parseFloat(document.getElementById('pessoal-item-valor')?.value || 0);
-        const qtdParcelas = parseInt(document.getElementById('pessoal-item-parcelas')?.value || 1, 10);
+        let qtdParcelas = 1;
+        const selectParc = document.getElementById('pessoal-item-parcelas')?.value;
+        if (selectParc === 'outro') {
+            qtdParcelas = parseInt(document.getElementById('pessoal-item-parcelas-custom')?.value || 1, 10);
+            if (qtdParcelas < 1) qtdParcelas = 1;
+        } else {
+            qtdParcelas = parseInt(selectParc || 1, 10);
+        }
         const parcelasPagas = parseInt(document.getElementById('pessoal-item-pagas')?.value || 0, 10);
         const dataVenc = document.getElementById('pessoal-item-vencimento')?.value;
         const diaFixo = parseInt(document.getElementById('pessoal-item-dia-fixo')?.value || 10, 10);
