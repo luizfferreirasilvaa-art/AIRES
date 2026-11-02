@@ -386,3 +386,29 @@ button[data-nav-section] svg {
     color: #a3e635 !important;
     stroke: currentColor !important;
 }
+
+/* Modais e Overlays com z-index garantido acima de qualquer dock ou drawer */
+.z-60,
+.z-\[60\],
+[id^="modal-"],
+[id$="-modal"],
+[id*="modal-"],
+#conflict-modal,
+#settings-modal,
+#task-modal-container {
+    z-index: 60 !important;
+}
+
+/* Oculta dock inferior flutuante quando qualquer modal estiver aberto */
+body.modal-open #mobile-bottom-dock {
+    display: none !important;
+}
+
+/* Utilitário para barras de rolagem fluidas sem barra visual feia no mobile */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

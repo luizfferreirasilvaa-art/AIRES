@@ -206,7 +206,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
     <!-- ========================================================
          MAIN CANVAS (Ambient Atmosphere & Content)
          ======================================================== -->
-    <main class="flex-1 flex flex-col min-w-0 h-full h-[100dvh] max-h-[100dvh] overflow-y-auto overscroll-contain relative safe-main">
+    <main class="flex-1 flex flex-col min-w-0 h-full h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden overscroll-contain relative safe-main w-full max-w-full">
         
         <!-- Ambient Art Glow Background Header (Top Sunset Gradient) -->
         <div class="ambient-glow-header pt-3 sm:pt-6 pb-4 px-4 md:px-8 border-b border-white/[0.04] safe-top relative">
@@ -605,28 +605,28 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
         <!-- ========================================================
              SEÇÃO: FINANÇAS PESSOAIS & METAS
              ======================================================== -->
-        <section id="section-financas-pessoais" class="app-section flex-1 p-4 md:p-8 space-y-6 hidden">
+        <section id="section-financas-pessoais" class="app-section flex-1 p-3 sm:p-6 md:p-8 space-y-5 hidden w-full max-w-full overflow-x-hidden">
             <!-- Header com Título & Indicadores -->
-            <div class="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
-                        💳 Finanças Pessoais & Metas
-                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 font-bold uppercase tracking-wider">Gestão & Teto Orçamentário</span>
+            <div class="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-3">
+                <div class="space-y-0.5">
+                    <h3 class="text-base sm:text-lg font-extrabold text-white flex items-center flex-wrap gap-2">
+                        <span>💳 Finanças Pessoais & Metas</span>
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 font-bold uppercase tracking-wider whitespace-nowrap">Gestão de Teto</span>
                     </h3>
-                    <p class="text-xs text-zinc-400">Controle do teto mensal, parcelamentos de metas (geladeira, eletrônicos), custos fixos (aluguel) e alertas de extrapolação.</p>
+                    <p class="text-[11px] sm:text-xs text-zinc-400">Controle do teto mensal, parcelamentos de metas (geladeira, eletrônicos), custos fixos e alertas.</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="PersonalFinance.abrirModalConfig()" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 font-bold text-xs rounded-full transition-all flex items-center gap-1.5">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="button" onclick="PersonalFinance.abrirModalConfig()" class="flex-1 sm:flex-initial px-3.5 py-2 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 font-bold text-xs rounded-full transition-all flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <span>⚙️ Ajustar Teto</span>
                     </button>
-                    <button type="button" onclick="PersonalFinance.abrirModalNovoItem()" class="px-4 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center gap-1.5 active:scale-95">
-                        <span>+ Nova Despesa ou Compra</span>
+                    <button type="button" onclick="PersonalFinance.abrirModalNovoItem()" class="flex-1 sm:flex-initial px-4 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
+                        <span>+ Nova Despesa</span>
                     </button>
                 </div>
             </div>
 
             <!-- Container Principal do Módulo de Finanças Pessoais -->
-            <div id="personal-finance-container" class="space-y-4 pb-36 md:pb-8"></div>
+            <div id="personal-finance-container" class="space-y-4 pb-36 md:pb-8 w-full max-w-full overflow-x-hidden"></div>
         </section>
 
         <!-- ========================================================
@@ -1260,7 +1260,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
     <!-- ========================================================
          MODAL DE CONFLITO DE AGENDA (Anti-Colisão)
          ======================================================== -->
-    <div id="conflict-modal" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div id="conflict-modal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <div class="max-w-md w-full bg-[#121217] border border-orange-500/40 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
             <div class="w-12 h-12 mx-auto rounded-2xl bg-orange-500/10 text-orange-400 flex items-center justify-center text-xl">
                 ⚠️
@@ -1293,7 +1293,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
     <!-- ========================================================
          MODAL DE CONFIGURAÇÕES (Pierre Glassmorphism)
          ======================================================== -->
-    <div id="settings-modal" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div id="settings-modal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 relative">
             <!-- Close button -->
             <button type="button" onclick="App.closeSettingsModal()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
@@ -1364,7 +1364,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
     <!-- ========================================================
          MODAL DE CRIAR NOVO MODO (Pierre Glassmorphism)
          ======================================================== -->
-    <div id="modal-create-mode" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div id="modal-create-mode" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <div class="max-w-md w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative">
             <button type="button" id="btn-close-create-mode" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -1429,7 +1429,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                     </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5 sticky bottom-0 bg-[#121217] -mx-2 px-2 pb-1">
                     <button type="button" id="btn-delete-mode" class="hidden px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs rounded-full transition-all mr-auto">
                         Excluir Modo
                     </button>
@@ -1448,8 +1448,8 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
     <!-- ========================================================
          MODAL DE ITEM DE FINANÇAS PESSOAIS (Pierre Glassmorphism)
          ======================================================== -->
-    <div id="modal-personal-finance-item" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
+    <div id="modal-personal-finance-item" class="fixed inset-0 z-[60] hidden items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md">
+        <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 relative max-h-[85dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain">
             <button type="button" onclick="PersonalFinance.fecharModalItem()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -1581,7 +1581,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                     <textarea id="pessoal-item-obs" rows="2" placeholder="Garantia, loja, notas de pagamento..." class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80"></textarea>
                 </div>
 
-                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5 sticky bottom-0 bg-[#121217] -mx-2 px-2 pb-1">
                     <button type="button" onclick="PersonalFinance.fecharModalItem()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
                         Cancelar
                     </button>
@@ -1596,7 +1596,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
     <!-- ========================================================
          MODAL DE CONFIGURAÇÃO DE TETO ORÇAMENTÁRIO PESSOAL
          ======================================================== -->
-    <div id="modal-personal-finance-config" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div id="modal-personal-finance-config" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <div class="max-w-md w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative">
             <button type="button" onclick="PersonalFinance.fecharModalConfig()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -1630,7 +1630,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                     <p class="text-[10px] text-zinc-500 mt-1">Gera aviso preventivo amarelo quando atingir essa porcentagem do teto.</p>
                 </div>
 
-                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5 sticky bottom-0 bg-[#121217] -mx-2 px-2 pb-1">
                     <button type="button" onclick="PersonalFinance.fecharModalConfig()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
                         Cancelar
                     </button>
@@ -1646,8 +1646,8 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
     <!-- ========================================================
          MODAL DE INVESTIMENTO / RESERVA (Pierre Glassmorphism)
          ======================================================== -->
-    <div id="modal-personal-investimento" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
+    <div id="modal-personal-investimento" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 relative max-h-[85dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain">
             <button type="button" onclick="PersonalFinance.fecharModalInvestimento()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -1751,7 +1751,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                     <textarea id="invest-obs" rows="2" placeholder="Finalidade, prazo, indexador (100% CDI, IPCA+6%)..." class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80"></textarea>
                 </div>
 
-                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5 sticky bottom-0 bg-[#121217] -mx-2 px-2 pb-1">
                     <button type="button" onclick="PersonalFinance.fecharModalInvestimento()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
                         Cancelar
                     </button>
@@ -1766,7 +1766,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
     <!-- ========================================================
          MODAL DE MOVIMENTAÇÃO RÁPIDA (Aporte / Rendimento / Resgate)
          ======================================================== -->
-    <div id="modal-personal-movimentacao" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div id="modal-personal-movimentacao" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <div class="max-w-md w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative">
             <button type="button" onclick="PersonalFinance.fecharModalMovimentacao()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -1810,7 +1810,7 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
                     <input type="text" id="mov-obs" placeholder="Ex: Sobra do mês, Aporte mensal planejado..." class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80">
                 </div>
 
-                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5 sticky bottom-0 bg-[#121217] -mx-2 px-2 pb-1">
                     <button type="button" onclick="PersonalFinance.fecharModalMovimentacao()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
                         Cancelar
                     </button>

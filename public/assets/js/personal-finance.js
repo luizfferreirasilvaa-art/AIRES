@@ -215,67 +215,67 @@ const PersonalFinance = (() => {
             <!-- ========================================================
                  KPI CARDS: VISÃO INTEGRADA (DESPESAS + PATRIMÔNIO ECONOMIZADO)
                  ======================================================== -->
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3 w-full max-w-full">
                 <!-- Teto Mensal Planejado -->
-                <div class="glass-card rounded-2xl p-4 space-y-1 border border-white/5 bg-white/[0.02]">
+                <div class="glass-card rounded-2xl p-3 sm:p-4 space-y-1 border border-white/5 bg-white/[0.02] min-w-0 overflow-hidden">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Teto de Gastos</span>
+                        <span class="text-[10px] text-zinc-400 uppercase font-bold tracking-wider truncate">Teto de Gastos</span>
                         <button type="button" onclick="PersonalFinance.abrirModalConfig()" class="text-xs text-lime-400 hover:text-white transition-colors" title="Ajustar teto">⚙️</button>
                     </div>
-                    <p class="text-xl sm:text-2xl font-black text-white font-mono">
+                    <p class="text-base sm:text-2xl font-black text-white font-mono truncate">
                         R$ ${teto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     <p class="text-[10px] text-zinc-500 truncate">Renda: R$ ${parseFloat(configData.renda_mensal_estimada || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</p>
                 </div>
 
                 <!-- Custos Fixos Mensais (Aluguel, etc.) -->
-                <div class="glass-card rounded-2xl p-4 space-y-1 border border-white/5 bg-white/[0.02]">
+                <div class="glass-card rounded-2xl p-3 sm:p-4 space-y-1 border border-white/5 bg-white/[0.02] min-w-0 overflow-hidden">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Custos Fixos</span>
+                        <span class="text-[10px] text-zinc-400 uppercase font-bold tracking-wider truncate">Custos Fixos</span>
                         <span class="text-cyan-400 text-sm">🏠</span>
                     </div>
-                    <p class="text-xl sm:text-2xl font-black text-cyan-400 font-mono">
+                    <p class="text-base sm:text-2xl font-black text-cyan-400 font-mono truncate">
                         R$ ${fixos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p class="text-[10px] text-zinc-500 truncate">Aluguel, contas recorrentes</p>
+                    <p class="text-[10px] text-zinc-500 truncate">Aluguel, contas</p>
                 </div>
 
                 <!-- Parcelas de Metas no Mês (Geladeira, etc.) -->
-                <div class="glass-card rounded-2xl p-4 space-y-1 border border-white/5 bg-white/[0.02]">
+                <div class="glass-card rounded-2xl p-3 sm:p-4 space-y-1 border border-white/5 bg-white/[0.02] min-w-0 overflow-hidden">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Parcelas de Metas</span>
+                        <span class="text-[10px] text-zinc-400 uppercase font-bold tracking-wider truncate">Parcelas de Metas</span>
                         <span class="text-purple-400 text-sm">💳</span>
                     </div>
-                    <p class="text-xl sm:text-2xl font-black text-purple-300 font-mono">
+                    <p class="text-base sm:text-2xl font-black text-purple-300 font-mono truncate">
                         R$ ${parcelasMes.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p class="text-[10px] text-zinc-500 truncate">Saldo restante: R$ ${dividaRestante.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</p>
+                    <p class="text-[10px] text-zinc-500 truncate">Restante: R$ ${dividaRestante.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</p>
                 </div>
 
                 <!-- Margem / Saldo Livre Mensal -->
-                <div class="glass-card rounded-2xl p-4 space-y-1 border ${saldoLivre < 0 ? 'border-red-500/30 bg-red-500/[0.04]' : 'border-emerald-500/20 bg-emerald-500/[0.02]'}">
+                <div class="glass-card rounded-2xl p-3 sm:p-4 space-y-1 border ${saldoLivre < 0 ? 'border-red-500/30 bg-red-500/[0.04]' : 'border-emerald-500/20 bg-emerald-500/[0.02]'} min-w-0 overflow-hidden">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] ${saldoLivre < 0 ? 'text-red-400' : 'text-emerald-400'} uppercase font-bold tracking-wider">Margem Livre</span>
+                        <span class="text-[10px] ${saldoLivre < 0 ? 'text-red-400' : 'text-emerald-400'} uppercase font-bold tracking-wider truncate">Margem Livre</span>
                         <span class="text-sm">${saldoLivre < 0 ? '⚠️' : '💎'}</span>
                     </div>
-                    <p class="text-xl sm:text-2xl font-black ${saldoLivre < 0 ? 'text-red-400 font-bold' : 'text-emerald-400'} font-mono">
+                    <p class="text-base sm:text-2xl font-black ${saldoLivre < 0 ? 'text-red-400 font-bold' : 'text-emerald-400'} font-mono truncate">
                         R$ ${saldoLivre.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <div class="flex items-center gap-1.5 text-[10px] ${saldoLivre < 0 ? 'text-red-400' : 'text-zinc-400'}">
+                    <div class="flex items-center gap-1.5 text-[10px] ${saldoLivre < 0 ? 'text-red-400' : 'text-zinc-400'} truncate">
                         <span>${pctComprometido}% do teto</span>
                     </div>
                 </div>
 
                 <!-- Patrimônio Total Economizado / Investimentos -->
-                <div class="col-span-2 lg:col-span-1 glass-card rounded-2xl p-4 space-y-1 border border-lime-400/20 bg-lime-400/[0.03] cursor-pointer hover:border-lime-400/40 transition-all" onclick="PersonalFinance.setSubView('investimentos')" title="Clique para ver os investimentos detalhados">
+                <div class="col-span-2 lg:col-span-1 glass-card rounded-2xl p-3 sm:p-4 space-y-1 border border-lime-400/20 bg-lime-400/[0.03] cursor-pointer hover:border-lime-400/40 transition-all min-w-0 overflow-hidden" onclick="PersonalFinance.setSubView('investimentos')" title="Clique para ver os investimentos detalhados">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-lime-400 uppercase font-extrabold tracking-wider">Economias & Investimentos</span>
+                        <span class="text-[10px] text-lime-400 uppercase font-extrabold tracking-wider truncate">Economias & Investimentos</span>
                         <span class="text-lime-400 text-sm">💰</span>
                     </div>
-                    <p class="text-xl sm:text-2xl font-black text-lime-400 font-mono">
+                    <p class="text-base sm:text-2xl font-black text-lime-400 font-mono truncate">
                         R$ ${patrimonioTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <div class="flex items-center justify-between text-[10px] text-zinc-400">
+                    <div class="flex items-center justify-between text-[10px] text-zinc-400 truncate">
                         <span class="text-emerald-400 font-semibold">+R$ ${lucroTotal.toLocaleString('pt-BR', { minimumFractionDigits: 0 })} rend.</span>
                         <span class="text-zinc-500 font-mono">${investimentosList.length} ativos</span>
                     </div>
@@ -283,40 +283,42 @@ const PersonalFinance = (() => {
             </div>
 
             <!-- ========================================================
-                 SUB-ABAS: ITENS & METAS | INVESTIMENTOS | FLUXO FUTURO | SIMULADOR
+                 SUB-ABAS: DASHBOARD | ITENS & METAS | INVESTIMENTOS | FLUXO FUTURO | SIMULADOR
                  ======================================================== -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-white/5">
-                <div class="inline-flex p-1 bg-zinc-900/90 rounded-full border border-white/10 gap-1 shadow-lg backdrop-blur-md self-start flex-wrap">
-                    <button type="button" onclick="PersonalFinance.setSubView('dashboard')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all ${currentSubView === 'dashboard' ? 'glass-pill-active text-lime-400' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        <span>Dashboard</span>
-                    </button>
-                    <button type="button" onclick="PersonalFinance.setSubView('itens')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all ${currentSubView === 'itens' ? 'glass-pill-active' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                        <span>Fixos & Metas (${itensList.length})</span>
-                    </button>
-                    <button type="button" onclick="PersonalFinance.setSubView('investimentos')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all ${currentSubView === 'investimentos' ? 'glass-pill-active text-lime-400' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
-                        <span class="text-sm">💰</span>
-                        <span>Investimentos & Economias (${investimentosList.length})</span>
-                    </button>
-                    <button type="button" onclick="PersonalFinance.setSubView('projecao')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all ${currentSubView === 'projecao' ? 'glass-pill-active' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span>Previsão 12 Meses</span>
-                        ${mesesExtrapolados.length > 0 ? `<span class="px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[9px] font-black">${mesesExtrapolados.length}</span>` : ''}
-                    </button>
-                    <button type="button" onclick="PersonalFinance.setSubView('simulador')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all ${currentSubView === 'simulador' ? 'glass-pill-active' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        <span>Simulador ("Posso Comprar?")</span>
-                    </button>
+            <div class="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-white/5">
+                <div class="w-full sm:w-auto overflow-x-auto no-scrollbar py-0.5">
+                    <div class="inline-flex p-1 bg-zinc-900/90 rounded-2xl sm:rounded-full border border-white/10 gap-1 shadow-lg backdrop-blur-md flex-nowrap shrink-0">
+                        <button type="button" onclick="PersonalFinance.setSubView('dashboard')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 ${currentSubView === 'dashboard' ? 'glass-pill-active text-lime-400' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            <span>Dashboard</span>
+                        </button>
+                        <button type="button" onclick="PersonalFinance.setSubView('itens')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 ${currentSubView === 'itens' ? 'glass-pill-active' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                            <span>Fixos & Metas (${itensList.length})</span>
+                        </button>
+                        <button type="button" onclick="PersonalFinance.setSubView('investimentos')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 ${currentSubView === 'investimentos' ? 'glass-pill-active text-lime-400' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
+                            <span class="text-sm">💰</span>
+                            <span>Investimentos (${investimentosList.length})</span>
+                        </button>
+                        <button type="button" onclick="PersonalFinance.setSubView('projecao')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 ${currentSubView === 'projecao' ? 'glass-pill-active' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span>Previsão 12 Meses</span>
+                            ${mesesExtrapolados.length > 0 ? `<span class="px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[9px] font-black">${mesesExtrapolados.length}</span>` : ''}
+                        </button>
+                        <button type="button" onclick="PersonalFinance.setSubView('simulador')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 ${currentSubView === 'simulador' ? 'glass-pill-active' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            <span>Simulador ("Posso Comprar?")</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-2 self-end sm:self-auto">
+                <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
                     ${currentSubView === 'investimentos' ? `
-                        <button type="button" onclick="PersonalFinance.abrirModalNovoInvestimento()" class="px-4 py-2 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center gap-1.5 active:scale-95">
+                        <button type="button" onclick="PersonalFinance.abrirModalNovoInvestimento()" class="px-4 py-2 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center gap-1.5 active:scale-95 whitespace-nowrap">
                             <span>+ Novo Investimento / Reserva</span>
                         </button>
                     ` : `
-                        <button type="button" onclick="PersonalFinance.abrirModalNovoItem()" class="px-4 py-2 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center gap-1.5 active:scale-95">
+                        <button type="button" onclick="PersonalFinance.abrirModalNovoItem()" class="px-4 py-2 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center gap-1.5 active:scale-95 whitespace-nowrap">
                             <span>+ Nova Despesa ou Compra</span>
                         </button>
                     `}
@@ -561,19 +563,20 @@ const PersonalFinance = (() => {
                     </div>
 
                     <!-- Bar Chart Visualizer -->
-                    <div class="pt-4 pb-2 overflow-x-auto">
+                    <div class="pt-4 pb-2 w-full max-w-full overflow-x-auto no-scrollbar">
                         <div class="min-w-[620px] flex items-end justify-between gap-2 h-44 px-2 border-b border-white/10">
                             ${(projecao.length > 0 ? projecao : [
-                                { rotulo: 'Atual', patrimonio_liquido: patLiq, patrimonio_bruto: patBruto, divida_restante: dividaRestante }
+                                { rotulo: 'Atual', mes_nome: 'Atual', patrimonio_liquido: patLiq, patrimonio_bruto: patBruto, divida_restante: dividaRestante }
                             ]).map((p, idx) => {
                                 const pLiq = parseFloat(p.patrimonio_liquido || 0);
                                 const pBruto = parseFloat(p.patrimonio_bruto || 0);
                                 const pDiv = parseFloat(p.divida_restante || 0);
                                 const heightPct = maxPatrimonio > 0 ? Math.max(12, Math.min(100, (pLiq / maxPatrimonio) * 100)) : 12;
                                 const isCurrent = idx === 0;
+                                const rotuloMes = p.mes_nome ? p.mes_nome.replace('/20', '/') : (p.rotulo || p.mes || `Mês ${idx + 1}`);
 
                                 return `
-                                    <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer" title="${p.rotulo}: Líquido R$ ${pLiq.toLocaleString('pt-BR')}, Bruto R$ ${pBruto.toLocaleString('pt-BR')}, Dívida -R$ ${pDiv.toLocaleString('pt-BR')}">
+                                    <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer" title="${rotuloMes}: Líquido R$ ${pLiq.toLocaleString('pt-BR')}, Bruto R$ ${pBruto.toLocaleString('pt-BR')}, Dívida -R$ ${pDiv.toLocaleString('pt-BR')}">
                                         <div class="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono font-bold text-lime-400 text-center whitespace-nowrap mb-1">
                                             R$ ${(pLiq / 1000).toFixed(1)}k
                                         </div>
@@ -582,8 +585,8 @@ const PersonalFinance = (() => {
                                             <div class="w-full bg-gradient-to-t from-lime-500 to-emerald-400 rounded-t-lg transition-all" style="height: 100%"></div>
                                         </div>
 
-                                        <span class="text-[10px] font-mono ${isCurrent ? 'text-lime-400 font-extrabold' : 'text-zinc-400'} pt-1">
-                                            ${p.rotulo}
+                                        <span class="text-[10px] font-mono ${isCurrent ? 'text-lime-400 font-extrabold' : 'text-zinc-400'} pt-1 whitespace-nowrap">
+                                            ${rotuloMes}
                                         </span>
                                     </div>
                                 `;
@@ -592,12 +595,12 @@ const PersonalFinance = (() => {
                     </div>
 
                     ${projecao.length >= 2 ? `
-                        <div class="flex items-center justify-between text-xs text-zinc-400 pt-1">
-                            <span>Início: <strong class="text-white font-mono">R$ ${parseFloat(projecao[0].patrimonio_liquido).toLocaleString('pt-BR')}</strong></span>
-                            <span class="text-emerald-400 font-bold flex items-center gap-1">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-zinc-400 pt-2 border-t border-white/5">
+                            <span class="whitespace-nowrap">Início: <strong class="text-white font-mono">R$ ${parseFloat(projecao[0].patrimonio_liquido).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
+                            <span class="text-emerald-400 font-bold flex items-center gap-1 whitespace-nowrap">
                                 🚀 Crescimento em 12m: +R$ ${(parseFloat(projecao[projecao.length - 1].patrimonio_liquido) - parseFloat(projecao[0].patrimonio_liquido)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
-                            <span>Projetado: <strong class="text-lime-400 font-mono">R$ ${parseFloat(projecao[projecao.length - 1].patrimonio_liquido).toLocaleString('pt-BR')}</strong></span>
+                            <span class="whitespace-nowrap">Projetado: <strong class="text-lime-400 font-mono">R$ ${parseFloat(projecao[projecao.length - 1].patrimonio_liquido).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
                         </div>
                     ` : ''}
                 </div>
@@ -1518,6 +1521,7 @@ const PersonalFinance = (() => {
     function abrirModalNovoItem() {
         const modal = document.getElementById('modal-personal-finance-item');
         if (!modal) return;
+        document.body.classList.add('modal-open');
 
         document.getElementById('form-personal-finance-item').reset();
         document.getElementById('pessoal-item-id').value = '';
@@ -1537,6 +1541,7 @@ const PersonalFinance = (() => {
 
         const modal = document.getElementById('modal-personal-finance-item');
         if (!modal) return;
+        document.body.classList.add('modal-open');
 
         document.getElementById('pessoal-item-id').value = item.id;
         document.getElementById('modal-pessoal-item-title').textContent = 'Editar ' + item.nome;
@@ -1566,6 +1571,7 @@ const PersonalFinance = (() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
+        document.body.classList.remove('modal-open');
     }
 
     function personalFinanceToggleTipoCampos() {
@@ -1691,6 +1697,7 @@ const PersonalFinance = (() => {
     function abrirModalNovoInvestimento() {
         const modal = document.getElementById('modal-personal-investimento');
         if (!modal) return;
+        document.body.classList.add('modal-open');
 
         document.getElementById('form-personal-investimento').reset();
         document.getElementById('invest-id').value = '';
@@ -1707,6 +1714,7 @@ const PersonalFinance = (() => {
 
         const modal = document.getElementById('modal-personal-investimento');
         if (!modal) return;
+        document.body.classList.add('modal-open');
 
         document.getElementById('invest-id').value = inv.id;
         document.getElementById('modal-invest-title').textContent = 'Editar ' + inv.nome;
@@ -1733,6 +1741,7 @@ const PersonalFinance = (() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
+        document.body.classList.remove('modal-open');
     }
 
     async function salvarInvestimento(e) {
@@ -1797,6 +1806,7 @@ const PersonalFinance = (() => {
 
         const modal = document.getElementById('modal-personal-movimentacao');
         if (!modal) return;
+        document.body.classList.add('modal-open');
 
         document.getElementById('form-personal-movimentacao').reset();
         document.getElementById('mov-invest-id').value = inv.id;
@@ -1815,6 +1825,7 @@ const PersonalFinance = (() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
+        document.body.classList.remove('modal-open');
     }
 
     async function salvarMovimentacao(e) {
@@ -1864,6 +1875,7 @@ const PersonalFinance = (() => {
     function abrirModalConfig() {
         const modal = document.getElementById('modal-personal-finance-config');
         if (!modal) return;
+        document.body.classList.add('modal-open');
 
         document.getElementById('cfg-teto').value = configData.teto_gastos_mensal || 5000;
         document.getElementById('cfg-renda').value = configData.renda_mensal_estimada || 6000;
@@ -1879,6 +1891,7 @@ const PersonalFinance = (() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
+        document.body.classList.remove('modal-open');
     }
 
     async function salvarConfig(e) {
