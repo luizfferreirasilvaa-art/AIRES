@@ -49,8 +49,3 @@ INSERT INTO `alertas_notificacoes` (`usuario_id`, `tarefa_id`, `horario_disparo`
 VALUES 
 (1, 1, CONCAT(CURDATE(), ' 12:15:00'), 'sistema', 0, 0, 'Saída em breve: Reunião de Alinhamento (45 min de viagem + 60 min antecedência)')
 ON DUPLICATE KEY UPDATE `mensagem` = VALUES(`mensagem`);
-
-INSERT INTO `notas` (`usuario_id`, `missao_id`, `tarefa_id`, `titulo`, `conteudo`, `fixado`, `tags`)
-VALUES 
-(1, 1, 2, 'Princípios do AIRES Segundo Cérebro', 'O sistema opera sob o preceito de Execution Engine: menos atrito para registrar, clareza máxima do que fazer a seguir, e inteligência ativa que protege a capacidade produtiva.', 1, '#manifesto,#arquitetura,#aires')
-ON DUPLICATE KEY UPDATE `titulo` = VALUES(`titulo`);

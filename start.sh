@@ -13,6 +13,7 @@ if [ -n "$DB_HOST" ]; then
     php database/migration_missao_orcamento.php || echo "Aviso: migration_missao_orcamento.php finalizou"
     php database/migration_financas_pessoais.php || echo "Aviso: migration_financas_pessoais.php finalizou"
     php database/migration_admin_usuarios.php || echo "Aviso: migration_admin_usuarios.php finalizou"
+    php database/migration_limpar_financas_notas.php || echo "Aviso: migration_limpar_financas_notas.php finalizou"
 fi
 
 # Define a porta injetada pelo Render ou padrão 10000

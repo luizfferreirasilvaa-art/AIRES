@@ -56,6 +56,21 @@ try {
     if (!in_array('paginas_permitidas', $cols, true)) {
         $pdoBoot->exec("ALTER TABLE `usuarios` ADD COLUMN `paginas_permitidas` TEXT NULL DEFAULT NULL");
     }
+
+    // Executa migrações pontuais sob demanda (como limpeza de dados demo solicitada pelo usuário)
+    $pdoBoot->exec("CREATE TABLE IF NOT EXISTS `sistema_migracoes_executadas` (`versao` VARCHAR(100) NOT NULL PRIMARY KEY, `executado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+    $chkLimpeza = $pdoBoot->query("SELECT COUNT(*) FROM `sistema_migracoes_executadas` WHERE `versao` = 'limpar_dados_financas_notas_v1'")->fetchColumn();
+    if ((int)$chkLimpeza === 0) {
+        $pdoBoot->exec("SET FOREIGN_KEY_CHECKS = 0;");
+        $pdoBoot->exec("DELETE FROM `financas_investimentos_movimentacoes`");
+        $pdoBoot->exec("DELETE FROM `financas_investimentos`");
+        $pdoBoot->exec("DELETE FROM `financas_pessoais_itens`");
+        $pdoBoot->exec("UPDATE `financas_pessoais_config` SET `teto_gastos_mensal` = 0.00, `renda_mensal_estimada` = 0.00 WHERE 1");
+        $pdoBoot->exec("DELETE FROM `missao_orcamento_itens`");
+        $pdoBoot->exec("DELETE FROM `notas`");
+        $pdoBoot->exec("SET FOREIGN_KEY_CHECKS = 1;");
+        $pdoBoot->exec("INSERT INTO `sistema_migracoes_executadas` (`versao`) VALUES ('limpar_dados_financas_notas_v1')");
+    }
 } catch (\Throwable $e) {
     // Silencioso
 }
