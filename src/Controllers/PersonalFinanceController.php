@@ -469,6 +469,255 @@ final class PersonalFinanceController
         return $mesesExtrapolados;
     }
 
+
+    public function dashboard(Request $request): void
+    {
+        $userId = $this->getUserId();
+        $config = $this->obterConfig($userId);
+        $teto = (float)$config['teto_gastos_mensal'];
+        $renda = (float)$config['renda_mensal_estimada'];
+
+        // 1. Despesas e compromissos
+        $stmtItens = $this->pdo->prepare("
+            SELECT *
+            FROM financas_pessoais_itens
+            WHERE usuario_id = :uid AND deletado_em IS NULL AND status IN ('ativo', 'planejado')
+        ");
+        $stmtItens->execute(['uid' => $userId]);
+        $itens = $stmtItens->fetchAll(PDO::FETCH_ASSOC);
+
+        $totalFixos = 0.0;
+        $totalParcelasMes = 0.0;
+        $totalDividaParceladaRestante = 0.0;
+        $mesAtual = date('Y-m');
+
+        foreach ($itens as $it) {
+            $tipo = $it['tipo'];
+            $vTot = (float)$it['valor_total'];
+            $qtd = max(1, (int)$it['qtd_parcelas']);
+            $vP = (float)$it['valor_parcela'] > 0 ? (float)$it['valor_parcela'] : round($vTot / $qtd, 2);
+            $pagas = (int)$it['parcelas_pagas'];
+            $restantes = max(0, $qtd - $pagas);
+
+            if ($tipo === 'fixo_mensal') {
+                $totalFixos += $vTot;
+            } elseif ($tipo === 'parcelado') {
+                $totalDividaParceladaRestante += ($vP * $restantes);
+                try {
+                    $dtVenc = new \DateTime($it['data_primeiro_vencimento']);
+                } catch (\Throwable $e) {
+                    $dtVenc = new \DateTime();
+                }
+                for ($p = 1; $p <= $qtd; $p++) {
+                    if ($dtVenc->format('Y-m') === $mesAtual) {
+                        $totalParcelasMes += $vP;
+                        break;
+                    }
+                    $dtVenc->modify('+1 month');
+                }
+            } elseif ($tipo === 'avulso') {
+                try {
+                    $dtVenc = new \DateTime($it['data_primeiro_vencimento']);
+                } catch (\Throwable $e) {
+                    $dtVenc = new \DateTime();
+                }
+                if ($dtVenc->format('Y-m') === $mesAtual) {
+                    $totalParcelasMes += $vTot;
+                }
+            }
+        }
+
+        $totalComprometido = $totalFixos + $totalParcelasMes;
+        $saldoLivre = $teto - $totalComprometido;
+
+        // 2. Investimentos e Economias
+        $stmtInv = $this->pdo->prepare("
+            SELECT *
+            FROM financas_investimentos
+            WHERE usuario_id = :uid AND deletado_em IS NULL AND status = 'ativo'
+        ");
+        $stmtInv->execute(['uid' => $userId]);
+        $investimentos = $stmtInv->fetchAll(PDO::FETCH_ASSOC);
+
+        $patrimonioBruto = 0.0;
+        $totalAplicado = 0.0;
+        $aporteMensalTotal = 0.0;
+        $reservaTotal = 0.0;
+        $reservaMeta = 0.0;
+        $rentabilidadePonderadaSoma = 0.0;
+
+        foreach ($investimentos as $inv) {
+            $vAt = (float)$inv['valor_atual'];
+            $vAp = (float)$inv['valor_aplicado'];
+            $patrimonioBruto += $vAt;
+            $totalAplicado += $vAp;
+            $aporteMensalTotal += (float)$inv['aporte_mensal'];
+            $rentabilidadePonderadaSoma += ($vAt * (float)$inv['rentabilidade_anual']);
+
+            if ($inv['tipo'] === 'reserva_emergencia') {
+                $reservaTotal += $vAt;
+                $reservaMeta += (float)$inv['meta_valor'];
+            }
+        }
+
+        $rentabilidadeMediaAnual = $patrimonioBruto > 0 ? round($rentabilidadePonderadaSoma / $patrimonioBruto, 2) : 10.50;
+        $patrimonioLiquidoReal = round($patrimonioBruto - $totalDividaParceladaRestante, 2);
+        $lucroTotal = round($patrimonioBruto - $totalAplicado, 2);
+
+        // Cobertura de Reserva (meses de custos fixos cobertos)
+        $mesesCoberturaReserva = $totalFixos > 0 ? round($reservaTotal / $totalFixos, 1) : 12.0;
+
+        // Taxa de Poupança (% da renda alocada para investimentos/economias)
+        $taxaPoupanca = $renda > 0 ? round(($aporteMensalTotal / $renda) * 100, 1) : 0.0;
+
+        // Cálculo do Score de Saúde Financeira (0 a 100)
+        $score = 100;
+        if ($totalComprometido > $teto) {
+            $score -= 30; // Perde 30 se extrapolou
+        } elseif ($totalComprometido > ($teto * 0.9)) {
+            $score -= 10;
+        }
+
+        if ($mesesCoberturaReserva < 3) {
+            $score -= 25;
+        } elseif ($mesesCoberturaReserva < 6) {
+            $score -= 10;
+        }
+
+        if ($taxaPoupanca < 10) {
+            $score -= 20;
+        } elseif ($taxaPoupanca < 20) {
+            $score -= 5;
+        }
+        $score = max(10, min(100, $score));
+
+        $scoreLabel = 'Excelente';
+        $scoreCor = 'lime';
+        if ($score < 50) {
+            $scoreLabel = 'Crítico / Atenção';
+            $scoreCor = 'red';
+        } elseif ($score < 75) {
+            $scoreLabel = 'Moderado / Em Ajuste';
+            $scoreCor = 'amber';
+        }
+
+        // Destinação da Renda Mensal
+        $destinacao = [
+            'custos_fixos' => [
+                'label'      => 'Custos Fixos (Moradia, Contas)',
+                'valor'      => round($totalFixos, 2),
+                'percentual' => $renda > 0 ? round(($totalFixos / $renda) * 100, 1) : 0,
+                'cor'        => 'cyan'
+            ],
+            'parcelas_metas' => [
+                'label'      => 'Metas & Parcelamentos (Geladeira, etc.)',
+                'valor'      => round($totalParcelasMes, 2),
+                'percentual' => $renda > 0 ? round(($totalParcelasMes / $renda) * 100, 1) : 0,
+                'cor'        => 'purple'
+            ],
+            'investimentos_economias' => [
+                'label'      => 'Investimentos & Economias (Aportes)',
+                'valor'      => round($aporteMensalTotal, 2),
+                'percentual' => $renda > 0 ? round(($aporteMensalTotal / $renda) * 100, 1) : 0,
+                'cor'        => 'lime'
+            ],
+            'margem_livre' => [
+                'label'      => 'Margem Livre Desimpedida',
+                'valor'      => max(0.0, round($renda - ($totalComprometido + $aporteMensalTotal), 2)),
+                'percentual' => $renda > 0 ? max(0.0, round((($renda - ($totalComprometido + $aporteMensalTotal)) / $renda) * 100, 1)) : 0,
+                'cor'        => 'emerald'
+            ]
+        ];
+
+        // Projeção Patrimonial dos Próximos 12 Meses
+        $taxaMensal = pow(1 + ($rentabilidadeMediaAnual / 100), 1/12) - 1;
+        $projecaoPatrimonial = [];
+        $dataCursor = new \DateTime('first day of this month');
+        $patrimonioSimulado = $patrimonioBruto;
+        $dividaSimulada = $totalDividaParceladaRestante;
+        $amortizacaoMensalMedia = $totalParcelasMes;
+
+        for ($m = 0; $m < 12; $m++) {
+            $chave = $dataCursor->format('Y-m');
+            $rendimentoMes = $patrimonioSimulado * $taxaMensal;
+            $patrimonioSimulado += ($rendimentoMes + $aporteMensalTotal);
+            $dividaSimulada = max(0.0, $dividaSimulada - $amortizacaoMensalMedia);
+            $liquidoMes = $patrimonioSimulado - $dividaSimulada;
+
+            $projecaoPatrimonial[] = [
+                'mes'                => $chave,
+                'mes_nome'           => $this->nomeMesAno($chave),
+                'patrimonio_bruto'   => round($patrimonioSimulado, 2),
+                'divida_restante'    => round($dividaSimulada, 2),
+                'patrimonio_liquido' => round($liquidoMes, 2),
+                'rendimento_mes'     => round($rendimentoMes, 2)
+            ];
+            $dataCursor->modify('+1 month');
+        }
+
+        // Insights Inteligentes
+        $insights = [];
+        if ($mesesCoberturaReserva >= 6) {
+            $insights[] = [
+                'tipo'     => 'sucesso',
+                'icone'    => '🛡️',
+                'titulo'   => 'Reserva de Emergência Sólida',
+                'mensagem' => "Sua reserva cobre {$mesesCoberturaReserva} meses dos seus custos fixos. Você tem excelente proteção contra imprevistos!"
+            ];
+        } else {
+            $insights[] = [
+                'tipo'     => 'atencao',
+                'icone'    => '⚠️',
+                'titulo'   => 'Construção da Reserva de Emergência',
+                'mensagem' => "Sua reserva atual cobre {$mesesCoberturaReserva} meses. O recomendado é atingir ao menos 6 meses (R$ " . number_format($totalFixos * 6, 2, ',', '.') . ") antes de aumentar aportes em ativos de maior risco."
+            ];
+        }
+
+        if ($taxaPoupanca >= 20) {
+            $insights[] = [
+                'tipo'     => 'sucesso',
+                'icone'    => '🚀',
+                'titulo'   => 'Excelente Taxa de Poupança',
+                'mensagem' => "Você poupa {$taxaPoupanca}% da sua renda líquida mensal (R$ " . number_format($aporteMensalTotal, 2, ',', '.') . "/mês), acelerando sua liberdade financeira."
+            ];
+        }
+
+        if ($totalDividaParceladaRestante > 0) {
+            $insights[] = [
+                'tipo'     => 'info',
+                'icone'    => '💳',
+                'titulo'   => 'Quitação Gradual de Parcelamentos',
+                'mensagem' => "Você possui R$ " . number_format($totalDividaParceladaRestante, 2, ',', '.') . " em parcelas futuras de metas planejadas. Conforme forem quitadas, esse valor retornará integralmente para sua margem livre."
+            ];
+        }
+
+        Response::json([
+            'sucesso' => true,
+            'kpis' => [
+                'patrimonio_liquido_real'         => $patrimonioLiquidoReal,
+                'patrimonio_bruto_investido'      => round($patrimonioBruto, 2),
+                'total_divida_parcelada_restante' => round($totalDividaParceladaRestante, 2),
+                'lucro_acumulado_investimentos'   => $lucroTotal,
+                'renda_mensal'                    => $renda,
+                'teto_gastos_mensal'              => $teto,
+                'total_fixos_mensais'             => round($totalFixos, 2),
+                'total_parcelas_mes'              => round($totalParcelasMes, 2),
+                'total_comprometido_mes'          => round($totalComprometido, 2),
+                'saldo_livre_mes'                 => round($saldoLivre, 2),
+                'aporte_mensal_total'             => round($aporteMensalTotal, 2),
+                'reserva_total'                   => round($reservaTotal, 2),
+                'meses_cobertura_reserva'         => $mesesCoberturaReserva,
+                'taxa_poupanca_pct'               => $taxaPoupanca,
+                'rentabilidade_media_anual'       => $rentabilidadeMediaAnual,
+                'saude_score'                     => $score,
+                'saude_label'                     => $scoreLabel,
+                'saude_cor'                       => $scoreCor
+            ],
+            'destinacao_renda'     => array_values($destinacao),
+            'projecao_patrimonial' => $projecaoPatrimonial,
+            'insights'             => $insights
+        ]);
+    }
     public function projecao(Request $request): void
     {
         $userId = $this->getUserId();

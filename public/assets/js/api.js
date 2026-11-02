@@ -118,6 +118,7 @@ const API = (() => {
             return request(`/pessoal/financeiro${query ? '?' + query : ''}`);
         },
         getPersonalFinanceResumo: () => request('/pessoal/financeiro/resumo'),
+        getPersonalFinanceDashboard: () => request('/pessoal/financeiro/dashboard'),
         getPersonalFinanceProjecao: (params = {}) => {
             const query = new URLSearchParams(params).toString();
             return request(`/pessoal/financeiro/projecao${query ? '?' + query : ''}`);

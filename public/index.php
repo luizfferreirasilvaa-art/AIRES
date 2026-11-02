@@ -129,6 +129,7 @@ $router->delete('/api/missoes/orcamento/{id}', [MissionBudgetController::class, 
 // Finanças Pessoais & Orçamento de Metas (Controle de Teto, Parcelamentos e Alertas de Extrapolação)
 $router->get('/api/pessoal/financeiro', [PersonalFinanceController::class, 'index']);
 $router->get('/api/pessoal/financeiro/resumo', [PersonalFinanceController::class, 'resumo']);
+$router->get('/api/pessoal/financeiro/dashboard', [PersonalFinanceController::class, 'dashboard']);
 $router->get('/api/pessoal/financeiro/projecao', [PersonalFinanceController::class, 'projecao']);
 $router->get('/api/pessoal/financeiro/config', [PersonalFinanceController::class, 'getConfig']);
 $router->post('/api/pessoal/financeiro/config', [PersonalFinanceController::class, 'saveConfig']);

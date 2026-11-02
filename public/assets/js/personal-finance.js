@@ -61,7 +61,8 @@ const PersonalFinance = (() => {
         status: 'ativo',
         busca: ''
     };
-    let currentSubView = 'itens'; // 'itens' | 'projecao' | 'simulador' | 'investimentos'
+    let dashboardData = null;
+    let currentSubView = 'dashboard'; // 'itens' | 'projecao' | 'simulador' | 'investimentos'
 
     const CATEGORIAS = {
         moradia: { label: 'Moradia / Aluguel', icone: '🏠', cor: 'cyan' },
@@ -108,13 +109,14 @@ const PersonalFinance = (() => {
         `;
 
         try {
-            const [respItens, respResumo, respProjecao, respConfig, respInvest, respInvestResumo] = await Promise.all([
+            const [respItens, respResumo, respProjecao, respConfig, respInvest, respInvestResumo, respDash] = await Promise.all([
                 API.getPersonalFinance(currentFilter),
                 API.getPersonalFinanceResumo(),
                 API.getPersonalFinanceProjecao({ meses: 12 }),
                 API.getPersonalFinanceConfig(),
                 API.getPersonalInvestimentos(currentInvestFilter),
-                API.getPersonalInvestimentosResumo()
+                API.getPersonalInvestimentosResumo(),
+                API.getPersonalFinanceDashboard ? API.getPersonalFinanceDashboard().catch(() => null) : Promise.resolve(null)
             ]);
 
             itensList = (respItens && respItens.itens) || [];
@@ -124,6 +126,7 @@ const PersonalFinance = (() => {
             configData = (respConfig && respConfig.config) || configData;
             investimentosList = (respInvest && respInvest.itens) || [];
             resumoInvestimentosData = respInvestResumo || resumoInvestimentosData;
+            dashboardData = respDash || null;
 
             render();
         } catch (err) {
@@ -281,6 +284,10 @@ const PersonalFinance = (() => {
                  ======================================================== -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-white/5">
                 <div class="inline-flex p-1 bg-zinc-900/90 rounded-full border border-white/10 gap-1 shadow-lg backdrop-blur-md self-start flex-wrap">
+                    <button type="button" onclick="PersonalFinance.setSubView('dashboard')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all ${currentSubView === 'dashboard' ? 'glass-pill-active text-lime-400' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <span>Dashboard</span>
+                    </button>
                     <button type="button" onclick="PersonalFinance.setSubView('itens')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all ${currentSubView === 'itens' ? 'glass-pill-active' : 'text-zinc-400 hover:text-white'} flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                         <span>Fixos & Metas (${itensList.length})</span>
@@ -314,7 +321,9 @@ const PersonalFinance = (() => {
             </div>
         `;
 
-        if (currentSubView === 'itens') {
+        if (currentSubView === 'dashboard') {
+            html += renderSubViewDashboard();
+        } else if (currentSubView === 'itens') {
             html += renderSubViewItens();
         } else if (currentSubView === 'investimentos') {
             html += renderSubViewInvestimentos();
@@ -325,6 +334,350 @@ const PersonalFinance = (() => {
         }
 
         container.innerHTML = html;
+    }
+
+
+    // ========================================================
+    // SEÇÃO DE DASHBOARD EXECUTIVO PESSOAL
+    // ========================================================
+    function renderSubViewDashboard() {
+        const d = dashboardData || {};
+        const kpis = d.kpis || {};
+        const destinacao = d.destinacao_renda || [];
+        const projecao = d.projecao_patrimonial || [];
+        const insights = d.insights || [];
+
+        const patLiq = parseFloat(kpis.patrimonio_liquido_real ?? ((resumoInvestimentosData.kpis?.patrimonio_total || 0) - (resumoData.total_divida_parcelada_restante || 0)));
+        const patBruto = parseFloat(kpis.patrimonio_bruto_investido ?? (resumoInvestimentosData.kpis?.patrimonio_total || 0));
+        const dividaRestante = parseFloat(kpis.total_divida_parcelada_restante ?? (resumoData.total_divida_parcelada_restante || 0));
+        const lucroTotal = parseFloat(kpis.lucro_acumulado_investimentos ?? (resumoInvestimentosData.kpis?.lucro_acumulado || 0));
+        const renda = parseFloat(kpis.renda_mensal ?? (configData.renda_mensal_estimada || 6000));
+        const teto = parseFloat(kpis.teto_gastos_mensal ?? (configData.teto_gastos_mensal || 5000));
+        const fixos = parseFloat(kpis.total_fixos_mensais ?? (resumoData.total_fixos_mensais || 0));
+        const parcelasMes = parseFloat(kpis.total_parcelas_mes ?? (resumoData.total_parcelas_mes_atual || 0));
+        const comprometido = parseFloat(kpis.total_comprometido_mes ?? (fixos + parcelasMes));
+        const saldoLivre = parseFloat(kpis.saldo_livre_mes ?? (renda - comprometido));
+        const aporteMensal = parseFloat(kpis.aporte_mensal_total ?? (resumoInvestimentosData.kpis?.aporte_mensal_total || 0));
+        const reservaTotal = parseFloat(kpis.reserva_total ?? (resumoInvestimentosData.kpis?.reserva_total || 0));
+        const mesesCobertura = parseFloat(kpis.meses_cobertura_reserva ?? (fixos > 0 ? reservaTotal / fixos : 0)).toFixed(1);
+        const taxaPoupanca = parseFloat(kpis.taxa_poupanca_pct ?? (renda > 0 ? (aporteMensal / renda) * 100 : 0)).toFixed(1);
+        const rentMedia = parseFloat(kpis.rentabilidade_media_anual ?? (resumoInvestimentosData.kpis?.rentabilidade_media || 0)).toFixed(2);
+        const score = parseInt(kpis.saude_score ?? 85, 10);
+        const scoreLabel = kpis.saude_label || (score >= 80 ? 'Excelente' : (score >= 60 ? 'Equilibrada' : 'Atenção'));
+        const scoreCor = kpis.saude_cor || (score >= 80 ? 'emerald' : (score >= 60 ? 'lime' : 'amber'));
+
+        let maxPatrimonio = 1;
+        projecao.forEach(p => {
+            const v = Math.max(parseFloat(p.patrimonio_bruto || 0), parseFloat(p.patrimonio_liquido || 0));
+            if (v > maxPatrimonio) maxPatrimonio = v;
+        });
+
+        const badgeCorClasses = {
+            emerald: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+            lime: 'bg-lime-400/15 text-lime-400 border-lime-400/30',
+            amber: 'bg-amber-400/15 text-amber-400 border-amber-400/30',
+            rose: 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+        }[scoreCor] || 'bg-lime-400/15 text-lime-400 border-lime-400/30';
+
+        return `
+            <div class="space-y-6 animate-fadeIn">
+                <!-- 1. Hero Snapshot: 4 KPIs Estruturantes -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Card 1: Patrimônio Líquido Real -->
+                    <div class="glass-card rounded-3xl p-5 space-y-2 border border-white/10 relative overflow-hidden group hover:border-lime-400/40 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">Patrimônio Líquido Real</span>
+                            <span class="p-2 rounded-2xl bg-white/5 text-lime-400 text-sm">💎</span>
+                        </div>
+                        <p class="text-2xl sm:text-3xl font-black ${patLiq >= 0 ? 'text-white' : 'text-red-400'} font-mono">
+                            R$ ${patLiq.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <div class="space-y-1 pt-1 border-t border-white/5 text-[11px]">
+                            <div class="flex items-center justify-between text-zinc-400">
+                                <span>Ativos Brutos:</span>
+                                <span class="font-bold text-lime-400 font-mono">R$ ${patBruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-zinc-400">
+                                <span>Dívidas Parceladas:</span>
+                                <span class="font-bold text-rose-400 font-mono">-R$ ${dividaRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Score de Saúde Financeira -->
+                    <div class="glass-card rounded-3xl p-5 space-y-2 border border-white/10 relative overflow-hidden group hover:border-lime-400/40 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">Saúde Financeira</span>
+                            <span class="p-2 rounded-2xl bg-white/5 text-sm">🩺</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl sm:text-4xl font-black text-white font-mono">${score}</span>
+                            <span class="text-xs text-zinc-500 font-bold">/ 100</span>
+                            <span class="ml-auto text-[10px] px-2.5 py-0.5 rounded-full border font-extrabold uppercase tracking-wide ${badgeCorClasses}">
+                                ${escapeHtml(scoreLabel)}
+                            </span>
+                        </div>
+                        <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-orange-500 via-amber-400 to-lime-400" style="width: ${Math.min(100, Math.max(5, score))}%"></div>
+                        </div>
+                        <p class="text-[10px] text-zinc-400">
+                            ${score >= 80 ? 'Finanças blindadas com bom controle de teto e aportes contínuos.' : 'Oportunidade para acelerar quitação de parcelas e reforçar a reserva.'}
+                        </p>
+                    </div>
+
+                    <!-- Card 3: Cobertura da Reserva -->
+                    <div class="glass-card rounded-3xl p-5 space-y-2 border border-white/10 relative overflow-hidden group hover:border-lime-400/40 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">Reserva de Emergência</span>
+                            <span class="p-2 rounded-2xl bg-white/5 text-emerald-400 text-sm">🛡️</span>
+                        </div>
+                        <p class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
+                            ${mesesCobertura} <span class="text-xs font-bold text-zinc-400">meses</span>
+                        </p>
+                        <div class="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-white/5">
+                            <span>Saldo Guardado:</span>
+                            <span class="font-bold text-white font-mono">R$ ${reservaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <p class="text-[10px] ${parseFloat(mesesCobertura) >= 6 ? 'text-emerald-400' : 'text-amber-400'} font-semibold">
+                            ${parseFloat(mesesCobertura) >= 6 ? '✅ Tranquilidade total (meta de 6 meses cumprida)' : '⚠️ Abaixo da meta sugerida de 6 meses de custos fixos'}
+                        </p>
+                    </div>
+
+                    <!-- Card 4: Taxa de Poupança & Aportes -->
+                    <div class="glass-card rounded-3xl p-5 space-y-2 border border-white/10 relative overflow-hidden group hover:border-lime-400/40 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">Taxa de Aporte & Poupança</span>
+                            <span class="p-2 rounded-2xl bg-white/5 text-lime-400 text-sm">📈</span>
+                        </div>
+                        <p class="text-2xl sm:text-3xl font-black text-lime-400 font-mono">
+                            ${taxaPoupanca}% <span class="text-xs font-bold text-zinc-400">da renda</span>
+                        </p>
+                        <div class="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-white/5">
+                            <span>Aporte Mensal:</span>
+                            <span class="font-bold text-white font-mono">R$ ${aporteMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/mês</span>
+                        </div>
+                        <p class="text-[10px] text-zinc-400">
+                            Rentabilidade média da carteira: <strong class="text-lime-400 font-mono">${rentMedia}% a.a.</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2. Balanço Visual da Renda Mensal (Destinação 100%) -->
+                <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-5 border border-white/10">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+                                🎯 Destinação da Renda Estimada
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-zinc-300 font-mono">R$ ${renda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </h4>
+                            <p class="text-xs text-zinc-400">Visualização de como cada real da receita é distribuído entre despesas fixas, compras parceladas, investimentos e sobra livre.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="PersonalFinance.abrirModalConfig()" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 rounded-full text-xs font-bold transition-all">
+                                ⚙️ Ajustar Renda & Teto
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Multi-segment Progress Bar -->
+                    <div class="w-full h-4 bg-zinc-900 rounded-full overflow-hidden p-0.5 border border-white/10 flex">
+                        ${(destinacao.length > 0 ? destinacao : [
+                            { rotulo: 'Custos Fixos', valor: fixos, pct: (renda > 0 ? (fixos/renda)*100 : 0), cor: 'cyan' },
+                            { rotulo: 'Parcelamentos', valor: parcelasMes, pct: (renda > 0 ? (parcelasMes/renda)*100 : 0), cor: 'purple' },
+                            { rotulo: 'Aportes', valor: aporteMensal, pct: (renda > 0 ? (aporteMensal/renda)*100 : 0), cor: 'lime' },
+                            { rotulo: 'Margem Livre', valor: Math.max(0, saldoLivre), pct: (renda > 0 ? (Math.max(0, saldoLivre)/renda)*100 : 0), cor: 'emerald' }
+                        ]).map(item => {
+                            const pct = Math.max(0, Math.min(100, parseFloat(item.pct || 0)));
+                            if (pct <= 0) return '';
+                            const bgCor = {
+                                cyan: 'bg-cyan-400',
+                                purple: 'bg-purple-400',
+                                lime: 'bg-lime-400',
+                                emerald: 'bg-emerald-400',
+                                rose: 'bg-rose-500'
+                            }[item.cor] || 'bg-lime-400';
+                            return `<div class="${bgCor} h-full transition-all duration-500 first:rounded-l-full last:rounded-r-full" style="width: ${pct}%" title="${escapeHtml(item.rotulo)}: ${pct.toFixed(1)}% (R$ ${parseFloat(item.valor).toLocaleString('pt-BR')})"></div>`;
+                        }).join('')}
+                    </div>
+
+                    <!-- 4 Buckets Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        ${(destinacao.length > 0 ? destinacao : [
+                            { rotulo: 'Custos Fixos', valor: fixos, pct: (renda > 0 ? (fixos/renda)*100 : 0), cor: 'cyan' },
+                            { rotulo: 'Parcelamentos & Metas', valor: parcelasMes, pct: (renda > 0 ? (parcelasMes/renda)*100 : 0), cor: 'purple' },
+                            { rotulo: 'Aportes & Economias', valor: aporteMensal, pct: (renda > 0 ? (aporteMensal/renda)*100 : 0), cor: 'lime' },
+                            { rotulo: 'Margem Livre', valor: Math.max(0, saldoLivre), pct: (renda > 0 ? (Math.max(0, saldoLivre)/renda)*100 : 0), cor: 'emerald' }
+                        ]).map(item => {
+                            const corClasses = {
+                                cyan: { text: 'text-cyan-400', bg: 'bg-cyan-400/10', border: 'border-cyan-400/20' },
+                                purple: { text: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/20' },
+                                lime: { text: 'text-lime-400', bg: 'bg-lime-400/10', border: 'border-lime-400/20' },
+                                emerald: { text: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/20' },
+                                rose: { text: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' }
+                            }[item.cor] || { text: 'text-white', bg: 'bg-white/5', border: 'border-white/10' };
+
+                            return `
+                                <div class="p-3.5 rounded-2xl ${corClasses.bg} border ${corClasses.border} space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[11px] font-bold ${corClasses.text}">${escapeHtml(item.rotulo)}</span>
+                                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md bg-white/5 text-white">${parseFloat(item.pct).toFixed(1)}%</span>
+                                    </div>
+                                    <p class="text-base sm:text-lg font-black text-white font-mono">
+                                        R$ ${parseFloat(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- 3. Curva Patrimonial & Desalavancagem 12 Meses -->
+                <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4 border border-white/10">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+                                📊 Curva de Evolução Patrimonial (12 Meses)
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-lime-400/10 text-lime-400 border border-lime-400/20 font-bold uppercase tracking-wider">Patrimônio Líquido Real</span>
+                            </h4>
+                            <p class="text-xs text-zinc-400">Projeção mês a mês considerando amortização de parcelas e aportes acumulados com juros compostos.</p>
+                        </div>
+                        <div class="flex items-center gap-3 text-[11px]">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-lime-400"></span>
+                                <span class="text-zinc-300">Líquido</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-cyan-400"></span>
+                                <span class="text-zinc-300">Bruto</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-sm bg-rose-400"></span>
+                                <span class="text-zinc-300">Dívidas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bar Chart Visualizer -->
+                    <div class="pt-4 pb-2 overflow-x-auto">
+                        <div class="min-w-[620px] flex items-end justify-between gap-2 h-44 px-2 border-b border-white/10">
+                            ${(projecao.length > 0 ? projecao : [
+                                { rotulo: 'Atual', patrimonio_liquido: patLiq, patrimonio_bruto: patBruto, divida_restante: dividaRestante }
+                            ]).map((p, idx) => {
+                                const pLiq = parseFloat(p.patrimonio_liquido || 0);
+                                const pBruto = parseFloat(p.patrimonio_bruto || 0);
+                                const pDiv = parseFloat(p.divida_restante || 0);
+                                const heightPct = maxPatrimonio > 0 ? Math.max(12, Math.min(100, (pLiq / maxPatrimonio) * 100)) : 12;
+                                const isCurrent = idx === 0;
+
+                                return `
+                                    <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer" title="${p.rotulo}: Líquido R$ ${pLiq.toLocaleString('pt-BR')}, Bruto R$ ${pBruto.toLocaleString('pt-BR')}, Dívida -R$ ${pDiv.toLocaleString('pt-BR')}">
+                                        <div class="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono font-bold text-lime-400 text-center whitespace-nowrap mb-1">
+                                            R$ ${(pLiq / 1000).toFixed(1)}k
+                                        </div>
+
+                                        <div class="w-full max-w-[36px] bg-white/5 rounded-t-xl overflow-hidden flex flex-col justify-end p-0.5 border ${isCurrent ? 'border-lime-400 shadow-lg shadow-lime-400/20' : 'border-white/10 group-hover:border-white/30'} transition-all" style="height: ${heightPct}%">
+                                            <div class="w-full bg-gradient-to-t from-lime-500 to-emerald-400 rounded-t-lg transition-all" style="height: 100%"></div>
+                                        </div>
+
+                                        <span class="text-[10px] font-mono ${isCurrent ? 'text-lime-400 font-extrabold' : 'text-zinc-400'} pt-1">
+                                            ${p.rotulo}
+                                        </span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    ${projecao.length >= 2 ? `
+                        <div class="flex items-center justify-between text-xs text-zinc-400 pt-1">
+                            <span>Início: <strong class="text-white font-mono">R$ ${parseFloat(projecao[0].patrimonio_liquido).toLocaleString('pt-BR')}</strong></span>
+                            <span class="text-emerald-400 font-bold flex items-center gap-1">
+                                🚀 Crescimento em 12m: +R$ ${(parseFloat(projecao[projecao.length - 1].patrimonio_liquido) - parseFloat(projecao[0].patrimonio_liquido)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                            <span>Projetado: <strong class="text-lime-400 font-mono">R$ ${parseFloat(projecao[projecao.length - 1].patrimonio_liquido).toLocaleString('pt-BR')}</strong></span>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- 4. Insights Inteligentes do Copilot & Ações Rápidas -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Coluna de Insights Inteligentes (2 cols) -->
+                    <div class="lg:col-span-2 glass-card rounded-3xl p-5 space-y-3.5 border border-white/10">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+                                🧠 Copilot Financeiro AIRES
+                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold uppercase tracking-wider">Diagnóstico</span>
+                            </h4>
+                            <span class="text-xs text-zinc-400">${insights.length} observações</span>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            ${insights.length === 0 ? `
+                                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 text-center text-xs text-zinc-400">
+                                    Nenhuma pendência ou extrapolação detectada. Suas finanças estão dentro do padrão planejado!
+                                </div>
+                            ` : insights.map(ins => {
+                                const iconColors = {
+                                    alerta: 'bg-red-500/15 text-red-400 border-red-500/30',
+                                    sucesso: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                                    info: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+                                    meta: 'bg-purple-500/15 text-purple-400 border-purple-500/30'
+                                }[ins.tipo] || 'bg-white/5 text-white border-white/10';
+
+                                return `
+                                    <div class="p-3.5 rounded-2xl bg-zinc-900/60 border border-white/5 flex items-start gap-3 hover:border-white/15 transition-all">
+                                        <div class="w-8 h-8 rounded-xl ${iconColors} border flex items-center justify-center shrink-0 text-sm">
+                                            ${ins.icone || '💡'}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h5 class="text-xs font-bold text-white">${escapeHtml(ins.titulo)}</h5>
+                                            <p class="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">${escapeHtml(ins.descricao)}</p>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Coluna de Ações Rápidas & Navegação (1 col) -->
+                    <div class="glass-card rounded-3xl p-5 space-y-4 border border-white/10 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+                                ⚡ Ações Rápidas
+                            </h4>
+                            <p class="text-xs text-zinc-400">Atalhos imediatos para movimentar ou planejar suas contas.</p>
+
+                            <div class="space-y-2 pt-1">
+                                <button type="button" onclick="PersonalFinance.abrirModalNovoInvestimento()" class="w-full py-2.5 px-3.5 rounded-2xl bg-lime-400 hover:bg-lime-300 text-zinc-950 font-extrabold text-xs shadow-lg shadow-lime-400/20 flex items-center justify-center gap-2 transition-all active:scale-95">
+                                    <span>💰 Registrar Aporte ou Reserva</span>
+                                </button>
+                                <button type="button" onclick="PersonalFinance.abrirModalNovoItem()" class="w-full py-2.5 px-3.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs border border-white/10 flex items-center justify-center gap-2 transition-all active:scale-95">
+                                    <span>➕ Nova Despesa ou Compra</span>
+                                </button>
+                                <button type="button" onclick="PersonalFinance.setSubView('simulador')" class="w-full py-2.5 px-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-semibold text-xs border border-white/5 flex items-center justify-center gap-2 transition-all">
+                                    <span>🧮 Simular Compra Parcelada</span>
+                                </button>
+                                <button type="button" onclick="PersonalFinance.setSubView('projecao')" class="w-full py-2.5 px-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-semibold text-xs border border-white/5 flex items-center justify-center gap-2 transition-all">
+                                    <span>📅 Ver Fluxo Mensal Detalhado</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Micro Card Resumo Rápido -->
+                        <div class="p-3 rounded-2xl bg-white/[0.02] border border-white/5 text-[11px] text-zinc-400 space-y-1">
+                            <div class="flex justify-between">
+                                <span>Comprometido este mês:</span>
+                                <span class="font-mono font-bold text-white">R$ ${comprometido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Margem livre este mês:</span>
+                                <span class="font-mono font-bold ${saldoLivre >= 0 ? 'text-emerald-400' : 'text-red-400'}">R$ ${saldoLivre.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // ========================================================
