@@ -67,6 +67,48 @@ final class PersonalFinanceController
                     INDEX `idx_fpi_deletado` (`deletado_em`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             ");
+
+            // Investimentos, Reservas e Economias Acumuladas
+            $this->pdo->exec("
+                CREATE TABLE IF NOT EXISTS `financas_investimentos` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `usuario_id` INT NOT NULL,
+                    `nome` VARCHAR(255) NOT NULL,
+                    `tipo` ENUM('reserva_emergencia', 'renda_fixa', 'fundos_imobiliarios', 'acoes', 'cripto', 'previdencia', 'outro') NOT NULL DEFAULT 'renda_fixa',
+                    `instituicao` VARCHAR(100) NULL,
+                    `valor_atual` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                    `valor_aplicado` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                    `aporte_mensal` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                    `meta_valor` DECIMAL(12,2) NULL,
+                    `rentabilidade_anual` DECIMAL(6,2) NOT NULL DEFAULT 10.00,
+                    `liquidez` VARCHAR(50) NOT NULL DEFAULT 'diaria',
+                    `data_inicio` DATE NOT NULL,
+                    `status` ENUM('ativo', 'resgatado', 'pausado') NOT NULL DEFAULT 'ativo',
+                    `observacoes` TEXT NULL,
+                    `criado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    `atualizado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    `deletado_em` TIMESTAMP NULL DEFAULT NULL,
+                    INDEX `idx_finv_usuario_status` (`usuario_id`, `status`),
+                    INDEX `idx_finv_tipo` (`tipo`),
+                    INDEX `idx_finv_deletado` (`deletado_em`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            ");
+
+            // Histórico de Aportes, Rendimentos e Resgates
+            $this->pdo->exec("
+                CREATE TABLE IF NOT EXISTS `financas_investimentos_movimentacoes` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `investimento_id` INT NOT NULL,
+                    `usuario_id` INT NOT NULL,
+                    `tipo` ENUM('aporte', 'rendimento', 'resgate') NOT NULL DEFAULT 'aporte',
+                    `valor` DECIMAL(12,2) NOT NULL,
+                    `data_movimentacao` DATE NOT NULL,
+                    `observacoes` VARCHAR(255) NULL,
+                    `criado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX `idx_fim_inv` (`investimento_id`),
+                    INDEX `idx_fim_user` (`usuario_id`, `data_movimentacao`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            ");
         } catch (\Throwable $e) {
             // Silencia caso a tabela já exista
         }
@@ -331,6 +373,15 @@ final class PersonalFinanceController
         // Projeção rápida de 12 meses para encontrar meses futuros que extrapolam
         $mesesExtrapolados = $this->calcularMesesExtrapolados($userId, $teto, $itens);
 
+        // Total de patrimônio acumulado em investimentos para o card de resumo
+        $stmtPatrimonio = $this->pdo->prepare("
+            SELECT COALESCE(SUM(valor_atual), 0) AS patrimonio_total
+            FROM financas_investimentos
+            WHERE usuario_id = :uid AND deletado_em IS NULL AND status = 'ativo'
+        ");
+        $stmtPatrimonio->execute(['uid' => $userId]);
+        $patrimonioTotal = (float)$stmtPatrimonio->fetchColumn();
+
         Response::json([
             'sucesso' => true,
             'config'  => $config,
@@ -347,7 +398,8 @@ final class PersonalFinanceController
                 'total_divida_parcelada_restante' => round($totalDividaParceladaRestante, 2),
                 'qtd_metas_ativas'                => $qtdMetasAtivas,
                 'total_itens'                     => count($itens),
-                'meses_alerta_futuros'            => count($mesesExtrapolados)
+                'meses_alerta_futuros'            => count($mesesExtrapolados),
+                'patrimonio_investido_total'      => round($patrimonioTotal, 2)
             ],
             'alertas' => [
                 'extrapolou_mes_atual' => $extrapolou,
@@ -951,6 +1003,421 @@ final class PersonalFinanceController
         Response::json([
             'sucesso'  => true,
             'mensagem' => 'Item removido do planejamento pessoal.'
+        ]);
+    }
+
+    // ========================================================
+    // INVESTIMENTOS, RESERVAS E ECONOMIAS PATRIMONIAIS
+    // ========================================================
+
+    public function investimentosIndex(Request $request): void
+    {
+        $userId = $this->getUserId();
+        $tipo = trim((string)$request->get('tipo', ''));
+        $status = trim((string)$request->get('status', 'ativo'));
+        $busca = trim((string)$request->get('busca', ''));
+
+        $sql = "
+            SELECT *
+            FROM financas_investimentos
+            WHERE usuario_id = :uid AND deletado_em IS NULL
+        ";
+        $params = ['uid' => $userId];
+
+        if ($tipo !== '') {
+            $sql .= " AND tipo = :tipo";
+            $params['tipo'] = $tipo;
+        }
+
+        if ($status !== '' && in_array($status, ['ativo', 'resgatado', 'pausado'], true)) {
+            $sql .= " AND status = :status";
+            $params['status'] = $status;
+        }
+
+        if ($busca !== '') {
+            $sql .= " AND (nome LIKE :busca OR instituicao LIKE :busca OR observacoes LIKE :busca)";
+            $params['busca'] = "%{$busca}%";
+        }
+
+        $sql .= " ORDER BY valor_atual DESC, id DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $investimentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $totalGeral = array_sum(array_column($investimentos, 'valor_atual'));
+
+        $formatados = array_map(function ($inv) use ($totalGeral) {
+            $vAtual = (float)$inv['valor_atual'];
+            $vAplicado = (float)$inv['valor_aplicado'];
+            $metaVal = (float)$inv['meta_valor'];
+            $lucro = $vAtual - $vAplicado;
+            $rentabilidadeGeral = $vAplicado > 0 ? round(($lucro / $vAplicado) * 100, 2) : 0.0;
+            $progressoMeta = $metaVal > 0 ? min(100.0, round(($vAtual / $metaVal) * 100, 1)) : 100.0;
+            $sharePct = $totalGeral > 0 ? round(($vAtual / $totalGeral) * 100, 1) : 0.0;
+
+            return [
+                'id'                  => (int)$inv['id'],
+                'nome'                => $inv['nome'],
+                'tipo'                => $inv['tipo'],
+                'instituicao'         => $inv['instituicao'],
+                'valor_atual'         => $vAtual,
+                'valor_aplicado'      => $vAplicado,
+                'lucro_reais'         => round($lucro, 2),
+                'rentabilidade_pct'   => $rentabilidadeGeral,
+                'aporte_mensal'       => (float)$inv['aporte_mensal'],
+                'meta_valor'          => $metaVal,
+                'progresso_meta_pct'  => $progressoMeta,
+                'rentabilidade_anual' => (float)$inv['rentabilidade_anual'],
+                'liquidez'            => $inv['liquidez'],
+                'data_inicio'         => $inv['data_inicio'],
+                'status'              => $inv['status'],
+                'share_pct'           => $sharePct,
+                'observacoes'         => $inv['observacoes'],
+                'criado_em'           => $inv['criado_em']
+            ];
+        }, $investimentos);
+
+        Response::json([
+            'sucesso' => true,
+            'total'   => count($formatados),
+            'itens'   => $formatados
+        ]);
+    }
+
+    public function investimentosResumo(Request $request): void
+    {
+        $userId = $this->getUserId();
+
+        $stmt = $this->pdo->prepare("
+            SELECT *
+            FROM financas_investimentos
+            WHERE usuario_id = :uid AND deletado_em IS NULL AND status = 'ativo'
+        ");
+        $stmt->execute(['uid' => $userId]);
+        $investimentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $patrimonioTotal = 0.0;
+        $totalAplicado = 0.0;
+        $aporteMensalTotal = 0.0;
+        $reservaTotal = 0.0;
+        $reservaMeta = 0.0;
+
+        $distribuicaoTipos = [
+            'reserva_emergencia'  => ['label' => 'Reserva de Emergência', 'icone' => '🛡️', 'total' => 0.0, 'cor' => 'emerald'],
+            'renda_fixa'          => ['label' => 'Renda Fixa / CDI / Tesouro', 'icone' => '📈', 'total' => 0.0, 'cor' => 'cyan'],
+            'fundos_imobiliarios' => ['label' => 'Fundos Imobiliários (FIIs)', 'icone' => '🏢', 'total' => 0.0, 'cor' => 'purple'],
+            'acoes'               => ['label' => 'Ações & Dividendos', 'icone' => '📊', 'total' => 0.0, 'cor' => 'lime'],
+            'cripto'              => ['label' => 'Criptoativos / BTC', 'icone' => '🪙', 'total' => 0.0, 'cor' => 'amber'],
+            'previdencia'         => ['label' => 'Previdência Privada', 'icone' => '🏦', 'total' => 0.0, 'cor' => 'indigo'],
+            'outro'               => ['label' => 'Outros Investimentos', 'icone' => '💎', 'total' => 0.0, 'cor' => 'zinc']
+        ];
+
+        foreach ($investimentos as $inv) {
+            $vAt = (float)$inv['valor_atual'];
+            $vAp = (float)$inv['valor_aplicado'];
+            $tipo = $inv['tipo'];
+
+            $patrimonioTotal += $vAt;
+            $totalAplicado += $vAp;
+            $aporteMensalTotal += (float)$inv['aporte_mensal'];
+
+            if (isset($distribuicaoTipos[$tipo])) {
+                $distribuicaoTipos[$tipo]['total'] += $vAt;
+            }
+
+            if ($tipo === 'reserva_emergencia') {
+                $reservaTotal += $vAt;
+                $reservaMeta += (float)$inv['meta_valor'];
+            }
+        }
+
+        $lucroTotal = round($patrimonioTotal - $totalAplicado, 2);
+        $rentabilidadeMediaPct = $totalAplicado > 0 ? round(($lucroTotal / $totalAplicado) * 100, 2) : 0.0;
+        $reservaProgressoPct = $reservaMeta > 0 ? min(100.0, round(($reservaTotal / $reservaMeta) * 100, 1)) : 100.0;
+
+        // Distribuição percentual
+        foreach ($distribuicaoTipos as $k => &$dt) {
+            $dt['percentual'] = $patrimonioTotal > 0 ? round(($dt['total'] / $patrimonioTotal) * 100, 1) : 0;
+        }
+        unset($dt);
+
+        // Últimas movimentações
+        $stmtMov = $this->pdo->prepare("
+            SELECT m.*, i.nome AS investimento_nome, i.tipo AS investimento_tipo
+            FROM financas_investimentos_movimentacoes m
+            JOIN financas_investimentos i ON i.id = m.investimento_id
+            WHERE m.usuario_id = :uid
+            ORDER BY m.data_movimentacao DESC, m.id DESC
+            LIMIT 5
+        ");
+        $stmtMov->execute(['uid' => $userId]);
+        $ultimasMov = $stmtMov->fetchAll(PDO::FETCH_ASSOC);
+
+        Response::json([
+            'sucesso' => true,
+            'kpis'    => [
+                'patrimonio_total'       => round($patrimonioTotal, 2),
+                'total_aplicado'         => round($totalAplicado, 2),
+                'lucro_acumulado'        => $lucroTotal,
+                'rentabilidade_media'    => $rentabilidadeMediaPct,
+                'aporte_mensal_total'    => round($aporteMensalTotal, 2),
+                'reserva_total'          => round($reservaTotal, 2),
+                'reserva_meta'           => round($reservaMeta, 2),
+                'reserva_progresso_pct'  => $reservaProgressoPct,
+                'qtd_ativos'             => count($investimentos)
+            ],
+            'distribuicao'           => array_values($distribuicaoTipos),
+            'ultimas_movimentacoes'  => $ultimasMov
+        ]);
+    }
+
+    public function investimentosStore(Request $request): void
+    {
+        $userId = $this->getUserId();
+        $nome = trim((string)$request->input('nome', ''));
+        $tipo = trim((string)$request->input('tipo', 'renda_fixa'));
+        $instituicao = trim((string)$request->input('instituicao', 'Nubank')) ?: null;
+        $valorAtual = (float)$request->input('valor_atual', 0.0);
+        $valorAplicado = (float)$request->input('valor_aplicado', $valorAtual);
+        $aporteMensal = (float)$request->input('aporte_mensal', 0.0);
+        $metaValor = (float)$request->input('meta_valor', 0.0) ?: null;
+        $rentabilidade = (float)$request->input('rentabilidade_anual', 10.50);
+        $liquidez = trim((string)$request->input('liquidez', 'Diária (D+0)'));
+        $dataInicio = trim((string)$request->input('data_inicio', date('Y-m-d')));
+        $status = trim((string)$request->input('status', 'ativo'));
+        $obs = trim((string)$request->input('observacoes', '')) ?: null;
+
+        if ($nome === '') {
+            Response::error('O nome do investimento/reserva é obrigatório.', 422);
+            return;
+        }
+
+        if ($valorAtual < 0) {
+            Response::error('O valor atual não pode ser negativo.', 422);
+            return;
+        }
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO financas_investimentos (
+                usuario_id, nome, tipo, instituicao, valor_atual, valor_aplicado,
+                aporte_mensal, meta_valor, rentabilidade_anual, liquidez,
+                data_inicio, status, observacoes
+            ) VALUES (
+                :uid, :nome, :tipo, :inst, :vat, :vap,
+                :aporte, :meta, :rent, :liq,
+                :dt_ini, :status, :obs
+            )
+        ");
+
+        $stmt->execute([
+            'uid'     => $userId,
+            'nome'    => $nome,
+            'tipo'    => $tipo,
+            'inst'    => $instituicao,
+            'vat'     => $valorAtual,
+            'vap'     => $valorAplicado,
+            'aporte'  => $aporteMensal,
+            'meta'    => $metaValor,
+            'rent'    => $rentabilidade,
+            'liq'     => $liquidez,
+            'dt_ini'  => $dataInicio,
+            'status'  => $status,
+            'obs'     => $obs
+        ]);
+
+        $invId = (int)$this->pdo->lastInsertId();
+
+        // Se inicializou com saldo, registra movimento de aporte inicial
+        if ($valorAtual > 0) {
+            $stmtMov = $this->pdo->prepare("
+                INSERT INTO financas_investimentos_movimentacoes (
+                    investimento_id, usuario_id, tipo, valor, data_movimentacao, observacoes
+                ) VALUES (
+                    :iid, :uid, 'aporte', :val, :dt, 'Saldo inicial cadastrado'
+                )
+            ");
+            $stmtMov->execute([
+                'iid' => $invId,
+                'uid' => $userId,
+                'val' => $valorAtual,
+                'dt'  => $dataInicio
+            ]);
+        }
+
+        Response::json([
+            'sucesso'  => true,
+            'mensagem' => 'Investimento cadastrado com sucesso!',
+            'id'       => $invId
+        ], 201);
+    }
+
+    public function investimentosUpdate(Request $request, array $params): void
+    {
+        $userId = $this->getUserId();
+        $id = (int)($params['id'] ?? 0);
+
+        if ($id <= 0) {
+            Response::error('Investimento inválido.', 400);
+            return;
+        }
+
+        $nome = trim((string)$request->input('nome', ''));
+        $tipo = trim((string)$request->input('tipo', 'renda_fixa'));
+        $instituicao = trim((string)$request->input('instituicao', '')) ?: null;
+        $valorAtual = (float)$request->input('valor_atual', 0.0);
+        $valorAplicado = (float)$request->input('valor_aplicado', 0.0);
+        $aporteMensal = (float)$request->input('aporte_mensal', 0.0);
+        $metaValor = (float)$request->input('meta_valor', 0.0) ?: null;
+        $rentabilidade = (float)$request->input('rentabilidade_anual', 10.00);
+        $liquidez = trim((string)$request->input('liquidez', 'diaria'));
+        $dataInicio = trim((string)$request->input('data_inicio', date('Y-m-d')));
+        $status = trim((string)$request->input('status', 'ativo'));
+        $obs = trim((string)$request->input('observacoes', '')) ?: null;
+
+        if ($nome === '') {
+            Response::error('O nome do investimento é obrigatório.', 422);
+            return;
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE financas_investimentos SET
+                nome = :nome,
+                tipo = :tipo,
+                instituicao = :inst,
+                valor_atual = :vat,
+                valor_aplicado = :vap,
+                aporte_mensal = :aporte,
+                meta_valor = :meta,
+                rentabilidade_anual = :rent,
+                liquidez = :liq,
+                data_inicio = :dt_ini,
+                status = :status,
+                observacoes = :obs
+            WHERE id = :id AND usuario_id = :uid
+        ");
+
+        $stmt->execute([
+            'id'     => $id,
+            'uid'    => $userId,
+            'nome'   => $nome,
+            'tipo'   => $tipo,
+            'inst'   => $instituicao,
+            'vat'    => $valorAtual,
+            'vap'    => $valorAplicado,
+            'aporte' => $aporteMensal,
+            'meta'   => $metaValor,
+            'rent'   => $rentabilidade,
+            'liq'    => $liquidez,
+            'dt_ini' => $dataInicio,
+            'status' => $status,
+            'obs'    => $obs
+        ]);
+
+        Response::json([
+            'sucesso'  => true,
+            'mensagem' => 'Investimento atualizado com sucesso!'
+        ]);
+    }
+
+    public function investimentosMovimentar(Request $request, array $params): void
+    {
+        $userId = $this->getUserId();
+        $id = (int)($params['id'] ?? 0);
+
+        $tipo = trim((string)$request->input('tipo', 'aporte'));
+        $valor = (float)$request->input('valor', 0.0);
+        $dataMov = trim((string)$request->input('data_movimentacao', date('Y-m-d')));
+        $obs = trim((string)$request->input('observacoes', '')) ?: null;
+
+        if ($id <= 0 || $valor <= 0) {
+            Response::error('Informe um valor válido maior que zero.', 422);
+            return;
+        }
+
+        if (!in_array($tipo, ['aporte', 'rendimento', 'resgate'], true)) {
+            Response::error('Tipo de movimentação inválido.', 422);
+            return;
+        }
+
+        $stmt = $this->pdo->prepare("SELECT id, valor_atual, valor_aplicado FROM financas_investimentos WHERE id = :id AND usuario_id = :uid AND deletado_em IS NULL");
+        $stmt->execute(['id' => $id, 'uid' => $userId]);
+        $inv = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$inv) {
+            Response::error('Investimento não encontrado.', 404);
+            return;
+        }
+
+        $vAtual = (float)$inv['valor_atual'];
+        $vAplicado = (float)$inv['valor_aplicado'];
+
+        if ($tipo === 'aporte') {
+            $vAtual += $valor;
+            $vAplicado += $valor;
+        } elseif ($tipo === 'rendimento') {
+            $vAtual += $valor;
+        } elseif ($tipo === 'resgate') {
+            $vAtual = max(0.0, $vAtual - $valor);
+            $vAplicado = max(0.0, $vAplicado - $valor);
+        }
+
+        $stmtUp = $this->pdo->prepare("
+            UPDATE financas_investimentos
+            SET valor_atual = :vat, valor_aplicado = :vap
+            WHERE id = :id AND usuario_id = :uid
+        ");
+        $stmtUp->execute([
+            'vat' => $vAtual,
+            'vap' => $vAplicado,
+            'id'  => $id,
+            'uid' => $userId
+        ]);
+
+        $stmtMov = $this->pdo->prepare("
+            INSERT INTO financas_investimentos_movimentacoes (
+                investimento_id, usuario_id, tipo, valor, data_movimentacao, observacoes
+            ) VALUES (
+                :iid, :uid, :tipo, :val, :dt, :obs
+            )
+        ");
+        $stmtMov->execute([
+            'iid'  => $id,
+            'uid'  => $userId,
+            'tipo' => $tipo,
+            'val'  => $valor,
+            'dt'   => $dataMov,
+            'obs'  => $obs
+        ]);
+
+        Response::json([
+            'sucesso'        => true,
+            'mensagem'       => ucfirst($tipo) . ' de R$ ' . number_format($valor, 2, ',', '.') . ' registrado com sucesso!',
+            'novo_saldo'     => $vAtual,
+            'total_aplicado' => $vAplicado
+        ]);
+    }
+
+    public function investimentosDestroy(Request $request, array $params): void
+    {
+        $userId = $this->getUserId();
+        $id = (int)($params['id'] ?? 0);
+
+        if ($id <= 0) {
+            Response::error('Investimento inválido.', 400);
+            return;
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE financas_investimentos
+            SET deletado_em = CURRENT_TIMESTAMP
+            WHERE id = :id AND usuario_id = :uid AND deletado_em IS NULL
+        ");
+        $stmt->execute(['id' => $id, 'uid' => $userId]);
+
+        Response::json([
+            'sucesso'  => true,
+            'mensagem' => 'Investimento removido com sucesso.'
         ]);
     }
 

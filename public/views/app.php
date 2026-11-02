@@ -1577,7 +1577,187 @@ $compMes = $compromissos_mes ?? [];
         </div>
     </div>
 
-    <!-- Scripts -->
+
+    <!-- ========================================================
+         MODAL DE INVESTIMENTO / RESERVA (Pierre Glassmorphism)
+         ======================================================== -->
+    <div id="modal-personal-investimento" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
+            <button type="button" onclick="PersonalFinance.fecharModalInvestimento()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-lime-400/20 text-lime-400 border border-lime-400/30 flex items-center justify-center text-xl">
+                    💰
+                </div>
+                <div>
+                    <h3 id="modal-invest-title" class="text-base font-extrabold text-white">Novo Investimento ou Reserva</h3>
+                    <p class="text-xs text-zinc-400">Controle de patrimônio, liquidez e aportes mensais</p>
+                </div>
+            </div>
+
+            <form id="form-personal-investimento" onsubmit="PersonalFinance.salvarInvestimento(event)" class="space-y-4">
+                <input type="hidden" id="invest-id" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Nome do Investimento / Ativo *</label>
+                    <input type="text" id="invest-nome" required placeholder="Ex: Reserva de Emergência 100% CDI, Tesouro Selic 2029, FII HGLG11..." class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80 text-xs">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Tipo de Ativo *</label>
+                        <select id="invest-tipo" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                            <option value="reserva_emergencia" selected>🛡️ Reserva de Emergência</option>
+                            <option value="renda_fixa">📈 Renda Fixa / CDI / Tesouro</option>
+                            <option value="fundos_imobiliarios">🏢 Fundos Imobiliários (FIIs)</option>
+                            <option value="acoes">📊 Ações & Dividendos</option>
+                            <option value="cripto">🪙 Criptoativos / BTC</option>
+                            <option value="previdencia">🏦 Previdência Privada</option>
+                            <option value="outro">💎 Outros Investimentos</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Instituição / Corretora</label>
+                        <input type="text" id="invest-instituicao" placeholder="Ex: Nubank, XP, Inter, BTG..." class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80 text-xs">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Saldo Atual Acumulado (R$) *</label>
+                        <input type="number" id="invest-valor-atual" step="0.01" min="0" required placeholder="0.00" class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-lime-400 font-mono font-bold text-xs focus:outline-none focus:border-lime-400/80">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Custo Aplicado / Aportado (R$)</label>
+                        <input type="number" id="invest-valor-aplicado" step="0.01" min="0" placeholder="0.00" class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 font-mono text-xs focus:outline-none focus:border-lime-400/80">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Aporte Mensal (R$)</label>
+                        <input type="number" id="invest-aporte-mensal" step="0.01" min="0" value="0.00" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 font-mono focus:outline-none focus:border-lime-400/80">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Meta Alvo (R$)</label>
+                        <input type="number" id="invest-meta-valor" step="0.01" min="0" placeholder="Ex: 20000.00" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 font-mono focus:outline-none focus:border-lime-400/80">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Rent. Estimada (% a.a.)</label>
+                        <input type="number" id="invest-rentabilidade" step="0.01" min="0" value="10.50" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 font-mono focus:outline-none focus:border-lime-400/80">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Liquidez</label>
+                        <select id="invest-liquidez" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                            <option value="Imediata (D+0)" selected>Imediata (D+0)</option>
+                            <option value="D+1 útil">D+1 útil</option>
+                            <option value="D+2 útil">D+2 útil</option>
+                            <option value="D+30">D+30</option>
+                            <option value="No Vencimento">No Vencimento</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Data de Início</label>
+                        <input type="date" id="invest-data-inicio" required class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Status</label>
+                        <select id="invest-status" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                            <option value="ativo" selected>Ativo</option>
+                            <option value="pausado">Pausado</option>
+                            <option value="resgatado">Resgatado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Observações (Opcional)</label>
+                    <textarea id="invest-obs" rows="2" placeholder="Finalidade, prazo, indexador (100% CDI, IPCA+6%)..." class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                    <button type="button" onclick="PersonalFinance.fecharModalInvestimento()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-submit-invest" class="px-5 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all">
+                        Salvar Investimento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL DE MOVIMENTAÇÃO RÁPIDA (Aporte / Rendimento / Resgate)
+         ======================================================== -->
+    <div id="modal-personal-movimentacao" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="max-w-md w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative">
+            <button type="button" onclick="PersonalFinance.fecharModalMovimentacao()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl">
+                    ⚡
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-white">Movimentar Investimento</h3>
+                    <p id="mov-invest-nome" class="text-xs text-lime-400 font-semibold truncate"></p>
+                    <p id="mov-saldo-atual" class="text-[10px] text-zinc-400"></p>
+                </div>
+            </div>
+
+            <form id="form-personal-movimentacao" onsubmit="PersonalFinance.salvarMovimentacao(event)" class="space-y-4">
+                <input type="hidden" id="mov-invest-id" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Tipo de Movimentação *</label>
+                    <select id="mov-tipo" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                        <option value="aporte" selected>➕ Aporte (Adicionar Dinheiro Economizado)</option>
+                        <option value="rendimento">📈 Rendimento / Dividendos Creditados</option>
+                        <option value="resgate">➖ Resgate (Retirar Dinheiro)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Valor da Movimentação (R$) *</label>
+                    <input type="number" id="mov-valor" step="0.01" min="0.01" required placeholder="0.00" class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-lime-400 font-mono font-bold text-sm focus:outline-none focus:border-lime-400/80">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Data da Movimentação</label>
+                    <input type="date" id="mov-data" required class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Observação (Opcional)</label>
+                    <input type="text" id="mov-obs" placeholder="Ex: Sobra do mês, Aporte mensal planejado..." class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80">
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                    <button type="button" onclick="PersonalFinance.fecharModalMovimentacao()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all">
+                        Confirmar Movimentação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+        <!-- Scripts -->
     <script src="assets/js/api.js?v=<?= time() ?>"></script>
     <script src="assets/js/conflict-dialog.js?v=<?= time() ?>"></script>
     <script src="assets/js/modal-task.js?v=<?= time() ?>"></script>

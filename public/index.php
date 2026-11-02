@@ -138,6 +138,14 @@ $router->put('/api/pessoal/financeiro/{id}', [PersonalFinanceController::class, 
 $router->patch('/api/pessoal/financeiro/{id}/pagar-parcela', [PersonalFinanceController::class, 'pagarParcela']);
 $router->delete('/api/pessoal/financeiro/{id}', [PersonalFinanceController::class, 'destroy']);
 
+// Investimentos & Patrimônio Pessoal (Economias, Reservas e Aportes)
+$router->get('/api/pessoal/investimentos', [PersonalFinanceController::class, 'investimentosIndex']);
+$router->get('/api/pessoal/investimentos/resumo', [PersonalFinanceController::class, 'investimentosResumo']);
+$router->post('/api/pessoal/investimentos', [PersonalFinanceController::class, 'investimentosStore']);
+$router->put('/api/pessoal/investimentos/{id}', [PersonalFinanceController::class, 'investimentosUpdate']);
+$router->post('/api/pessoal/investimentos/{id}/movimentar', [PersonalFinanceController::class, 'investimentosMovimentar']);
+$router->delete('/api/pessoal/investimentos/{id}', [PersonalFinanceController::class, 'investimentosDestroy']);
+
 // Inteligência Ativa: Alertas e Notificações com Cálculo de Viagem (Pilar 3)
 $router->get('/api/alertas/pendentes', [AlertController::class, 'pending']);
 $router->patch('/api/alertas/{id}/lido', [AlertController::class, 'markRead']);

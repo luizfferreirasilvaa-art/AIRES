@@ -130,6 +130,17 @@ const API = (() => {
         pagarPersonalFinanceParcela: (id) => request(`/pessoal/financeiro/${id}/pagar-parcela`, { method: 'PATCH' }),
         deletePersonalFinanceItem: (id) => request(`/pessoal/financeiro/${id}`, { method: 'DELETE' }),
 
+        // Finanças Pessoais - Investimentos & Economias Acumuladas
+        getPersonalInvestimentos: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/pessoal/investimentos${query ? '?' + query : ''}`);
+        },
+        getPersonalInvestimentosResumo: () => request('/pessoal/investimentos/resumo'),
+        createPersonalInvestimento: (payload) => request('/pessoal/investimentos', { method: 'POST', body: payload }),
+        updatePersonalInvestimento: (id, payload) => request(`/pessoal/investimentos/${id}`, { method: 'PUT', body: payload }),
+        movimentarPersonalInvestimento: (id, payload) => request(`/pessoal/investimentos/${id}/movimentar`, { method: 'POST', body: payload }),
+        deletePersonalInvestimento: (id) => request(`/pessoal/investimentos/${id}`, { method: 'DELETE' }),
+
         getAlertasPendentes: () => request('/alertas/pendentes'),
         markAlertaLido: (id) => request(`/alertas/${id}/lido`, { method: 'PATCH' }),
 
