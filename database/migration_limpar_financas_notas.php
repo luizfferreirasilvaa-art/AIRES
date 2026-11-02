@@ -56,3 +56,4 @@ try {
 } catch (\Throwable $e) {
     echo "Aviso durante limpeza: " . $e->getMessage() . "\n";
 }
+

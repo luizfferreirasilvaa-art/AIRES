@@ -1,14 +1,46 @@
 /**
- * AIRES - Módulo Startup: Log de Auditoria & Rastreabilidade
+ * AIRES - Módulo Startup: Log de Auditoria & Lixeira de Restauração (7 Dias)
  * Obsidian Dark Glassmorphism
  */
 
 const StartupAuditoria = (() => {
+    let currentSubTab = 'logs'; // 'logs' | 'lixeira'
     let logsList = [];
+    let lixeiraList = [];
 
     function init() {
         const selectEntidade = document.getElementById('startup-auditoria-entidade');
-        selectEntidade?.addEventListener('change', () => load());
+        selectEntidade?.addEventListener('change', () => {
+            if (currentSubTab === 'logs') load();
+        });
+    }
+
+    function switchSubTab(tab) {
+        currentSubTab = tab;
+        const btnLogs = document.getElementById('tab-btn-auditoria-logs');
+        const btnLixeira = document.getElementById('tab-btn-auditoria-lixeira');
+        const subtabLogs = document.getElementById('subtab-auditoria-logs');
+        const subtabLixeira = document.getElementById('subtab-auditoria-lixeira');
+
+        if (tab === 'logs') {
+            btnLogs?.classList.add('bg-white', 'text-zinc-950', 'shadow-md');
+            btnLogs?.classList.remove('text-zinc-400');
+            btnLixeira?.classList.remove('bg-white', 'text-zinc-950', 'shadow-md');
+            btnLixeira?.classList.add('text-zinc-400');
+
+            subtabLogs?.classList.remove('hidden');
+            subtabLixeira?.classList.add('hidden');
+            load();
+        } else {
+            btnLixeira?.classList.add('bg-white', 'text-zinc-950', 'shadow-md');
+            btnLixeira?.classList.remove('text-zinc-400');
+            btnLogs?.classList.remove('bg-white', 'text-zinc-950', 'shadow-md');
+            btnLogs?.classList.add('text-zinc-400');
+
+            subtabLixeira?.classList.remove('hidden');
+            subtabLogs?.classList.add('hidden');
+            loadLixeira();
+        }
     }
 
     async function load() {
@@ -28,6 +60,8 @@ const StartupAuditoria = (() => {
             const resp = await API.getStartupAuditoria({ entidade });
             logsList = (resp && resp.logs) || [];
             render();
+            // Atualiza contagem silenciosa da lixeira no badge
+            checkLixeiraBadge();
         } catch (err) {
             container.innerHTML = `
                 <div class="glass-card rounded-3xl p-6 text-center text-red-400">
@@ -35,6 +69,22 @@ const StartupAuditoria = (() => {
                 </div>
             `;
         }
+    }
+
+    async function checkLixeiraBadge() {
+        try {
+            const res = await API.getStartupAuditoriaLixeira();
+            const badge = document.getElementById('badge-lixeira-count');
+            if (badge && res && res.sucesso) {
+                const total = res.total || 0;
+                badge.textContent = total;
+                if (total > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        } catch (_) {}
     }
 
     function render() {
@@ -46,7 +96,7 @@ const StartupAuditoria = (() => {
                 <div class="glass-card rounded-3xl p-12 text-center text-zinc-500 space-y-3">
                     <div class="w-12 h-12 mx-auto rounded-2xl bg-white/5 text-zinc-400 border border-white/10 flex items-center justify-center text-xl">📋</div>
                     <p class="text-sm font-bold text-white">Nenhum evento registrado no log</p>
-                    <p class="text-xs">Todas as ações executadas no módulo Startup ficarão registradas aqui automaticamente.</p>
+                    <p class="text-xs">Todas as ações executadas no sistema ficarão registradas aqui automaticamente.</p>
                 </div>
             `;
             return;
@@ -57,7 +107,7 @@ const StartupAuditoria = (() => {
                 <div class="flex items-center justify-between">
                     <div>
                         <h4 class="font-extrabold text-sm text-white">Trilha de Ações e Modificações</h4>
-                        <p class="text-xs text-zinc-400">Registro cronológico de criação, alterações, faturamento e liquidações.</p>
+                        <p class="text-xs text-zinc-400">Registro cronológico de criação, alterações, exclusões e restaurações.</p>
                     </div>
                     <span class="text-xs text-zinc-400 font-bold">${logsList.length} registros</span>
                 </div>
@@ -110,11 +160,169 @@ const StartupAuditoria = (() => {
         container.innerHTML = html;
     }
 
+    /* ========================================================
+     * LIXEIRA & RESTAURAÇÃO RÁPIDA (ATÉ 7 DIAS)
+     * ======================================================== */
+    async function loadLixeira() {
+        const container = document.getElementById('startup-lixeira-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="py-12 flex flex-col items-center justify-center text-zinc-500">
+                <div class="w-8 h-8 border-2 border-lime-400/20 border-t-lime-400 rounded-full animate-spin mb-3"></div>
+                <p class="text-xs">Consultando itens disponíveis para restauração...</p>
+            </div>
+        `;
+
+        try {
+            const resp = await API.getStartupAuditoriaLixeira();
+            lixeiraList = (resp && resp.itens) || [];
+
+            const badge = document.getElementById('badge-lixeira-count');
+            if (badge) {
+                badge.textContent = lixeiraList.length;
+                if (lixeiraList.length > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            renderLixeira();
+        } catch (err) {
+            container.innerHTML = `
+                <div class="glass-card rounded-3xl p-6 text-center text-red-400">
+                    <p class="text-xs font-bold">Erro ao consultar lixeira: ${escapeHtml(err.message)}</p>
+                </div>
+            `;
+        }
+    }
+
+    function renderLixeira() {
+        const container = document.getElementById('startup-lixeira-container');
+        if (!container) return;
+
+        if (lixeiraList.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card rounded-3xl p-12 text-center text-zinc-500 space-y-3">
+                    <div class="w-12 h-12 mx-auto rounded-2xl bg-white/5 text-zinc-400 border border-white/10 flex items-center justify-center text-xl">♻️</div>
+                    <p class="text-sm font-bold text-white">Lixeira Vazia</p>
+                    <p class="text-xs">Nenhum item (missão, tarefa, nota, finança ou cliente) foi excluído nos últimos 7 dias.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="glass-card rounded-3xl p-5 space-y-4">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                        <h4 class="font-extrabold text-sm text-white flex items-center gap-2">
+                            <span>Itens Excluídos Recentemente</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-lime-400/10 text-lime-400 font-bold font-mono">${lixeiraList.length}</span>
+                        </h4>
+                        <p class="text-xs text-zinc-400">Você pode restaurar qualquer um destes itens com 1 clique antes do prazo de expiração.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5 pt-1">
+        `;
+
+        lixeiraList.forEach(item => {
+            const dias = item.dias_restantes;
+            let badgeExpira = '';
+            if (dias <= 1) {
+                badgeExpira = `<span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 text-[10px] font-extrabold uppercase tracking-wider animate-pulse">⚠️ ${item.expira_texto}</span>`;
+            } else if (dias <= 3) {
+                badgeExpira = `<span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-extrabold uppercase tracking-wider">⏳ ${item.expira_texto}</span>`;
+            } else {
+                badgeExpira = `<span class="px-2 py-0.5 rounded-full bg-lime-400/15 text-lime-400 border border-lime-400/30 text-[10px] font-extrabold uppercase tracking-wider">⏳ ${item.expira_texto}</span>`;
+            }
+
+            const valorHtml = item.valor ? `<span class="text-xs font-mono font-bold text-lime-400">R$ ${parseFloat(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>` : '';
+            const subinfoHtml = item.subinfo ? `<span class="text-[11px] text-zinc-500 font-medium">(${escapeHtml(item.subinfo)})</span>` : '';
+
+            html += `
+                <div class="p-3.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 transition-all flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-lg shrink-0">
+                            ${item.icone || '📦'}
+                        </div>
+
+                        <div class="min-w-0 space-y-0.5">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-extrabold text-xs text-white truncate">${escapeHtml(item.titulo || 'Item sem título')}</span>
+                                <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-white/10">${escapeHtml(item.tipo_label || item.tipo)}</span>
+                                ${subinfoHtml}
+                                ${valorHtml}
+                            </div>
+                            <div class="flex items-center gap-2 text-[10px] text-zinc-500">
+                                <span>Apagado em: ${formatarDataHora(item.deletado_em)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 shrink-0">
+                        ${badgeExpira}
+                        <button type="button" onclick="StartupAuditoria.restaurarItem('${item.tipo}', ${item.id}, '${escapeHtml(item.titulo || '').replace(/'/g, "\\'")}')" class="px-3.5 py-1.5 rounded-full bg-lime-400 hover:bg-lime-300 text-zinc-950 font-bold text-xs shadow-md shadow-lime-400/20 active:scale-95 transition-all flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <span>Restaurar</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    async function restaurarItem(tipo, id, titulo) {
+        if (!confirm(`Deseja restaurar "${titulo}" de volta para o sistema?`)) {
+            return;
+        }
+
+        try {
+            const res = await API.restaurarStartupAuditoriaItem({ tipo, id });
+            if (res && res.sucesso !== false) {
+                if (typeof App !== 'undefined' && App.showToast) {
+                    App.showToast(res.mensagem || 'Item restaurado com sucesso!', 'success');
+                } else if (typeof Toast !== 'undefined') {
+                    Toast.success(res.mensagem || 'Item restaurado com sucesso!');
+                }
+
+                // Recarrega lixeira
+                await loadLixeira();
+
+                // Atualiza módulos se aplicável
+                if (tipo === 'missao' && typeof App !== 'undefined' && App.renderMissions) {
+                    App.renderMissions();
+                } else if (tipo === 'tarefa' && typeof App !== 'undefined' && App.reloadCurrentView) {
+                    App.reloadCurrentView();
+                }
+            } else {
+                const erroMsg = (res && res.erro) || 'Falha ao restaurar item.';
+                if (typeof App !== 'undefined' && App.showToast) {
+                    App.showToast(erroMsg, 'error');
+                }
+            }
+        } catch (err) {
+            if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Erro ao restaurar: ' + err.message, 'error');
+            }
+        }
+    }
+
     function getAcaoInfo(acao) {
         const map = {
             criar: { icon: '+', titulo: 'Novo Registro Criado', bg: 'bg-emerald-500/15', color: 'text-emerald-400', border: 'border-emerald-500/30' },
             editar: { icon: '✎', titulo: 'Registro Modificado', bg: 'bg-blue-500/15', color: 'text-blue-400', border: 'border-blue-500/30' },
-            excluir: { icon: '✕', titulo: 'Registro Excluído', bg: 'bg-red-500/15', color: 'text-red-400', border: 'border-red-500/30' },
+            excluir: { icon: '✕', titulo: 'Registro Excluído (Lixeira)', bg: 'bg-red-500/15', color: 'text-red-400', border: 'border-red-500/30' },
+            restaurar: { icon: '🔄', titulo: 'Item Restaurado da Lixeira', bg: 'bg-lime-400/15', color: 'text-lime-400', border: 'border-lime-400/30' },
             emitir_fatura: { icon: '⚡', titulo: 'Fatura Solar Emitida', bg: 'bg-lime-400/15', color: 'text-lime-400', border: 'border-lime-400/30' },
             alterar_status: { icon: '✓', titulo: 'Status da Fatura Atualizado', bg: 'bg-purple-500/15', color: 'text-purple-400', border: 'border-purple-500/30' },
             alocar_creditos: { icon: '🔄', titulo: 'Rateio de Créditos Solar', bg: 'bg-cyan-400/15', color: 'text-cyan-400', border: 'border-cyan-400/30' },
@@ -127,7 +335,12 @@ const StartupAuditoria = (() => {
 
     function getEntidadeBadge(entidade) {
         const map = {
+            missoes: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">Missões</span>',
+            tarefas: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-lime-400/10 text-lime-400 border border-lime-400/20">Tarefas</span>',
+            notas: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20">Notas</span>',
+            financas_pessoais_itens: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">Finanças</span>',
             cliente: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Cliente</span>',
+            startup_clientes: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Cliente</span>',
             fatura: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-lime-400/10 text-lime-400 border border-lime-400/20">Fatura</span>',
             credito: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">Créditos</span>',
             pagamento: '<span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-orange-400/10 text-orange-400 border border-orange-400/20">Financeiro</span>',
@@ -175,6 +388,9 @@ const StartupAuditoria = (() => {
 
     return {
         init,
-        load
+        load,
+        switchSubTab,
+        loadLixeira,
+        restaurarItem
     };
 })();

@@ -222,11 +222,16 @@ const API = (() => {
         // Startup - Dashboard Solar
         getStartupDashboard: () => request('/startup/dashboard'),
 
-        // Startup - Log de Auditoria
+        // Startup - Log de Auditoria & Lixeira (7 Dias)
         getStartupAuditoria: (params = {}) => {
             const query = new URLSearchParams(params).toString();
             return request(`/startup/auditoria${query ? '?' + query : ''}`);
         },
+        getStartupAuditoriaLixeira: () => request('/startup/auditoria/lixeira'),
+        restaurarStartupAuditoriaItem: (payload) => request('/startup/auditoria/restaurar', {
+            method: 'POST',
+            body: payload
+        }),
 
         // Administração - Gestão de Usuários & Acessos
         getAdminUsuarios: (params = {}) => {

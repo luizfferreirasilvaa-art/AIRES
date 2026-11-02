@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $userStreak = (int)($usuario['streak_dias'] ?? 0);
 $userXp = (int)($usuario['xp'] ?? 0);
 $totalActiveTasks = (int)(($metricas['planejamento'] ?? 0) + ($metricas['a_fazer'] ?? 0) + ($metricas['em_andamento'] ?? 0));
@@ -855,26 +855,64 @@ $userPaginas = !empty($userPaginasRaw) ? json_decode((string)$userPaginasRaw, tr
              SEÇÃO: STARTUP - LOG DE AUDITORIA
              ======================================================== -->
         <section id="section-startup-auditoria" class="app-section flex-1 p-4 md:p-8 space-y-5 hidden">
+            <!-- Header com Subtabs: Histórico vs Lixeira 7 Dias -->
             <div class="flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
-                        📋 Log de Auditoria
-                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-zinc-500/20 text-zinc-300 border border-white/10 font-bold uppercase tracking-wider">Rastreabilidade</span>
+                        📋 Auditoria & Rastreabilidade
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-zinc-500/20 text-zinc-300 border border-white/10 font-bold uppercase tracking-wider">Governança</span>
                     </h3>
-                    <p class="text-xs text-zinc-400">Histórico de todas as operações realizadas em clientes, faturas, créditos e financeiro.</p>
+                    <p class="text-xs text-zinc-400">Histórico de operações e restauração de itens apagados em até 7 dias (missões, tarefas, notas, etc).</p>
                 </div>
-                <div class="flex items-center gap-2">
+                
+                <!-- Pills Flutuantes: Alternar entre Logs e Lixeira -->
+                <div class="flex items-center bg-zinc-900/90 p-1 rounded-full border border-white/10 gap-1 shadow-inner">
+                    <button type="button" id="tab-btn-auditoria-logs" onclick="StartupAuditoria.switchSubTab('logs')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-white text-zinc-950 shadow-md">
+                        📋 Histórico de Operações
+                    </button>
+                    <button type="button" id="tab-btn-auditoria-lixeira" onclick="StartupAuditoria.switchSubTab('lixeira')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all text-zinc-400 hover:text-white flex items-center gap-1.5">
+                        <span>♻️ Lixeira & Restauração</span>
+                        <span id="badge-lixeira-count" class="px-1.5 py-0.2 rounded-full text-[10px] bg-lime-400/20 text-lime-400 font-mono font-bold hidden">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subtab 1: Logs de Auditoria -->
+            <div id="subtab-auditoria-logs" class="space-y-4">
+                <div class="flex items-center justify-end gap-2">
                     <select id="startup-auditoria-entidade" onchange="StartupAuditoria.load()" class="px-3 py-1.5 bg-zinc-900/80 border border-white/10 rounded-full text-xs text-zinc-300 focus:outline-none focus:border-white/40">
                         <option value="">Todas as Entidades</option>
+                        <option value="missoes">🎯 Missões</option>
+                        <option value="tarefas">⚡ Tarefas</option>
+                        <option value="notas">📝 Notas</option>
+                        <option value="financas">💳 Finanças Pessoais</option>
                         <option value="cliente">👥 Clientes</option>
                         <option value="fatura">🧾 Faturas</option>
                         <option value="credito">📊 Créditos</option>
                         <option value="pagamento">💰 Pagamentos</option>
                     </select>
                 </div>
+                <div id="startup-auditoria-container" class="space-y-2 pb-36 md:pb-8"></div>
             </div>
 
-            <div id="startup-auditoria-container" class="space-y-2 pb-36 md:pb-8"></div>
+            <!-- Subtab 2: Lixeira & Restauração Rápida (Até 7 dias) -->
+            <div id="subtab-auditoria-lixeira" class="space-y-4 hidden">
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-lime-400/10 text-lime-400 border border-lime-400/20 flex items-center justify-center text-sm font-bold shrink-0">⏳</div>
+                        <div>
+                            <h4 class="text-xs font-bold text-white">Restauração Segura em até 7 Dias</h4>
+                            <p class="text-[11px] text-zinc-400">Qualquer item apagado (missões, tarefas, notas, orçamentos, metas ou clientes) fica preservado aqui por <strong class="text-lime-400">7 dias corridos</strong> antes de ser purgado definitivamente.</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="StartupAuditoria.loadLixeira()" class="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-xs font-bold text-zinc-300 hover:text-white border border-white/10 transition-all flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span>Atualizar Lixeira</span>
+                    </button>
+                </div>
+
+                <div id="startup-lixeira-container" class="space-y-2 pb-36 md:pb-8"></div>
+            </div>
         </section>
     </main>
 

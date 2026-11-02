@@ -120,9 +120,28 @@ final class MissionController
         $userId = $this->getUserId();
         $missionId = (int)$id;
 
+        $stmtCheck = $this->pdo->prepare("SELECT titulo FROM missoes WHERE id = :id AND usuario_id = :usuario_id");
+        $stmtCheck->execute(['id' => $missionId, 'usuario_id' => $userId]);
+        $missao = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
         $stmt = $this->pdo->prepare("UPDATE missoes SET deletado_em = NOW() WHERE id = :id AND usuario_id = :usuario_id");
         $stmt->execute(['id' => $missionId, 'usuario_id' => $userId]);
 
-        Response::success(null, 'Missão excluída com sucesso!');
+        try {
+            (new \Aires\Services\StartupAuditoriaService())->registrar(
+                $userId,
+                'excluir',
+                'missoes',
+                $missionId,
+                [
+                    'titulo'   => $missao['titulo'] ?? "Missão #{$missionId}",
+                    'mensagem' => "Missão '" . ($missao['titulo'] ?? "#{$missionId}") . "' movida para a lixeira (recuperável na Auditoria em até 7 dias)."
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Silencioso
+        }
+
+        Response::success(null, 'Missão excluída com sucesso! Pode ser restaurada na Auditoria em até 7 dias.');
     }
 }

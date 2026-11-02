@@ -1286,7 +1286,12 @@ const App = (() => {
                             <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider ${m.status === 'concluida' ? 'bg-lime-400/10 text-lime-400 border border-lime-400/20' : 'bg-purple-500/10 text-purple-300 border border-purple-500/20'}">
                                 ${m.status === 'concluida' ? 'Concluída' : 'Em Execução'}
                             </span>
-                            <span class="text-[11px] text-zinc-500">🎯 ${dateLimit}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] text-zinc-500">🎯 ${dateLimit}</span>
+                                <button type="button" onclick="App.deleteMission(${m.id}, '${escapeHtml(m.titulo).replace(/'/g, "\\'")}')" class="p-1 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Excluir Missão (Pode ser restaurada na Auditoria em até 7 dias)">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div>
@@ -1305,7 +1310,7 @@ const App = (() => {
                         </div>
 
                         <div class="pt-3 border-t border-white/[0.04] flex items-center justify-between text-xs">
-                            <button type="button" onclick="App.switchMissionSubTab('financeiro'); setTimeout(() => MissionBudget.filtrarPorMissao(${m.id}), 100);" class="text-xs text-cyan-400 hover:underline font-bold flex items-center gap-1" title="Ver orçamento detalhado e parcelamentos deste plano"><span>💰 R$ ${parseFloat(m.orcamento_estimado || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span></button>
+                            <button type="button" onclick="App.switchMissionSubTab('financeiro'); setTimeout(() => MissionBudget.filtrarPorMissao(${m.id}), 100);" class="text-xs text-lime-400 hover:underline font-bold flex items-center gap-1" title="Ver orçamento detalhado e parcelamentos deste plano"><span>💰 R$ ${parseFloat(m.orcamento_estimado || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span></button>
                             <button type="button" class="text-lime-400 hover:underline font-bold" onclick="App.filterTasksByMission(${m.id})">
                                 Ver Ações →
                             </button>
@@ -1519,6 +1524,24 @@ const App = (() => {
         KanbanView.render({ missao_id: missionId });
     }
 
+    async function deleteMission(id, titulo) {
+        if (!confirm(`Deseja realmente excluir a missão "${titulo}"?\n\nEla poderá ser restaurada na seção Auditoria em até 7 dias.`)) {
+            return;
+        }
+
+        try {
+            const res = await API.deleteMissao(id);
+            if (res && res.sucesso !== false) {
+                showToast(`Missão "${titulo}" excluída com sucesso! Pode ser restaurada na Auditoria em até 7 dias.`, 'success');
+                renderMissions();
+            } else {
+                showToast(res.erro || 'Falha ao excluir missão.', 'error');
+            }
+        } catch (err) {
+            showToast('Erro ao excluir missão: ' + err.message, 'error');
+        }
+    }
+
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -1536,6 +1559,8 @@ const App = (() => {
         filterTasksByMission,
         switchMissionSubTab,
         handleMissionActionClick,
+        deleteMission,
+        renderMissions,
         openMissionModal,
         openMissionModal: () => {
             const title = prompt('Título da Missão Estratégica:');

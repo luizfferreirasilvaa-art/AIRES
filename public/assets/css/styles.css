@@ -377,8 +377,12 @@ html.sidebar-init-collapsed #app-sidebar .sidebar-gamification-mini {
 
 
 
-/* Força a cor uniforme lime (#a3e635) em todos os ícones da barra lateral e menu drawer */
+/* Força a cor uniforme lime (#a3e635) em todos os ícones da barra lateral, dock e drawer */
 #app-sidebar .sidebar-nav-btn svg,
-#mobile-drawer-sheet .mobile-drawer-nav-btn svg {
+#app-sidebar nav button svg,
+#mobile-drawer-sheet .mobile-drawer-nav-btn svg,
+#mobile-drawer-sheet nav button svg,
+button[data-nav-section] svg {
     color: #a3e635 !important;
+    stroke: currentColor !important;
 }

@@ -239,8 +239,10 @@ $router->delete('/api/startup/protocolos/{id}', [StartupProtocoloController::cla
 // Dashboard Solar
 $router->get('/api/startup/dashboard', [StartupDashboardController::class, 'stats']);
 
-// Log de Auditoria
+// Log de Auditoria & Lixeira de Restauração Rápida (7 dias)
 $router->get('/api/startup/auditoria', [StartupAuditoriaController::class, 'index']);
+$router->get('/api/startup/auditoria/lixeira', [StartupAuditoriaController::class, 'lixeira']);
+$router->post('/api/startup/auditoria/restaurar', [StartupAuditoriaController::class, 'restaurar']);
 
 // ==========================================
 // ADMINISTRAÇÃO: GESTÃO DE USUÁRIOS & PERMISSÕES
