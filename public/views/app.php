@@ -111,6 +111,11 @@ $compMes = $compromissos_mes ?? [];
                 <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 <span class="sidebar-text-collapsible">Missões Estratégicas</span>
             </button>
+            <button type="button" data-nav-section="financas-pessoais" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Finanças Pessoais & Metas">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="sidebar-text-collapsible">Finanças Pessoais</span>
+            </button>
+
             <button type="button" data-nav-section="dashboard" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all" title="Produtividade & Foco">
                 <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 <span class="sidebar-text-collapsible">Produtividade & Foco</span>
@@ -571,6 +576,33 @@ $compMes = $compromissos_mes ?? [];
         </section>
 
         <!-- ========================================================
+             SEÇÃO: FINANÇAS PESSOAIS & METAS
+             ======================================================== -->
+        <section id="section-financas-pessoais" class="app-section flex-1 p-4 md:p-8 space-y-6 hidden">
+            <!-- Header com Título & Indicadores -->
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        💳 Finanças Pessoais & Metas
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 font-bold uppercase tracking-wider">Gestão & Teto Orçamentário</span>
+                    </h3>
+                    <p class="text-xs text-zinc-400">Controle do teto mensal, parcelamentos de metas (geladeira, eletrônicos), custos fixos (aluguel) e alertas de extrapolação.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="PersonalFinance.abrirModalConfig()" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 font-bold text-xs rounded-full transition-all flex items-center gap-1.5">
+                        <span>⚙️ Ajustar Teto</span>
+                    </button>
+                    <button type="button" onclick="PersonalFinance.abrirModalNovoItem()" class="px-4 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all flex items-center gap-1.5 active:scale-95">
+                        <span>+ Nova Despesa ou Compra</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Container Principal do Módulo de Finanças Pessoais -->
+            <div id="personal-finance-container" class="space-y-4 pb-36 md:pb-8"></div>
+        </section>
+
+        <!-- ========================================================
              SEÇÃO: BASE DE CONHECIMENTO (Zettelkasten)
              ======================================================== -->
         <section id="section-notas" class="app-section flex-1 p-4 md:p-8 space-y-6 hidden">
@@ -902,6 +934,11 @@ $compMes = $compromissos_mes ?? [];
                     <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     <span>Missões Estratégicas</span>
                 </button>
+                <button type="button" data-nav-section="financas-pessoais" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                    <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Finanças Pessoais & Metas</span>
+                </button>
+
                 <button type="button" data-nav-section="dashboard" class="mobile-drawer-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
                     <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     <span>Produtividade & Foco</span>
@@ -1342,6 +1379,204 @@ $compMes = $compromissos_mes ?? [];
         </div>
     </div>
 
+    
+    <!-- ========================================================
+         MODAL DE ITEM DE FINANÇAS PESSOAIS (Pierre Glassmorphism)
+         ======================================================== -->
+    <div id="modal-personal-finance-item" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="max-w-lg w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
+            <button type="button" onclick="PersonalFinance.fecharModalItem()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl">
+                    💳
+                </div>
+                <div>
+                    <h3 id="modal-pessoal-item-title" class="text-base font-extrabold text-white">Nova Despesa ou Compra de Meta</h3>
+                    <p class="text-xs text-zinc-400">Gerencie fixos (aluguel) e compras parceladas (geladeira, eletrônicos)</p>
+                </div>
+            </div>
+
+            <form id="form-personal-finance-item" onsubmit="PersonalFinance.salvarItem(event)" class="space-y-4">
+                <input type="hidden" id="pessoal-item-id" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Descrição / Item *</label>
+                    <input type="text" id="pessoal-item-nome" required placeholder="Ex: Geladeira Frost Free 400L, Aluguel Apartamento..." class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80 text-xs">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Tipo de Despesa *</label>
+                        <select id="pessoal-item-tipo" onchange="PersonalFinance.personalFinanceToggleTipoCampos()" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                            <option value="parcelado" selected>💳 Compra Parcelada (Metas)</option>
+                            <option value="fixo_mensal">🏠 Fixo Mensal Recorrente</option>
+                            <option value="avulso">🏷️ Gasto Avulso / Único</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Categoria</label>
+                        <select id="pessoal-item-categoria" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                            <option value="moradia">🏠 Moradia / Aluguel</option>
+                            <option value="eletrodomestico" selected>🧊 Eletrodomésticos & Casa</option>
+                            <option value="servicos">⚡ Contas & Assinaturas</option>
+                            <option value="tecnologia">💻 Tecnologia & Gadgets</option>
+                            <option value="educacao">📚 Educação & Cursos</option>
+                            <option value="transporte">🚗 Transporte & Carro</option>
+                            <option value="lazer_viagem">✈️ Lazer & Viagens</option>
+                            <option value="saude">❤️ Saúde & Bem-estar</option>
+                            <option value="alimentacao">🛒 Alimentação & Supermercado</option>
+                            <option value="outros">🏷️ Outros & Avulsos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Valor Total (R$) *</label>
+                        <input type="number" id="pessoal-item-valor" step="0.01" min="0.01" required placeholder="0.00" oninput="PersonalFinance.calcularPreviaParcelaModal()" class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 font-mono text-xs focus:outline-none focus:border-lime-400/80">
+                    </div>
+
+                    <div id="container-campos-parcelas">
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Nº de Parcelas *</label>
+                        <select id="pessoal-item-parcelas" onchange="PersonalFinance.calcularPreviaParcelaModal()" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                            <option value="1">1x (À vista)</option>
+                            <option value="2">2x</option>
+                            <option value="3">3x</option>
+                            <option value="4">4x</option>
+                            <option value="5">5x</option>
+                            <option value="6">6x</option>
+                            <option value="8">8x</option>
+                            <option value="10" selected>10x</option>
+                            <option value="12">12x</option>
+                            <option value="18">18x</option>
+                            <option value="24">24x</option>
+                            <option value="36">36x</option>
+                            <option value="48">48x</option>
+                        </select>
+                    </div>
+
+                    <div id="container-campos-fixo" class="hidden">
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Dia de Vencimento Fixo</label>
+                        <input type="number" id="pessoal-item-dia-fixo" min="1" max="31" value="10" class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-100 font-mono text-xs focus:outline-none focus:border-lime-400/80">
+                    </div>
+                </div>
+
+                <!-- Prévia do Impacto Mensal -->
+                <div id="pessoal-modal-preview-box" class="p-3 rounded-2xl bg-zinc-950/60 border border-white/5 text-center hidden">
+                    <span class="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Custo Mensal no Orçamento</span>
+                    <p id="pessoal-modal-preview-texto" class="text-sm font-black text-lime-400 font-mono mt-0.5"></p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">1º Vencimento</label>
+                        <input type="date" id="pessoal-item-vencimento" required class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Forma Pagamento</label>
+                        <select id="pessoal-item-forma" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                            <option value="cartao" selected>Cartão de Crédito</option>
+                            <option value="boleto">Boleto Bancário</option>
+                            <option value="pix">PIX</option>
+                            <option value="debito_automatico">Débito Automático</option>
+                            <option value="dinheiro">Dinheiro / Espécie</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Parcelas Já Pagas</label>
+                        <input type="number" id="pessoal-item-pagas" min="0" value="0" class="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 font-mono focus:outline-none focus:border-lime-400/80">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Meta Relacionada (Opcional)</label>
+                        <input type="text" id="pessoal-item-meta" placeholder="Ex: Equipar Cozinha, Viagem Fim de Ano..." class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Status</label>
+                        <select id="pessoal-item-status" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 focus:outline-none focus:border-lime-400/80">
+                            <option value="ativo" selected>Ativo (Comprometendo Orçamento)</option>
+                            <option value="planejado">Planejado (Simulação)</option>
+                            <option value="pausado">Pausado</option>
+                            <option value="quitado">Quitado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Observações (Opcional)</label>
+                    <textarea id="pessoal-item-obs" rows="2" placeholder="Garantia, loja, notas de pagamento..." class="w-full px-3.5 py-2 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-lime-400/80"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                    <button type="button" onclick="PersonalFinance.fecharModalItem()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-submit-pessoal-item" class="px-5 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all">
+                        Salvar Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL DE CONFIGURAÇÃO DE TETO ORÇAMENTÁRIO PESSOAL
+         ======================================================== -->
+    <div id="modal-personal-finance-config" class="fixed inset-0 z-60 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="max-w-md w-full bg-[#121217] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5 relative">
+            <button type="button" onclick="PersonalFinance.fecharModalConfig()" class="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-lime-400/20 text-lime-400 border border-lime-400/30 flex items-center justify-center text-xl">
+                    ⚙️
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-white">Configurar Teto Orçamentário</h3>
+                    <p class="text-xs text-zinc-400">Defina o limite mensal para receber alertas de extrapolação</p>
+                </div>
+            </div>
+
+            <form id="form-personal-finance-config" onsubmit="PersonalFinance.salvarConfig(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Teto Máximo de Gastos Mensal (R$) *</label>
+                    <input type="number" id="cfg-teto" step="0.01" min="1" required placeholder="5000.00" class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-lime-400 font-mono font-bold text-sm focus:outline-none focus:border-lime-400/80">
+                    <p class="text-[10px] text-zinc-500 mt-1">Quando a soma dos fixos + parcelas do mês passar desse valor, o AIRES emitirá alertas de atenção.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Renda Líquida Mensal Estimada (R$)</label>
+                    <input type="number" id="cfg-renda" step="0.01" min="0" placeholder="6000.00" class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-white font-mono text-xs focus:outline-none focus:border-lime-400/80">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Margem de Alerta Preventivo (%)</label>
+                    <input type="number" id="cfg-alerta" min="50" max="100" value="90" class="w-full px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-zinc-200 font-mono text-xs focus:outline-none focus:border-lime-400/80">
+                    <p class="text-[10px] text-zinc-500 mt-1">Gera aviso preventivo amarelo quando atingir essa porcentagem do teto.</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/5">
+                    <button type="button" onclick="PersonalFinance.fecharModalConfig()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-full transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-lime-400 hover:bg-lime-300 text-black font-extrabold text-xs rounded-full shadow-lg shadow-lime-400/20 transition-all">
+                        Salvar Configuração
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="assets/js/api.js?v=<?= time() ?>"></script>
     <script src="assets/js/conflict-dialog.js?v=<?= time() ?>"></script>
@@ -1357,6 +1592,8 @@ $compMes = $compromissos_mes ?? [];
     <script src="assets/js/startup-auditoria.js?v=<?= time() ?>"></script>
     <script src="assets/js/startup-protocolos.js?v=<?= time() ?>"></script>
     <script src="assets/js/mission-budget.js?v=<?= time() ?>"></script>
+    <script src="assets/js/personal-finance.js?v=<?= time() ?>"></script>
+
     <script src="assets/js/app.js?v=<?= time() ?>"></script>
 </body>
 </html>

@@ -26,6 +26,7 @@ use Aires\Controllers\TaskController;
 use Aires\Controllers\SubtaskController;
 use Aires\Controllers\MissionController;
 use Aires\Controllers\MissionBudgetController;
+use Aires\Controllers\PersonalFinanceController;
 use Aires\Controllers\AlertController;
 use Aires\Controllers\DashboardController;
 use Aires\Controllers\NoteController;
@@ -124,6 +125,18 @@ $router->get('/api/missoes/orcamento/projecao', [MissionBudgetController::class,
 $router->post('/api/missoes/orcamento', [MissionBudgetController::class, 'store']);
 $router->put('/api/missoes/orcamento/{id}', [MissionBudgetController::class, 'update']);
 $router->delete('/api/missoes/orcamento/{id}', [MissionBudgetController::class, 'destroy']);
+
+// Finanças Pessoais & Orçamento de Metas (Controle de Teto, Parcelamentos e Alertas de Extrapolação)
+$router->get('/api/pessoal/financeiro', [PersonalFinanceController::class, 'index']);
+$router->get('/api/pessoal/financeiro/resumo', [PersonalFinanceController::class, 'resumo']);
+$router->get('/api/pessoal/financeiro/projecao', [PersonalFinanceController::class, 'projecao']);
+$router->get('/api/pessoal/financeiro/config', [PersonalFinanceController::class, 'getConfig']);
+$router->post('/api/pessoal/financeiro/config', [PersonalFinanceController::class, 'saveConfig']);
+$router->post('/api/pessoal/financeiro/simular', [PersonalFinanceController::class, 'simular']);
+$router->post('/api/pessoal/financeiro', [PersonalFinanceController::class, 'store']);
+$router->put('/api/pessoal/financeiro/{id}', [PersonalFinanceController::class, 'update']);
+$router->patch('/api/pessoal/financeiro/{id}/pagar-parcela', [PersonalFinanceController::class, 'pagarParcela']);
+$router->delete('/api/pessoal/financeiro/{id}', [PersonalFinanceController::class, 'destroy']);
 
 // Inteligência Ativa: Alertas e Notificações com Cálculo de Viagem (Pilar 3)
 $router->get('/api/alertas/pendentes', [AlertController::class, 'pending']);

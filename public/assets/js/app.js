@@ -261,6 +261,8 @@ const App = (() => {
             StartupDashboard?.load();
         } else if (section === 'startup-auditoria') {
             StartupAuditoria?.load();
+        } else if (section === 'financas-pessoais') {
+            PersonalFinance?.load();
         }
     }
 
@@ -945,6 +947,8 @@ const App = (() => {
             renderNotes();
         } else if (currentSection === 'dashboard') {
             renderDashboard();
+        } else if (currentSection === 'financas-pessoais') {
+            PersonalFinance?.load();
         }
         updateStats();
     }

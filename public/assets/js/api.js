@@ -112,6 +112,24 @@ const API = (() => {
         updateMissaoOrcamentoItem: (id, payload) => request(`/missoes/orcamento/${id}`, { method: 'PUT', body: payload }),
         deleteMissaoOrcamentoItem: (id) => request(`/missoes/orcamento/${id}`, { method: 'DELETE' }),
 
+        // Finanças Pessoais & Metas (Controle de Teto, Parcelamento e Extrapolação)
+        getPersonalFinance: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/pessoal/financeiro${query ? '?' + query : ''}`);
+        },
+        getPersonalFinanceResumo: () => request('/pessoal/financeiro/resumo'),
+        getPersonalFinanceProjecao: (params = {}) => {
+            const query = new URLSearchParams(params).toString();
+            return request(`/pessoal/financeiro/projecao${query ? '?' + query : ''}`);
+        },
+        getPersonalFinanceConfig: () => request('/pessoal/financeiro/config'),
+        savePersonalFinanceConfig: (payload) => request('/pessoal/financeiro/config', { method: 'POST', body: payload }),
+        simularPersonalFinance: (payload) => request('/pessoal/financeiro/simular', { method: 'POST', body: payload }),
+        createPersonalFinanceItem: (payload) => request('/pessoal/financeiro', { method: 'POST', body: payload }),
+        updatePersonalFinanceItem: (id, payload) => request(`/pessoal/financeiro/${id}`, { method: 'PUT', body: payload }),
+        pagarPersonalFinanceParcela: (id) => request(`/pessoal/financeiro/${id}/pagar-parcela`, { method: 'PATCH' }),
+        deletePersonalFinanceItem: (id) => request(`/pessoal/financeiro/${id}`, { method: 'DELETE' }),
+
         getAlertasPendentes: () => request('/alertas/pendentes'),
         markAlertaLido: (id) => request(`/alertas/${id}/lido`, { method: 'PATCH' }),
 
