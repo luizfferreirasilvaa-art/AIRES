@@ -375,3 +375,10 @@ html.sidebar-init-collapsed #app-sidebar .sidebar-gamification-mini {
     }
 }
 
+
+
+/* Força a cor uniforme lime (#a3e635) em todos os ícones da barra lateral e menu drawer */
+#app-sidebar .sidebar-nav-btn svg,
+#mobile-drawer-sheet .mobile-drawer-nav-btn svg {
+    color: #a3e635 !important;
+}
