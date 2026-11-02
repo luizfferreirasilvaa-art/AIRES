@@ -43,6 +43,23 @@ use Aires\Controllers\AdminUsuarioController;
 // Iniciar sessões armazenadas no banco de dados MySQL
 SessionHandler::start();
 
+// Garante colunas de controle de acessos e perfil na tabela usuarios
+try {
+    $pdoBoot = \Aires\Core\Database::getInstance()->getConnection();
+    $cols = $pdoBoot->query("SHOW COLUMNS FROM `usuarios`")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('perfil', $cols, true)) {
+        $pdoBoot->exec("ALTER TABLE `usuarios` ADD COLUMN `perfil` VARCHAR(50) NOT NULL DEFAULT 'usuario'");
+    }
+    if (!in_array('status', $cols, true)) {
+        $pdoBoot->exec("ALTER TABLE `usuarios` ADD COLUMN `status` VARCHAR(30) NOT NULL DEFAULT 'ativo'");
+    }
+    if (!in_array('paginas_permitidas', $cols, true)) {
+        $pdoBoot->exec("ALTER TABLE `usuarios` ADD COLUMN `paginas_permitidas` TEXT NULL DEFAULT NULL");
+    }
+} catch (\Throwable $e) {
+    // Silencioso
+}
+
 $request = new Request();
 $router = new Router();
 

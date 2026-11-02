@@ -50,3 +50,4 @@ $stmtAdmin->execute();
 echo "✓ Usuário master verificado como Administrador ativo.\n";
 
 echo "Migração de Controle de Acessos concluída com sucesso!\n";
+

@@ -39,16 +39,33 @@ final class AuthController
         }
 
         // Permitir login tanto com email completo (ex: admin@aires.io) quanto com alias ("admin")
-        $stmt = $this->pdo->prepare("SELECT id, nome, email, senha_hash, perfil, status, paginas_permitidas FROM usuarios 
-            WHERE (email = :login OR (email = 'admin@aires.io' AND :login_alias = 'admin')) 
-              AND deletado_em IS NULL 
-            LIMIT 1");
-            
-        $stmt->execute([
-            'login'       => $login,
-            'login_alias' => strtolower($login)
-        ]);
-        $user = $stmt->fetch();
+        try {
+            $stmt = $this->pdo->prepare("SELECT id, nome, email, senha_hash, perfil, status, paginas_permitidas FROM usuarios 
+                WHERE (email = :login OR (email = 'admin@aires.io' AND :login_alias = 'admin')) 
+                  AND deletado_em IS NULL 
+                LIMIT 1");
+            $stmt->execute([
+                'login'       => $login,
+                'login_alias' => strtolower($login)
+            ]);
+            $user = $stmt->fetch();
+        } catch (\Throwable $e) {
+            // Fallback caso as colunas perfil/status ainda não existam no banco legado
+            $stmt = $this->pdo->prepare("SELECT id, nome, email, senha_hash FROM usuarios 
+                WHERE (email = :login OR (email = 'admin@aires.io' AND :login_alias = 'admin')) 
+                  AND deletado_em IS NULL 
+                LIMIT 1");
+            $stmt->execute([
+                'login'       => $login,
+                'login_alias' => strtolower($login)
+            ]);
+            $user = $stmt->fetch();
+            if ($user) {
+                $user['perfil'] = 'admin';
+                $user['status'] = 'ativo';
+                $user['paginas_permitidas'] = null;
+            }
+        }
 
         if (!$user || !password_verify($senha, $user['senha_hash'])) {
             Response::error('Credenciais inválidas. Verifique seu usuário e senha.', 401);

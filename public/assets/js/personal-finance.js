@@ -110,12 +110,12 @@ const PersonalFinance = (() => {
 
         try {
             const [respItens, respResumo, respProjecao, respConfig, respInvest, respInvestResumo, respDash] = await Promise.all([
-                API.getPersonalFinance(currentFilter),
-                API.getPersonalFinanceResumo(),
-                API.getPersonalFinanceProjecao({ meses: 12 }),
-                API.getPersonalFinanceConfig(),
-                API.getPersonalInvestimentos(currentInvestFilter),
-                API.getPersonalInvestimentosResumo(),
+                API.getPersonalFinance(currentFilter).catch(() => null),
+                API.getPersonalFinanceResumo().catch(() => null),
+                API.getPersonalFinanceProjecao({ meses: 12 }).catch(() => null),
+                API.getPersonalFinanceConfig().catch(() => null),
+                API.getPersonalInvestimentos(currentInvestFilter).catch(() => null),
+                API.getPersonalInvestimentosResumo().catch(() => null),
                 API.getPersonalFinanceDashboard ? API.getPersonalFinanceDashboard().catch(() => null) : Promise.resolve(null)
             ]);
 
@@ -131,8 +131,11 @@ const PersonalFinance = (() => {
             render();
         } catch (err) {
             container.innerHTML = `
-                <div class="glass-card rounded-3xl p-6 text-center text-red-400">
+                <div class="glass-card rounded-3xl p-6 text-center text-red-400 space-y-3">
                     <p class="text-xs font-bold">Erro ao carregar finanças pessoais: ${escapeHtml(err.message)}</p>
+                    <button type="button" onclick="PersonalFinance.load()" class="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-full transition-all">
+                        🔄 Tentar Novamente
+                    </button>
                 </div>
             `;
         }
