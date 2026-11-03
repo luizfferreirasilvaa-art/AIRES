@@ -75,6 +75,21 @@ const PersonalFinance = (() => {
     };
     let dashboardData = null;
     let currentSubView = 'dashboard'; // 'itens' | 'projecao' | 'simulador' | 'investimentos'
+    let chartMode = (function() {
+        try {
+            return localStorage.getItem('aires_finance_chart_mode') || 'curvas';
+        } catch (e) {
+            return 'curvas';
+        }
+    })();
+
+    function setChartMode(mode) {
+        chartMode = (mode === 'barras') ? 'barras' : 'curvas';
+        try {
+            localStorage.setItem('aires_finance_chart_mode', chartMode);
+        } catch (e) {}
+        render();
+    }
 
     const CATEGORIAS = {
         moradia: { label: 'Moradia / Aluguel', icone: '🏠', cor: 'cyan' },
@@ -409,11 +424,80 @@ const PersonalFinance = (() => {
         const somaPositivos = itemsDestinacao.reduce((acc, it) => acc + (it.valor > 0 ? it.valor : 0), 0);
         const barScaleTotal = Math.max(renda, somaPositivos);
 
-        let maxPatrimonio = 1;
-        projecao.forEach(p => {
-            const v = Math.max(parseFloat(p.patrimonio_bruto || 0), parseFloat(p.patrimonio_liquido || 0));
-            if (v > maxPatrimonio) maxPatrimonio = v;
+        // Gráfico de Evolução Patrimonial (12 Meses) - 3 Métricas: Líquido, Bruto e Dívidas
+        const itemsProjecao = (projecao && projecao.length > 0) ? projecao : [
+            { rotulo: 'Atual', mes_nome: 'Atual', patrimonio_liquido: patLiq, patrimonio_bruto: patBruto, divida_restante: dividaRestante }
+        ];
+
+        let minChartVal = 0;
+        let maxChartVal = 1;
+        itemsProjecao.forEach(p => {
+            const l = parseFloat(p.patrimonio_liquido || 0);
+            const b = parseFloat(p.patrimonio_bruto || 0);
+            const d = parseFloat(p.divida_restante || 0);
+            if (l < minChartVal) minChartVal = l;
+            if (b < minChartVal) minChartVal = b;
+            if (d < minChartVal) minChartVal = d;
+            if (l > maxChartVal) maxChartVal = l;
+            if (b > maxChartVal) maxChartVal = b;
+            if (d > maxChartVal) maxChartVal = d;
         });
+
+        // 15% de headroom no topo para o gráfico respirar
+        const maxChartScale = Math.max(maxChartVal * 1.15, 100);
+        const chartValRange = Math.max(1, maxChartScale - minChartVal);
+
+        // Coordenadas SVG para o modo Curvas
+        const svgW = 760;
+        const svgH = 180;
+        const padX = 35;
+        const padTop = 20;
+        const padBottom = 30;
+        const chartW = svgW - (padX * 2);
+        const chartH = svgH - padTop - padBottom;
+        const numPts = itemsProjecao.length;
+
+        function calcChartY(v) {
+            const ratio = (v - minChartVal) / chartValRange;
+            return padTop + chartH * (1 - ratio);
+        }
+        function calcChartX(idx) {
+            if (numPts <= 1) return padX + chartW / 2;
+            return padX + (idx * (chartW / (numPts - 1)));
+        }
+
+        const ptsLiq = itemsProjecao.map((p, i) => ({ x: calcChartX(i), y: calcChartY(parseFloat(p.patrimonio_liquido || 0)), val: parseFloat(p.patrimonio_liquido || 0) }));
+        const ptsBruto = itemsProjecao.map((p, i) => ({ x: calcChartX(i), y: calcChartY(parseFloat(p.patrimonio_bruto || 0)), val: parseFloat(p.patrimonio_bruto || 0) }));
+        const ptsDiv = itemsProjecao.map((p, i) => ({ x: calcChartX(i), y: calcChartY(parseFloat(p.divida_restante || 0)), val: parseFloat(p.divida_restante || 0) }));
+
+        function buildSplinePath(pts) {
+            if (pts.length === 0) return '';
+            if (pts.length === 1) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+            let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+            for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = pts[i === 0 ? 0 : i - 1];
+                const p1 = pts[i];
+                const p2 = pts[i + 1];
+                const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+                const cp1x = p1.x + (p2.x - p0.x) / 6;
+                const cp1y = p1.y + (p2.y - p0.y) / 6;
+                const cp2x = p2.x - (p3.x - p1.x) / 6;
+                const cp2y = p2.y - (p3.y - p1.y) / 6;
+                d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+            }
+            return d;
+        }
+
+        const splineLiq = buildSplinePath(ptsLiq);
+        const splineBruto = buildSplinePath(ptsBruto);
+        const splineDiv = buildSplinePath(ptsDiv);
+
+        const yZero = Math.min(padTop + chartH, Math.max(padTop, calcChartY(0)));
+        const areaLiq = ptsLiq.length > 1
+            ? `${splineLiq} L ${ptsLiq[ptsLiq.length - 1].x.toFixed(1)} ${yZero.toFixed(1)} L ${ptsLiq[0].x.toFixed(1)} ${yZero.toFixed(1)} Z`
+            : '';
+
+        let maxPatrimonio = maxChartScale;
 
         const badgeCorClasses = {
             emerald: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
@@ -566,7 +650,7 @@ const PersonalFinance = (() => {
 
                 <!-- 3. Curva Patrimonial & Desalavancagem 12 Meses -->
                 <div class="glass-card rounded-3xl p-5 sm:p-6 space-y-4 border border-white/10">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                         <div>
                             <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
                                 📊 Curva de Evolução Patrimonial (12 Meses)
@@ -574,53 +658,187 @@ const PersonalFinance = (() => {
                             </h4>
                             <p class="text-xs text-zinc-400">Projeção mês a mês considerando amortização de parcelas e aportes acumulados com juros compostos.</p>
                         </div>
-                        <div class="flex items-center gap-3 text-[11px]">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-sm bg-lime-400"></span>
-                                <span class="text-zinc-300">Líquido</span>
+                        
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Legenda das 3 métricas -->
+                            <div class="flex items-center gap-3 text-[11px] bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-lime-400 shadow-sm shadow-lime-400/50"></span>
+                                    <span class="text-zinc-200 font-semibold">Líquido</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/50"></span>
+                                    <span class="text-zinc-200 font-semibold">Bruto</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-sm shadow-rose-400/50"></span>
+                                    <span class="text-zinc-200 font-semibold">Dívidas</span>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-sm bg-cyan-400"></span>
-                                <span class="text-zinc-300">Bruto</span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-sm bg-rose-400"></span>
-                                <span class="text-zinc-300">Dívidas</span>
+
+                            <!-- Switcher Curvas vs Barras -->
+                            <div class="flex items-center bg-white/5 p-0.5 rounded-xl border border-white/10 text-[11px]">
+                                <button type="button" onclick="PersonalFinance.setChartMode('curvas')" class="px-3 py-1 rounded-lg transition-all font-bold ${chartMode === 'curvas' ? 'bg-lime-400 text-black shadow-md shadow-lime-400/20' : 'text-zinc-400 hover:text-white'}">
+                                    📈 Curvas
+                                </button>
+                                <button type="button" onclick="PersonalFinance.setChartMode('barras')" class="px-3 py-1 rounded-lg transition-all font-bold ${chartMode === 'barras' ? 'bg-lime-400 text-black shadow-md shadow-lime-400/20' : 'text-zinc-400 hover:text-white'}">
+                                    📊 Barras
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Bar Chart Visualizer -->
-                    <div class="pt-4 pb-2 w-full max-w-full overflow-x-auto no-scrollbar">
-                        <div class="min-w-[620px] flex items-end justify-between gap-2 h-44 px-2 border-b border-white/10">
-                            ${(projecao.length > 0 ? projecao : [
-                                { rotulo: 'Atual', mes_nome: 'Atual', patrimonio_liquido: patLiq, patrimonio_bruto: patBruto, divida_restante: dividaRestante }
-                            ]).map((p, idx) => {
-                                const pLiq = parseFloat(p.patrimonio_liquido || 0);
-                                const pBruto = parseFloat(p.patrimonio_bruto || 0);
-                                const pDiv = parseFloat(p.divida_restante || 0);
-                                const heightPct = maxPatrimonio > 0 ? Math.max(12, Math.min(100, (pLiq / maxPatrimonio) * 100)) : 12;
-                                const isCurrent = idx === 0;
-                                const rotuloMes = p.mes_nome ? p.mes_nome.replace('/20', '/') : (p.rotulo || p.mes || `Mês ${idx + 1}`);
+                    ${chartMode === 'curvas' ? `
+                        <!-- VISUALIZADOR DE CURVAS (SVG COM AS 3 LINHAS E ÁREA) -->
+                        <div class="pt-2 pb-2 w-full max-w-full overflow-x-auto no-scrollbar">
+                            <div class="min-w-[680px] relative">
+                                <svg viewBox="0 0 ${svgW} ${svgH}" class="w-full h-48 overflow-visible" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="grad-curva-liq" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#a3e635" stop-opacity="0.32"/>
+                                            <stop offset="100%" stop-color="#a3e635" stop-opacity="0.0"/>
+                                        </linearGradient>
+                                        <filter id="glow-curva" x="-20%" y="-20%" width="140%" height="140%">
+                                            <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#a3e635" flood-opacity="0.5"/>
+                                        </filter>
+                                    </defs>
 
-                                return `
-                                    <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer" title="${rotuloMes}: Líquido R$ ${pLiq.toLocaleString('pt-BR')}, Bruto R$ ${pBruto.toLocaleString('pt-BR')}, Dívida -R$ ${pDiv.toLocaleString('pt-BR')}">
-                                        <div class="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono font-bold text-lime-400 text-center whitespace-nowrap mb-1">
-                                            R$ ${(pLiq / 1000).toFixed(1)}k
-                                        </div>
+                                    <!-- Linhas de Grade Horizontais -->
+                                    <line x1="${padX}" y1="${calcChartY(maxChartScale)}" x2="${svgW - padX}" y2="${calcChartY(maxChartScale)}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3"/>
+                                    <line x1="${padX}" y1="${calcChartY(maxChartScale * 0.66)}" x2="${svgW - padX}" y2="${calcChartY(maxChartScale * 0.66)}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3"/>
+                                    <line x1="${padX}" y1="${calcChartY(maxChartScale * 0.33)}" x2="${svgW - padX}" y2="${calcChartY(maxChartScale * 0.33)}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3"/>
+                                    <line x1="${padX}" y1="${yZero}" x2="${svgW - padX}" y2="${yZero}" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
 
-                                        <div class="w-full max-w-[36px] bg-white/5 rounded-t-xl overflow-hidden flex flex-col justify-end p-0.5 border ${isCurrent ? 'border-lime-400 shadow-lg shadow-lime-400/20' : 'border-white/10 group-hover:border-white/30'} transition-all" style="height: ${heightPct}%">
-                                            <div class="w-full bg-gradient-to-t from-lime-500 to-emerald-400 rounded-t-lg transition-all" style="height: 100%"></div>
-                                        </div>
+                                    <!-- 1. Área Sombreada Líquido -->
+                                    ${areaLiq ? `<path d="${areaLiq}" fill="url(#grad-curva-liq)"/>` : ''}
 
-                                        <span class="text-[10px] font-mono ${isCurrent ? 'text-lime-400 font-extrabold' : 'text-zinc-400'} pt-1 whitespace-nowrap">
-                                            ${rotuloMes}
-                                        </span>
-                                    </div>
-                                `;
-                            }).join('')}
+                                    <!-- 2. Curva Bruto (Ciano) -->
+                                    <path d="${splineBruto}" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-all duration-300"/>
+
+                                    <!-- 3. Curva Dívidas (Rosa Tracejado) -->
+                                    <path d="${splineDiv}" fill="none" stroke="#fb7185" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round" stroke-linejoin="round" class="transition-all duration-300"/>
+
+                                    <!-- 4. Curva Líquido (Verde Limão / Destaque) -->
+                                    <path d="${splineLiq}" fill="none" stroke="#a3e635" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-curva)" class="transition-all duration-300"/>
+
+                                    <!-- Pontos Marcadores nas Curvas -->
+                                    ${ptsBruto.map(pt => `
+                                        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="3" fill="#22d3ee" class="transition-transform group-hover:scale-125"/>
+                                    `).join('')}
+                                    ${ptsDiv.map(pt => `
+                                        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="3" fill="#fb7185" class="transition-transform group-hover:scale-125"/>
+                                    `).join('')}
+                                    ${ptsLiq.map(pt => `
+                                        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="4.5" fill="#a3e635" stroke="#070709" stroke-width="1.5" class="transition-transform group-hover:scale-125"/>
+                                    `).join('')}
+                                </svg>
+
+                                <!-- Grid de Interação e Tooltips no Hover -->
+                                <div class="absolute inset-0 flex items-stretch px-[${padX}px]">
+                                    ${itemsProjecao.map((p, idx) => {
+                                        const pLiq = parseFloat(p.patrimonio_liquido || 0);
+                                        const pBruto = parseFloat(p.patrimonio_bruto || 0);
+                                        const pDiv = parseFloat(p.divida_restante || 0);
+                                        const rotuloMes = p.mes_nome ? p.mes_nome.replace('/20', '/') : (p.rotulo || p.mes || `Mês ${idx + 1}`);
+                                        const isCurrent = idx === 0;
+
+                                        return `
+                                            <div class="flex-1 flex flex-col justify-between items-center group cursor-pointer relative" title="${rotuloMes}: Líquido R$ ${pLiq.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}, Bruto R$ ${pBruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}, Dívida -R$ ${pDiv.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}">
+                                                <!-- Linha vertical guia no hover -->
+                                                <div class="absolute inset-y-4 w-px bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+
+                                                <!-- Popover Flutuante com as 3 Curvas / Métricas -->
+                                                <div class="opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none absolute -top-12 z-20 bg-zinc-950/95 border border-white/20 p-2 rounded-xl shadow-2xl backdrop-blur-md min-w-[140px] text-left">
+                                                    <div class="text-[10px] font-extrabold text-white pb-1 border-b border-white/10 flex items-center justify-between">
+                                                        <span>${rotuloMes}</span>
+                                                        ${isCurrent ? '<span class="text-[9px] text-lime-400 font-bold uppercase">Atual</span>' : ''}
+                                                    </div>
+                                                    <div class="space-y-0.5 pt-1 text-[10px] font-mono">
+                                                        <div class="text-lime-400 flex items-center justify-between gap-2">
+                                                            <span>Líq:</span>
+                                                            <span class="font-bold">R$ ${pLiq.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                                        </div>
+                                                        <div class="text-cyan-400 flex items-center justify-between gap-2">
+                                                            <span>Bruto:</span>
+                                                            <span>R$ ${pBruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                                        </div>
+                                                        <div class="text-rose-400 flex items-center justify-between gap-2">
+                                                            <span>Dívida:</span>
+                                                            <span>-R$ ${pDiv.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div></div>
+
+                                                <!-- Rótulo do Mês -->
+                                                <span class="text-[10px] font-mono ${isCurrent ? 'text-lime-400 font-extrabold' : 'text-zinc-400 group-hover:text-white'} pt-1 pb-1 whitespace-nowrap transition-colors">
+                                                    ${rotuloMes}
+                                                </span>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    ` : `
+                        <!-- VISUALIZADOR DE BARRAS AGRUPADAS (3 MÉTRICAS LADO A LADO) -->
+                        <div class="pt-4 pb-2 w-full max-w-full overflow-x-auto no-scrollbar">
+                            <div class="min-w-[680px] flex items-end justify-between gap-2 h-48 px-2 border-b border-white/10">
+                                ${itemsProjecao.map((p, idx) => {
+                                    const pLiq = parseFloat(p.patrimonio_liquido || 0);
+                                    const pBruto = parseFloat(p.patrimonio_bruto || 0);
+                                    const pDiv = parseFloat(p.divida_restante || 0);
+                                    const isCurrent = idx === 0;
+                                    const rotuloMes = p.mes_nome ? p.mes_nome.replace('/20', '/') : (p.rotulo || p.mes || `Mês ${idx + 1}`);
+
+                                    const hBruto = maxChartScale > 0 ? Math.max(6, Math.min(100, (pBruto / maxChartScale) * 100)) : 6;
+                                    const hDiv = maxChartScale > 0 ? Math.max(6, Math.min(100, (pDiv / maxChartScale) * 100)) : 6;
+                                    const hLiq = maxChartScale > 0 ? Math.max(6, Math.min(100, (Math.max(0, pLiq) / maxChartScale) * 100)) : 6;
+
+                                    return `
+                                        <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer relative" title="${rotuloMes}: Líquido R$ ${pLiq.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}, Bruto R$ ${pBruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}, Dívida -R$ ${pDiv.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}">
+                                            <!-- Tooltip no Hover -->
+                                            <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 z-20 bg-zinc-950/95 border border-white/20 p-2 rounded-xl shadow-2xl backdrop-blur-md min-w-[130px] pointer-events-none text-left">
+                                                <div class="text-[10px] font-extrabold text-white pb-1 border-b border-white/10 flex items-center justify-between">
+                                                    <span>${rotuloMes}</span>
+                                                    ${isCurrent ? '<span class="text-[9px] text-lime-400 font-bold uppercase">Atual</span>' : ''}
+                                                </div>
+                                                <div class="space-y-0.5 pt-1 text-[10px] font-mono">
+                                                    <div class="text-lime-400 flex items-center justify-between">
+                                                        <span>Líq:</span>
+                                                        <span class="font-bold">R$ ${pLiq.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                                    </div>
+                                                    <div class="text-cyan-400 flex items-center justify-between">
+                                                        <span>Bruto:</span>
+                                                        <span>R$ ${pBruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                                    </div>
+                                                    <div class="text-rose-400 flex items-center justify-between">
+                                                        <span>Dívida:</span>
+                                                        <span>-R$ ${pDiv.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Card com o Cluster das 3 Barras -->
+                                            <div class="w-full max-w-[50px] bg-white/5 rounded-t-xl flex items-end justify-center gap-1 p-1 border ${isCurrent ? 'border-lime-400 shadow-lg shadow-lime-400/20' : 'border-white/10 group-hover:border-white/30'} h-full transition-all">
+                                                <!-- Barra 1: Bruto (Ciano) -->
+                                                <div class="w-2.5 sm:w-3 bg-gradient-to-t from-cyan-600 to-cyan-400 rounded-t-md transition-all" style="height: ${hBruto}%" title="Bruto: R$ ${pBruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}"></div>
+                                                <!-- Barra 2: Dívidas (Rosa) -->
+                                                <div class="w-2.5 sm:w-3 bg-gradient-to-t from-rose-600 to-rose-400 rounded-t-md transition-all" style="height: ${hDiv}%" title="Dívida: -R$ ${pDiv.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}"></div>
+                                                <!-- Barra 3: Líquido (Verde Limão) -->
+                                                <div class="w-2.5 sm:w-3 bg-gradient-to-t from-lime-500 to-emerald-400 rounded-t-md transition-all" style="height: ${hLiq}%" title="Líquido: R$ ${pLiq.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}"></div>
+                                            </div>
+
+                                            <span class="text-[10px] font-mono ${isCurrent ? 'text-lime-400 font-extrabold' : 'text-zinc-400 group-hover:text-white'} pt-1 whitespace-nowrap transition-colors">
+                                                ${rotuloMes}
+                                            </span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `}
 
                     ${projecao.length >= 2 ? `
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-zinc-400 pt-2 border-t border-white/5">
@@ -2058,6 +2276,7 @@ const PersonalFinance = (() => {
         abrirModalMovimentacao,
         fecharModalMovimentacao,
         salvarMovimentacao,
-        excluirInvestimento
+        excluirInvestimento,
+        setChartMode
     };
 })();
