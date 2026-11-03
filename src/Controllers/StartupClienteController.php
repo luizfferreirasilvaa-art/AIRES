@@ -28,6 +28,7 @@ final class StartupClienteController
     public function index(Request $request): void
     {
         $userId = $this->getUserId();
+        $this->deduplicarClientes($userId);
         $busca = trim((string)$request->get('busca', ''));
         $status = trim((string)$request->get('status', ''));
 
@@ -132,6 +133,27 @@ final class StartupClienteController
         $observacoes = trim((string)$request->input('observacoes', '')) ?: null;
         $contratoFim = !empty($request->input('contrato_vigencia_fim')) ? (string)$request->input('contrato_vigencia_fim') : null;
         $contratoTermos = trim((string)$request->input('contrato_termos', '')) ?: null;
+
+        // Previne duplicidade de cliente por Nome ou UC
+        $stmtCheck = $this->pdo->prepare("
+            SELECT id FROM startup_clientes 
+            WHERE usuario_id = :uid 
+              AND (
+                  (numero_uc IS NOT NULL AND numero_uc != '' AND numero_uc = :uc)
+                  OR LOWER(TRIM(nome)) = LOWER(TRIM(:nome))
+              )
+              AND deletado_em IS NULL
+            LIMIT 1
+        ");
+        $stmtCheck->execute([
+            'uid'  => $userId,
+            'uc'   => $numeroUc,
+            'nome' => $nome
+        ]);
+        if ($stmtCheck->fetch()) {
+            Response::error('Já existe um cliente cadastrado com este Nome ou Número de UC.', 409);
+            return;
+        }
 
         $stmt = $this->pdo->prepare("
             INSERT INTO startup_clientes (
@@ -283,5 +305,54 @@ final class StartupClienteController
         ]);
 
         Response::success(null, 'Cliente removido com sucesso!');
+    }
+
+    private function deduplicarClientes(int $userId): void
+    {
+        try {
+            // Localiza clientes duplicados pelo mesmo número de UC ou pelo mesmo nome
+            $sqlDups = "
+                SELECT GROUP_CONCAT(id ORDER BY id ASC) AS ids, COUNT(*) as qtd
+                FROM startup_clientes
+                WHERE usuario_id = :uid AND deletado_em IS NULL
+                GROUP BY CASE 
+                    WHEN numero_uc IS NOT NULL AND TRIM(numero_uc) != '' THEN TRIM(numero_uc)
+                    ELSE LOWER(TRIM(nome))
+                END
+                HAVING qtd > 1
+            ";
+            $stmt = $this->pdo->prepare($sqlDups);
+            $stmt->execute(['uid' => $userId]);
+            $grupos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($grupos as $grupo) {
+                $ids = array_map('intval', explode(',', (string)$grupo['ids']));
+                if (count($ids) <= 1) continue;
+
+                $primaryId = array_shift($ids);
+                $dupPlaceholders = implode(',', $ids);
+
+                // Migrar faturas vinculadas aos ids duplicados para o id principal
+                $this->pdo->exec("UPDATE startup_faturas SET cliente_id = {$primaryId} WHERE cliente_id IN ({$dupPlaceholders})");
+
+                // Migrar créditos de cliente (evitando duplicar chave em credito_id)
+                foreach ($ids as $dupId) {
+                    $this->pdo->exec("
+                        DELETE FROM startup_creditos_cliente 
+                        WHERE cliente_id = {$dupId} 
+                          AND credito_id IN (SELECT c_id FROM (SELECT credito_id AS c_id FROM startup_creditos_cliente WHERE cliente_id = {$primaryId}) AS tmp)
+                    ");
+                    $this->pdo->exec("UPDATE startup_creditos_cliente SET cliente_id = {$primaryId} WHERE cliente_id = {$dupId}");
+                }
+
+                // Migrar protocolos
+                $this->pdo->exec("UPDATE startup_protocolos SET cliente_id = {$primaryId} WHERE cliente_id IN ({$dupPlaceholders})");
+
+                // Soft-delete nos clientes duplicados
+                $this->pdo->exec("UPDATE startup_clientes SET deletado_em = NOW() WHERE id IN ({$dupPlaceholders})");
+            }
+        } catch (\Throwable $e) {
+            error_log('[AIRES] Falha ao deduplicar clientes: ' . $e->getMessage());
+        }
     }
 }

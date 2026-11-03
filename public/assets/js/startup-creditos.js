@@ -371,23 +371,39 @@ const StartupCreditos = (() => {
                 return;
             }
 
+            // Deduplicação defensiva no frontend por UC ou Nome do Cliente
+            const seenKeys = new Map();
+            alocacoes.forEach(a => {
+                const key = (a.numero_uc && a.numero_uc.trim()) ? a.numero_uc.trim() : (a.cliente_nome ? a.cliente_nome.trim().toLowerCase() : a.cliente_id);
+                if (!seenKeys.has(key)) {
+                    seenKeys.set(key, a);
+                }
+            });
+            const alocacoesUnicas = Array.from(seenKeys.values());
+
             let cardsHtml = '';
             let tableRowsHtml = '';
 
-            alocacoes.forEach(a => {
+            alocacoesUnicas.forEach(a => {
                 const aloc = parseFloat(a.creditos_alocados_kwh || 0);
                 const cons = parseFloat(a.creditos_consumidos_kwh || 0);
                 const saldo = parseFloat(a.saldo_acumulado_kwh || 0);
                 const previsaoMeses = parseFloat(a.previsao_meses || 0);
                 const statusEstoque = a.status_estoque || (a.alerta_estoque_baixo ? 'baixo' : 'saudavel');
 
-                // Badge inteligente
+                // Badge inteligente com indicação das Faturas
                 let badgeHtml = '';
                 let previsaoLabel = '';
 
-                if (statusEstoque === 'aguardando') {
-                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5 text-[9px] font-bold">⚪ Aguardando Rateio</span>`;
-                    previsaoLabel = `<span class="text-zinc-500 font-sans text-[10px]">Sem histórico</span>`;
+                if (statusEstoque === 'pendente') {
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[9px] font-extrabold flex items-center gap-1">⚡ Fatura Aberta (${cons.toLocaleString('pt-BR')} kWh)</span>`;
+                    previsaoLabel = `<span class="text-amber-400 font-bold font-sans text-[10px]">Aguardando Rateio</span>`;
+                } else if (statusEstoque === 'compensado') {
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-extrabold flex items-center gap-1">✓ 100% Compensado</span>`;
+                    previsaoLabel = `<span class="text-emerald-400 font-bold font-sans text-[10px]">Fatura Atendida</span>`;
+                } else if (statusEstoque === 'aguardando') {
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5 text-[9px] font-bold">⚪ Sem consumo</span>`;
+                    previsaoLabel = `<span class="text-zinc-500 font-sans text-[10px]">Aguardando fatura</span>`;
                 } else if (statusEstoque === 'reservado') {
                     badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[9px] font-bold">📦 Crédito Reservado</span>`;
                     previsaoLabel = `<span class="text-cyan-400 font-sans text-[10px]">Intacto</span>`;
@@ -395,10 +411,10 @@ const StartupCreditos = (() => {
                     badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 text-[9px] font-extrabold uppercase animate-pulse">🔴 Sem Estoque</span>`;
                     previsaoLabel = `<span class="text-red-400 font-bold font-sans text-[10px]">Esgotado</span>`;
                 } else if (statusEstoque === 'baixo') {
-                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-extrabold uppercase">⚠️ Estoque Baixo (< 1m)</span>`;
-                    previsaoLabel = `<span class="text-amber-400 font-bold font-sans text-[10px]">~${previsaoMeses} m</span>`;
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-extrabold uppercase">⚠️ Déficit (${Math.max(0, cons - aloc).toLocaleString('pt-BR')} kWh)</span>`;
+                    previsaoLabel = `<span class="text-amber-400 font-bold font-sans text-[10px]">Alocação < Fatura</span>`;
                 } else {
-                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold">✓ Saudável</span>`;
+                    badgeHtml = `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold">✓ Saudável (+${saldo.toLocaleString('pt-BR')} kWh)</span>`;
                     previsaoLabel = `<span class="text-emerald-400 font-sans text-[10px]">${previsaoMeses >= 90 ? '>3 anos' : `~${previsaoMeses} m`}</span>`;
                 }
 
@@ -419,7 +435,10 @@ const StartupCreditos = (() => {
                             <div>
                                 <span class="text-[9px] text-zinc-500 uppercase block font-sans">Alocado / Consumido</span>
                                 <span class="text-cyan-300 font-semibold">${aloc.toLocaleString('pt-BR')} kWh</span>
-                                <span class="text-zinc-500 block text-[10px]">Cons: ${cons.toLocaleString('pt-BR')} kWh</span>
+                                <span class="text-zinc-400 block text-[10px] mt-0.5">
+                                    Cons: <strong class="text-zinc-200">${cons.toLocaleString('pt-BR')} kWh</strong>
+                                    ${a.tem_fatura ? `<span class="text-[9px] text-emerald-400 font-bold px-1 py-0.5 bg-emerald-500/10 rounded ml-1" title="Consumo batido da Fatura de ${a.mes_referencia}">⚡ Fatura</span>` : ''}
+                                </span>
                             </div>
                             <div>
                                 <span class="text-[9px] text-zinc-500 uppercase block font-sans">Estoque / Previsão</span>
@@ -439,7 +458,12 @@ const StartupCreditos = (() => {
                         </td>
                         <td class="py-2.5 px-3 text-amber-400 font-bold whitespace-nowrap">${a.qtd_propriedades || 1} un</td>
                         <td class="py-2.5 px-3 font-mono text-cyan-300 whitespace-nowrap">${aloc.toLocaleString('pt-BR')} kWh</td>
-                        <td class="py-2.5 px-3 font-mono text-zinc-400 whitespace-nowrap">${cons.toLocaleString('pt-BR')} kWh</td>
+                        <td class="py-2.5 px-3 font-mono text-zinc-300 whitespace-nowrap">
+                            <div class="flex items-center gap-1.5">
+                                <span>${cons.toLocaleString('pt-BR')} kWh</span>
+                                ${a.tem_fatura ? `<span class="text-[9px] text-emerald-400 font-bold font-mono px-1.5 py-0.5 bg-emerald-500/10 rounded" title="Consumo extraído da fatura do mês ${a.mes_referencia}">⚡ Fatura</span>` : ''}
+                            </div>
+                        </td>
                         <td class="py-2.5 px-3 font-mono font-bold text-lime-400 whitespace-nowrap">${saldo.toLocaleString('pt-BR')} kWh</td>
                         <td class="py-2.5 px-3 whitespace-nowrap font-mono">
                             ${previsaoLabel}
@@ -455,7 +479,7 @@ const StartupCreditos = (() => {
                 <div class="flex items-center justify-between pb-3 mb-2 flex-wrap gap-2">
                     <span class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
                         <span>Rateio por Cliente</span>
-                        <span class="text-zinc-500 font-normal">(${alocacoes.length} clientes na carteira)</span>
+                        <span class="text-zinc-500 font-normal">(${alocacoesUnicas.length} clientes na carteira)</span>
                     </span>
                     <button type="button" onclick="StartupCreditos.openModalAlocacao(${creditoId})" class="px-3.5 py-1.5 rounded-full bg-lime-400/10 hover:bg-lime-400/20 text-lime-400 border border-lime-400/30 text-xs font-bold transition-all flex items-center gap-1">
                         <span>⚙️ Ajustar Rateio do Mês</span>
@@ -719,24 +743,41 @@ const StartupCreditos = (() => {
             const existing = document.getElementById('modal-alocacao-credito');
             if (existing) existing.remove();
 
+            // Deduplica clientes defensivamente para o modal de rateio
+            const seenKeys = new Map();
+            alocacoes.forEach(a => {
+                const key = (a.numero_uc && a.numero_uc.trim()) ? a.numero_uc.trim() : (a.cliente_nome ? a.cliente_nome.trim().toLowerCase() : a.cliente_id);
+                if (!seenKeys.has(key)) {
+                    seenKeys.set(key, a);
+                }
+            });
+            const alocacoesUnicas = Array.from(seenKeys.values());
+
             let rowsHtml = '';
-            clientesList.forEach(cli => {
-                const alocAtual = alocacoes.find(a => a.cliente_id == cli.id);
-                const valAloc = alocAtual ? parseFloat(alocAtual.creditos_alocados_kwh || 0) : 0;
-                const valCons = alocAtual ? parseFloat(alocAtual.creditos_consumidos_kwh || 0) : 0;
-                const valSaldo = alocAtual ? parseFloat(alocAtual.saldo_acumulado_kwh || 0) : Math.max(0, valAloc - valCons);
+            alocacoesUnicas.forEach(a => {
+                const valAloc = parseFloat(a.creditos_alocados_kwh || 0);
+                const valCons = parseFloat(a.creditos_consumidos_kwh || 0);
+                const valSaldo = (a.saldo_acumulado_kwh !== null && a.saldo_acumulado_kwh !== undefined)
+                    ? parseFloat(a.saldo_acumulado_kwh)
+                    : Math.max(0, valAloc - valCons);
 
                 rowsHtml += `
-                    <tr class="border-b border-white/5 transition-colors hover:bg-white/[0.02]" data-cli-id="${cli.id}" data-prop="${cli.qtd_propriedades || 1}">
+                    <tr class="border-b border-white/5 transition-colors hover:bg-white/[0.02]" data-cli-id="${a.cliente_id}" data-prop="${a.qtd_propriedades || 1}">
                         <td class="py-2.5 pr-2 text-xs text-white font-bold">
-                            ${escapeHtml(cli.nome)}
-                            <span class="block text-[9px] text-zinc-500 font-mono">${escapeHtml(cli.numero_uc || 'Sem UC')} • ${cli.qtd_propriedades || 1} un</span>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span>${escapeHtml(a.cliente_nome)}</span>
+                                ${a.tem_fatura ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">⚡ Fatura ${a.mes_referencia}</span>` : ''}
+                            </div>
+                            <span class="block text-[9px] text-zinc-500 font-mono mt-0.5">
+                                ${escapeHtml(a.numero_uc || 'Sem UC')} • ${a.qtd_propriedades || 1} un
+                                ${a.tem_fatura ? ` • <strong class="text-zinc-300">Fatura: ${valCons.toLocaleString('pt-BR')} kWh</strong>` : ' • <span class="text-zinc-600">Sem fatura neste mês</span>'}
+                            </span>
                         </td>
                         <td class="py-2.5 px-1.5">
                             <input type="number" step="0.01" min="0" class="inp-aloc w-24 px-2.5 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-cyan-300 font-mono font-semibold focus:outline-none focus:border-lime-400" value="${valAloc}">
                         </td>
                         <td class="py-2.5 px-1.5">
-                            <input type="number" step="0.01" min="0" class="inp-cons w-24 px-2.5 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 font-mono focus:outline-none focus:border-lime-400" value="${valCons}">
+                            <input type="number" step="0.01" min="0" class="inp-cons w-24 px-2.5 py-1.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-zinc-300 font-mono focus:outline-none focus:border-lime-400" value="${valCons}" ${a.tem_fatura ? 'title="Consumo extraído da fatura do mês"' : ''}>
                         </td>
                         <td class="py-2.5 pl-1.5">
                             <input type="number" step="0.01" min="0" class="inp-saldo w-24 px-2.5 py-1.5 bg-zinc-900/60 border border-white/10 rounded-xl text-xs text-lime-400 font-mono font-bold focus:outline-none focus:border-lime-400" value="${valSaldo}">
@@ -785,7 +826,10 @@ const StartupCreditos = (() => {
                         <!-- Ações Rápidas -->
                         <div class="flex items-center justify-between gap-2 shrink-0 flex-wrap">
                             <span class="text-[11px] text-zinc-400">Preencha os valores para cada cliente:</span>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button type="button" id="btn-cobrir-faturas" class="px-3 py-1 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold transition-all flex items-center gap-1">
+                                    ⚡ Cobrir Faturas do Mês (${cred.mes_referencia})
+                                </button>
                                 <button type="button" id="btn-ratear-proporcional" class="px-3 py-1 rounded-full bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 border border-cyan-400/20 text-[10px] font-bold transition-all">
                                     ⚡ Ratear por Propriedades
                                 </button>
@@ -913,6 +957,23 @@ const StartupCreditos = (() => {
                 recalcularModal();
             });
 
+            // Botão: Cobrir Faturas do Mês
+            document.getElementById('btn-cobrir-faturas')?.addEventListener('click', () => {
+                rows.forEach(r => {
+                    const inpAloc = r.querySelector('.inp-aloc');
+                    const inpCons = r.querySelector('.inp-cons');
+                    const inpSaldo = r.querySelector('.inp-saldo');
+                    const cVal = parseFloat(inpCons?.value || '0');
+                    if (inpAloc) inpAloc.value = cVal;
+                    if (inpSaldo) {
+                        delete inpSaldo.dataset.custom;
+                        inpSaldo.value = 0;
+                    }
+                });
+                recalcularModal();
+                App.showToast('Créditos alocados para bater 100% com as faturas abertas do mês!', 'success');
+            });
+
             // Botão: Limpar
             document.getElementById('btn-zerar-alocacoes')?.addEventListener('click', () => {
                 rows.forEach(r => {
@@ -935,11 +996,18 @@ const StartupCreditos = (() => {
     }
 
     async function salvarAlocacoesModal(creditoId) {
+        const btn = document.querySelector('#modal-alocacao-credito button[onclick*="salvarAlocacoesModal"]');
+        if (btn) btn.disabled = true;
+
         const rows = document.querySelectorAll('#modal-alocacao-credito tbody tr');
         const alocacoes = [];
+        const seenIds = new Set();
 
         rows.forEach(r => {
             const cliId = parseInt(r.dataset.cliId);
+            if (!cliId || seenIds.has(cliId)) return;
+            seenIds.add(cliId);
+
             const aloc = parseFloat(r.querySelector('.inp-aloc')?.value || '0');
             const cons = parseFloat(r.querySelector('.inp-cons')?.value || '0');
             const saldo = parseFloat(r.querySelector('.inp-saldo')?.value || '0');
@@ -960,6 +1028,7 @@ const StartupCreditos = (() => {
             carregarAlocacoesDoMes(creditoId);
         } catch (err) {
             App.showToast(err.message, 'error');
+            if (btn) btn.disabled = false;
         }
     }
 
