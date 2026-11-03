@@ -303,6 +303,12 @@ final class StartupFaturaController
             return;
         }
 
+        $clienteId = $request->input('cliente_id') !== null ? (int)$request->input('cliente_id') : (int)$existing['cliente_id'];
+        $mesReferencia = $request->input('mes_referencia') !== null ? trim((string)$request->input('mes_referencia')) : (string)$existing['mes_referencia'];
+        if (empty($mesReferencia)) {
+            $mesReferencia = (string)$existing['mes_referencia'];
+        }
+
         $consumoKwh = $request->input('consumo_kwh') !== null ? (float)$request->input('consumo_kwh') : (float)$existing['consumo_kwh'];
         $creditosInjetados = $request->input('creditos_injetados_kwh') !== null ? (float)$request->input('creditos_injetados_kwh') : (float)$existing['creditos_injetados_kwh'];
         $iluminacaoPublica = $request->input('iluminacao_publica') !== null ? (float)$request->input('iluminacao_publica') : (float)$existing['iluminacao_publica'];
@@ -344,6 +350,8 @@ final class StartupFaturaController
         try {
             $stmt = $this->pdo->prepare("
                 UPDATE startup_faturas SET
+                    cliente_id = :cid,
+                    mes_referencia = :mes,
                     consumo_kwh = :consumo,
                     creditos_injetados_kwh = :creditos,
                     iluminacao_publica = :ilum,
@@ -363,6 +371,8 @@ final class StartupFaturaController
             ");
 
             $stmt->execute([
+                'cid'        => $clienteId,
+                'mes'        => $mesReferencia,
                 'consumo'    => $consumoKwh,
                 'creditos'   => $creditosInjetados,
                 'ilum'       => $iluminacaoPublica,
@@ -386,6 +396,8 @@ final class StartupFaturaController
                     $this->pdo->exec("ALTER TABLE `startup_faturas` ADD COLUMN `arquivo_anexo` VARCHAR(500) NULL DEFAULT NULL");
                     $this->pdo->exec("ALTER TABLE `startup_faturas` ADD COLUMN `nome_arquivo_anexo` VARCHAR(255) NULL DEFAULT NULL");
                     $stmt->execute([
+                        'cid'        => $clienteId,
+                        'mes'        => $mesReferencia,
                         'consumo'    => $consumoKwh,
                         'creditos'   => $creditosInjetados,
                         'ilum'       => $iluminacaoPublica,
@@ -406,6 +418,8 @@ final class StartupFaturaController
                 } catch (\Throwable $ex) {
                     $stmtFallback = $this->pdo->prepare("
                         UPDATE startup_faturas SET
+                            cliente_id = :cid,
+                            mes_referencia = :mes,
                             consumo_kwh = :consumo,
                             creditos_injetados_kwh = :creditos,
                             iluminacao_publica = :ilum,
@@ -422,6 +436,8 @@ final class StartupFaturaController
                         WHERE id = :id AND usuario_id = :uid
                     ");
                     $stmtFallback->execute([
+                        'cid'        => $clienteId,
+                        'mes'        => $mesReferencia,
                         'consumo'    => $consumoKwh,
                         'creditos'   => $creditosInjetados,
                         'ilum'       => $iluminacaoPublica,
@@ -445,8 +461,9 @@ final class StartupFaturaController
         }
 
         $this->auditoria->registrar($userId, 'editar', 'fatura', $faturaId, [
-            'status'        => $status,
-            'valor_cobrado' => $valorCobrado
+            'status'         => $status,
+            'mes_referencia' => $mesReferencia,
+            'valor_cobrado'  => $valorCobrado
         ]);
 
         Response::success(null, 'Fatura atualizada com sucesso!');

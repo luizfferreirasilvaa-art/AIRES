@@ -491,7 +491,7 @@ const StartupFaturamento = (() => {
         const codigoCliente = opt?.dataset.codigo || '1.866.806.017-50';
         const codigoInstalacao = opt?.dataset.uc || '2077812';
 
-        const mesRef = document.getElementById('emissao-mes')?.value || '2026-08';
+        const mesRef = document.getElementById('emissao-mes')?.value || new Date().toISOString().substring(0, 7);
         const vencimento = document.getElementById('emissao-vencimento')?.value || '2026-10-21';
 
         const consumo = parseFloat(document.getElementById('emissao-consumo')?.value || '0');
@@ -876,7 +876,7 @@ const StartupFaturamento = (() => {
                 if (selectCli) selectCli.value = fat.cliente_id;
 
                 const inputMes = document.getElementById('emissao-mes');
-                if (inputMes) inputMes.value = fat.mes_referencia || '';
+                if (inputMes) inputMes.value = fat.mes_referencia ? fat.mes_referencia.substring(0, 7) : '';
 
                 const inputVenc = document.getElementById('emissao-vencimento');
                 if (inputVenc) inputVenc.value = fat.data_vencimento || '';
