@@ -899,10 +899,35 @@ final class PersonalFinanceController
         $stmt->execute(['uid' => $userId]);
         $itensAtuais = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $projecaoSimulada = [];
-        $dataCursor = new \DateTime('first day of this month');
+        try {
+            $dtPrimeiroVenc = new \DateTime($dataPrimeiroVenc);
+        } catch (\Throwable $e) {
+            $dtPrimeiroVenc = new \DateTime();
+        }
+        $dtPrimeiroVencMes = (clone $dtPrimeiroVenc)->modify('first day of this month');
+        $dtMesAtual = new \DateTime('first day of this month');
 
-        for ($i = 0; $i < 12; $i++) {
+        // Determina o início e o término da linha do tempo da simulação
+        // Se a compra iniciar no mês atual ou no próximo mês (até 2 meses):
+        // Inclui a partir do mês atual para visualizar a transição.
+        // Se a compra for bem no futuro (ex: ano que vem, 3+ meses à frente):
+        // Inicia diretamente no mês da compra planejada.
+        $diffMeses = (int)$dtMesAtual->diff($dtPrimeiroVencMes)->format('%r%m') + ((int)$dtMesAtual->diff($dtPrimeiroVencMes)->format('%r%y') * 12);
+
+        if ($diffMeses <= 2) {
+            $dataCursor = clone $dtMesAtual;
+        } else {
+            $dataCursor = clone $dtPrimeiroVencMes;
+        }
+
+        // Determina quantos meses a simulação deve cobrir:
+        // Cobre pelo menos 12 meses E garante a cobertura de todas as parcelas da nova compra!
+        $dtFimItem = (clone $dtPrimeiroVencMes)->modify('+' . ($qtdParcelas - 1) . ' months');
+        $mesesAteFimItem = (int)$dataCursor->diff($dtFimItem)->format('%r%m') + ((int)$dataCursor->diff($dtFimItem)->format('%r%y') * 12) + 1;
+        $totalMesesSimulacao = max(12, min(36, $mesesAteFimItem));
+
+        $projecaoSimulada = [];
+        for ($i = 0; $i < $totalMesesSimulacao; $i++) {
             $chaveMes = $dataCursor->format('Y-m');
             $projecaoSimulada[$chaveMes] = [
                 'mes'               => $chaveMes,
@@ -914,7 +939,8 @@ final class PersonalFinanceController
                 'saldo_livre_novo'  => $teto,
                 'extrapolou_antes'  => false,
                 'extrapolou_depois' => false,
-                'diferenca_excesso' => 0.0
+                'diferenca_excesso' => 0.0,
+                'is_periodo_compra' => false
             ];
             $dataCursor->modify('+1 month');
         }
@@ -957,22 +983,19 @@ final class PersonalFinanceController
             }
         }
 
-        // Aplica o item simulado
-        try {
-            $dtSim = new \DateTime($dataPrimeiroVenc);
-        } catch (\Throwable $e) {
-            $dtSim = new \DateTime();
-        }
-
+        // Aplica o item simulado nos seus meses de vigência
+        $dtSim = clone $dtPrimeiroVencMes;
         for ($p = 1; $p <= $qtdParcelas; $p++) {
             $k = $dtSim->format('Y-m');
             if (isset($projecaoSimulada[$k])) {
                 $projecaoSimulada[$k]['adicional_item'] += $valorParcela;
+                $projecaoSimulada[$k]['is_periodo_compra'] = true;
             }
             $dtSim->modify('+1 month');
         }
 
-        $mesesExtrapoladosNovo = [];
+        $mesesExtrapoladosPelaCompra = [];
+        $mesesEstouradosOutros = [];
         $maiorTotalNovo = 0.0;
 
         foreach ($projecaoSimulada as &$m) {
@@ -986,14 +1009,28 @@ final class PersonalFinanceController
             if ($m['extrapolou_depois']) {
                 $excesso = round($totalNovo - $teto, 2);
                 $m['diferenca_excesso'] = $excesso;
-                $mesesExtrapoladosNovo[] = [
-                    'mes'            => $m['mes'],
-                    'mes_nome'       => $m['mes_nome'],
-                    'total_com_item' => $totalNovo,
-                    'teto'           => $teto,
-                    'excesso'        => $excesso,
-                    'novo_estouro'   => !$m['extrapolou_antes']
-                ];
+
+                if ($m['adicional_item'] > 0) {
+                    // Estouro DURANTE o período de pagamento da nova compra!
+                    $mesesExtrapoladosPelaCompra[] = [
+                        'mes'            => $m['mes'],
+                        'mes_nome'       => $m['mes_nome'],
+                        'total_com_item' => $totalNovo,
+                        'teto'           => $teto,
+                        'excesso'        => $excesso,
+                        'adicional_item' => $m['adicional_item'],
+                        'novo_estouro'   => !$m['extrapolou_antes']
+                    ];
+                } else {
+                    // Estouro em mês anterior/fora da vigência da compra (ex: compromissos atuais herdados)
+                    $mesesEstouradosOutros[] = [
+                        'mes'            => $m['mes'],
+                        'mes_nome'       => $m['mes_nome'],
+                        'total_atual'    => $m['total_atual'],
+                        'teto'           => $teto,
+                        'excesso'        => $excesso
+                    ];
+                }
             }
 
             if ($totalNovo > $maiorTotalNovo) {
@@ -1002,28 +1039,46 @@ final class PersonalFinanceController
         }
         unset($m);
 
-        $aprovado = count($mesesExtrapoladosNovo) === 0;
+        // A aprovação da compra depende EXCLUSIVAMENTE dos meses em que a compra gera desembolso!
+        $aprovado = count($mesesExtrapoladosPelaCompra) === 0;
+
+        $primeiroMesCompraNome = $this->nomeMesAno($dtPrimeiroVencMes->format('Y-m'));
+        $ultimoMesCompraNome = $this->nomeMesAno($dtFimItem->format('Y-m'));
 
         if ($aprovado) {
-            $veredito = "✅ Compra Aprovada! Seu orçamento comporta tranquilamente as {$qtdParcelas}x de R$ " . number_format($valorParcela, 2, ',', '.') . " sem estourar o teto em nenhum mês.";
+            $periodoTexto = ($qtdParcelas > 1) 
+                ? "no período planejado ({$primeiroMesCompraNome} a {$ultimoMesCompraNome})"
+                : "no mês planejado ({$primeiroMesCompraNome})";
+
+            $veredito = "✅ Compra Aprovada! Seu orçamento comporta tranquilamente as {$qtdParcelas}x de R$ " . number_format($valorParcela, 2, ',', '.') . " {$periodoTexto} sem estourar o teto!";
         } else {
-            $qtdMeses = count($mesesExtrapoladosNovo);
-            $primeiroMes = $mesesExtrapoladosNovo[0]['mes_nome'];
-            $maiorExcesso = max(array_column($mesesExtrapoladosNovo, 'excesso'));
-            $veredito = "⚠️ Alerta de Extrapolação: Comprar '{$nomeItem}' em {$qtdParcelas}x de R$ " . number_format($valorParcela, 2, ',', '.') . " fará você ultrapassar o teto mensal em {$qtdMeses} mês(es), iniciando em {$primeiroMes} com excesso de até R$ " . number_format($maiorExcesso, 2, ',', '.') . "!";
+            $qtdMeses = count($mesesExtrapoladosPelaCompra);
+            $primeiroMesEstouro = $mesesExtrapoladosPelaCompra[0]['mes_nome'];
+            $maiorExcesso = max(array_column($mesesExtrapoladosPelaCompra, 'excesso'));
+            $veredito = "⚠️ Alerta de Extrapolação: Comprar '{$nomeItem}' em {$qtdParcelas}x de R$ " . number_format($valorParcela, 2, ',', '.') . " fará você ultrapassar o teto mensal em {$qtdMeses} mês(es) durante seu pagamento, iniciando em {$primeiroMesEstouro} com excesso de até R$ " . number_format($maiorExcesso, 2, ',', '.') . "!";
+        }
+
+        $notaContexto = null;
+        if ($aprovado && count($mesesEstouradosOutros) > 0) {
+            $nomesOutros = implode(', ', array_column($mesesEstouradosOutros, 'mes_nome'));
+            $notaContexto = "💡 Nota Orçamentária: O mês de {$nomesOutros} já possui contas anteriores acima do teto (R$ " . number_format($mesesEstouradosOutros[0]['total_atual'], 2, ',', '.') . "), mas sua nova compra só inicia em {$primeiroMesCompraNome} e cabe 100% dentro do teto em todos os seus meses de vigência.";
         }
 
         Response::json([
-            'sucesso'                => true,
-            'aprovado'               => $aprovado,
-            'veredito'               => $veredito,
-            'valor_total'            => $valorTotal,
-            'qtd_parcelas'           => $qtdParcelas,
-            'valor_parcela'          => $valorParcela,
-            'teto_mensal'            => $teto,
-            'maior_total_projetado'  => $maiorTotalNovo,
-            'meses_com_extrapolacao' => $mesesExtrapoladosNovo,
-            'cronograma_12m'         => array_values($projecaoSimulada)
+            'sucesso'                  => true,
+            'aprovado'                 => $aprovado,
+            'veredito'                 => $veredito,
+            'nota_contexto'            => $notaContexto,
+            'valor_total'              => $valorTotal,
+            'qtd_parcelas'             => $qtdParcelas,
+            'valor_parcela'            => $valorParcela,
+            'teto_mensal'              => $teto,
+            'primeiro_mes_compra'      => $primeiroMesCompraNome,
+            'ultimo_mes_compra'        => $ultimoMesCompraNome,
+            'maior_total_projetado'    => $maiorTotalNovo,
+            'meses_com_extrapolacao'   => $mesesExtrapoladosPelaCompra,
+            'meses_outros_extrapolados'=> $mesesEstouradosOutros,
+            'cronograma_12m'           => array_values($projecaoSimulada)
         ]);
     }
 

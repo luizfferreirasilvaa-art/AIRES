@@ -1547,7 +1547,17 @@ const PersonalFinance = (() => {
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-zinc-300 mb-1">Primeiro Vencimento</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-semibold text-zinc-300">Primeiro Vencimento</label>
+                                <div class="flex items-center gap-1.5 text-[10px]">
+                                    <button type="button" onclick="PersonalFinance.setSimVencimento('proximo_mes')" class="px-2 py-0.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/5 transition-all">
+                                        Próximo Mês
+                                    </button>
+                                    <button type="button" onclick="PersonalFinance.setSimVencimento('ano_que_vem')" class="px-2 py-0.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/5 transition-all">
+                                        Ano Que Vem
+                                    </button>
+                                </div>
+                            </div>
                             <input type="date" id="sim-vencimento" value="${new Date().toISOString().substring(0, 10)}" class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-2xl text-xs text-white focus:outline-none focus:border-lime-400/80">
                         </div>
 
@@ -1581,6 +1591,25 @@ const PersonalFinance = (() => {
             </div>
         `;
         return html;
+    }
+
+    function setSimVencimento(alvo) {
+        const input = document.getElementById('sim-vencimento');
+        if (!input) return;
+        const d = new Date();
+        if (alvo === 'proximo_mes') {
+            d.setMonth(d.getMonth() + 1);
+            d.setDate(10);
+        } else if (alvo === 'ano_que_vem') {
+            d.setFullYear(d.getFullYear() + 1);
+            d.setMonth(0);
+            d.setDate(10);
+        }
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        input.value = `${yyyy}-${mm}-${dd}`;
+        calcularPreviaParcelaSim();
     }
 
     function calcularPreviaParcelaSim() {
@@ -1679,11 +1708,18 @@ const PersonalFinance = (() => {
                     </div>
                     <div class="space-y-1">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider ${aprovado ? 'text-emerald-400' : 'text-red-400'}">
-                            ${aprovado ? 'COMPRA TOTALMENTE COMPATÍVEL' : 'ALERTA DE EXTRAPOLAÇÃO ORÇAMENTÁRIA'}
+                            ${aprovado ? 'COMPRA TOTALMENTE COMPATÍVEL COM O PERÍODO PLANEJADO' : 'ALERTA DE EXTRAPOLAÇÃO ORÇAMENTÁRIA'}
                         </span>
                         <h4 class="text-base font-extrabold text-white">${veredito}</h4>
                     </div>
                 </div>
+
+                ${data.nota_contexto ? `
+                    <div class="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-200 text-xs flex items-start gap-2.5 shadow-sm">
+                        <span class="text-base shrink-0">💡</span>
+                        <span class="leading-relaxed font-medium">${escapeHtml(data.nota_contexto)}</span>
+                    </div>
+                ` : ''}
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-white/5 text-xs">
                     <div class="p-2.5 rounded-2xl bg-black/40 border border-white/5">
@@ -1695,11 +1731,11 @@ const PersonalFinance = (() => {
                         <span class="font-black text-white font-mono text-sm">R$ ${teto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div class="p-2.5 rounded-2xl bg-black/40 border border-white/5">
-                        <span class="text-[10px] text-zinc-500 block">Pico Mensal Projetado</span>
+                        <span class="text-[10px] text-zinc-500 block">Pico Durante Compra</span>
                         <span class="font-black ${maiorTotal > teto ? 'text-red-400' : 'text-white'} font-mono text-sm">R$ ${maiorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div class="p-2.5 rounded-2xl bg-black/40 border border-white/5">
-                        <span class="text-[10px] text-zinc-500 block">Meses com Estouro</span>
+                        <span class="text-[10px] text-zinc-500 block">Estouros na Vigência</span>
                         <span class="font-black ${mesesEstourados.length > 0 ? 'text-red-400' : 'text-emerald-400'} font-mono text-sm">${mesesEstourados.length} mês(es)</span>
                     </div>
                 </div>
@@ -1714,9 +1750,14 @@ const PersonalFinance = (() => {
 
             <!-- Gráfico Comparativo Mês a Mês com o Novo Item -->
             <div class="glass-card rounded-3xl p-5 border border-white/10 bg-white/[0.02] space-y-3">
-                <h5 class="text-xs font-extrabold text-white uppercase tracking-wider">
-                    Impacto Visual nos Próximos 12 Meses (Antes vs Depois)
-                </h5>
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <h5 class="text-xs font-extrabold text-white uppercase tracking-wider">
+                        Impacto Visual no Período Planejado (${cronograma.length} Meses)
+                    </h5>
+                    <span class="text-[10px] text-zinc-400 font-mono">
+                        Vigência da compra: <strong class="text-lime-400">${data.primeiro_mes_compra || 'Início'}</strong> até <strong class="text-lime-400">${data.ultimo_mes_compra || 'Fim'}</strong>
+                    </span>
+                </div>
 
                 <div class="space-y-2">
                     ${cronograma.map(m => {
@@ -1724,31 +1765,48 @@ const PersonalFinance = (() => {
                         const adic = parseFloat(m.adicional_item || 0);
                         const pctNovo = Math.min(100, Math.round((totNovo / teto) * 100));
                         const estourou = totNovo > teto;
+                        const isAtivo = adic > 0;
 
                         return `
-                            <div class="p-2.5 rounded-2xl bg-black/30 border ${estourou ? 'border-red-500/30' : 'border-white/5'} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                                <div class="flex items-center gap-2 w-32 shrink-0">
-                                    <span class="font-black text-white text-[11px]">${m.mes_nome}</span>
-                                    ${adic > 0 ? `<span class="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 text-[9px] font-mono">+R$${Math.round(adic)}</span>` : ''}
+                            <div class="p-2.5 rounded-2xl bg-black/30 border ${isAtivo ? (estourou ? 'border-red-500/40 bg-red-500/[0.03]' : 'border-lime-400/20 bg-lime-400/[0.02]') : (estourou ? 'border-white/10 opacity-70' : 'border-white/5 opacity-50')} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs transition-all">
+                                <div class="flex items-center gap-2 w-36 shrink-0">
+                                    <span class="font-black ${isAtivo ? 'text-white' : 'text-zinc-400'} text-[11px]">${m.mes_nome}</span>
+                                    ${isAtivo ? `
+                                        <span class="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 text-[9px] font-mono font-bold">+R$${Math.round(adic)}</span>
+                                    ` : `
+                                        <span class="px-1.5 py-0.2 rounded bg-white/5 text-zinc-500 text-[8px] font-mono">Sem parcela</span>
+                                    `}
                                 </div>
 
                                 <div class="flex-1 min-w-[120px]">
                                     <div class="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
-                                        <div class="${estourou ? 'bg-red-500 animate-pulse' : 'bg-lime-400'} h-2 rounded-full" style="width: ${pctNovo}%"></div>
+                                        <div class="${estourou ? (isAtivo ? 'bg-red-500 animate-pulse' : 'bg-red-400/60') : 'bg-lime-400'} h-2 rounded-full" style="width: ${pctNovo}%"></div>
                                     </div>
                                 </div>
 
                                 <div class="flex items-center justify-between sm:justify-end gap-3 text-right shrink-0">
-                                    <span class="font-mono text-zinc-400 text-[11px]">R$ ${totNovo.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</span>
-                                    ${estourou ? `
-                                        <span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[9px] font-black uppercase">
-                                            +R$ ${(totNovo - teto).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-                                        </span>
-                                    ` : `
-                                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-bold">
-                                            Margem R$ ${(teto - totNovo).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-                                        </span>
-                                    `}
+                                    <span class="font-mono ${isAtivo ? 'text-zinc-300 font-bold' : 'text-zinc-500'} text-[11px]">R$ ${totNovo.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</span>
+                                    ${isAtivo ? (
+                                        estourou ? `
+                                            <span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[9px] font-black uppercase">
+                                                +R$ ${(totNovo - teto).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                                            </span>
+                                        ` : `
+                                            <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-bold">
+                                                Margem R$ ${(teto - totNovo).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                                            </span>
+                                        `
+                                    ) : (
+                                        estourou ? `
+                                            <span class="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-[9px] font-medium" title="Gastos herdados de outros compromissos cadastrados">
+                                                Compromissos Anteriores (+R$ ${(totNovo - teto).toLocaleString('pt-BR', { minimumFractionDigits: 0 })})
+                                            </span>
+                                        ` : `
+                                            <span class="px-2 py-0.5 rounded-full bg-white/5 text-zinc-500 text-[9px] font-mono">
+                                                Margem R$ ${(teto - totNovo).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                                            </span>
+                                        `
+                                    )}
                                 </div>
                             </div>
                         `;
@@ -2267,6 +2325,7 @@ const PersonalFinance = (() => {
         fecharModalConfig,
         salvarConfig,
         calcularPreviaParcelaSim,
+        setSimVencimento,
         executarSimulacao,
         cadastrarItemSimulado,
         abrirModalNovoInvestimento,
