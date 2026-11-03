@@ -13,6 +13,7 @@ final class Request
     private array $queryParams;
     private array $body;
     private array $headers;
+    private array $routeParams = [];
 
     public function __construct()
     {
@@ -92,6 +93,21 @@ final class Request
     public function input(string $key, mixed $default = null): mixed
     {
         return $this->body[$key] ?? $default;
+    }
+
+    public function setRouteParams(array $params): void
+    {
+        $this->routeParams = $params;
+    }
+
+    public function param(string $key, mixed $default = null): mixed
+    {
+        return $this->routeParams[$key] ?? $default;
+    }
+
+    public function allParams(): array
+    {
+        return $this->routeParams;
     }
 
     public function all(): array

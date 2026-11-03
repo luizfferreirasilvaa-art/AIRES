@@ -6,6 +6,18 @@
  */
 
 const PersonalFinance = (() => {
+    function parseMoney(val) {
+        if (typeof val === 'number') return isNaN(val) ? 0 : val;
+        if (!val) return 0;
+        let str = String(val).trim().replace('R$', '').trim();
+        if (str.includes(',') && str.includes('.')) {
+            str = str.replace(/\./g, '').replace(',', '.');
+        } else if (str.includes(',')) {
+            str = str.replace(',', '.');
+        }
+        const num = parseFloat(str);
+        return isNaN(num) ? 0 : num;
+    }
     let itensList = [];
     let investimentosList = [];
     let resumoData = {
@@ -1642,7 +1654,7 @@ const PersonalFinance = (() => {
 
     function calcularPreviaParcelaModal() {
         const tipo = document.getElementById('pessoal-item-tipo')?.value || 'parcelado';
-        const vTot = parseFloat(document.getElementById('pessoal-item-valor')?.value || 0);
+        const vTot = parseMoney(document.getElementById('pessoal-item-valor')?.value);
         const selectEl = document.getElementById('pessoal-item-parcelas');
         const customContainer = document.getElementById('container-parcelas-custom');
         const customInput = document.getElementById('pessoal-item-parcelas-custom');
@@ -1681,7 +1693,7 @@ const PersonalFinance = (() => {
         const nome = document.getElementById('pessoal-item-nome')?.value.trim();
         const tipo = document.getElementById('pessoal-item-tipo')?.value;
         const categoria = document.getElementById('pessoal-item-categoria')?.value;
-        const valorTotal = parseFloat(document.getElementById('pessoal-item-valor')?.value || 0);
+        const valorTotal = parseMoney(document.getElementById('pessoal-item-valor')?.value);
         let qtdParcelas = 1;
         const selectParc = document.getElementById('pessoal-item-parcelas')?.value;
         if (selectParc === 'outro') {
@@ -1819,11 +1831,11 @@ const PersonalFinance = (() => {
         const nome = document.getElementById('invest-nome')?.value.trim();
         const tipo = document.getElementById('invest-tipo')?.value;
         const instituicao = document.getElementById('invest-instituicao')?.value.trim();
-        const valorAtual = parseFloat(document.getElementById('invest-valor-atual')?.value || 0);
-        const valorAplicado = parseFloat(document.getElementById('invest-valor-aplicado')?.value || valorAtual);
-        const aporteMensal = parseFloat(document.getElementById('invest-aporte-mensal')?.value || 0);
-        const metaValor = parseFloat(document.getElementById('invest-meta-valor')?.value || 0);
-        const rentabilidade = parseFloat(document.getElementById('invest-rentabilidade')?.value || 10.50);
+        const valorAtual = parseMoney(document.getElementById('invest-valor-atual')?.value);
+        const valorAplicado = parseMoney(document.getElementById('invest-valor-aplicado')?.value || valorAtual);
+        const aporteMensal = parseMoney(document.getElementById('invest-aporte-mensal')?.value);
+        const metaValor = parseMoney(document.getElementById('invest-meta-valor')?.value);
+        const rentabilidade = parseMoney(document.getElementById('invest-rentabilidade')?.value || 10.50);
         const liquidez = document.getElementById('invest-liquidez')?.value.trim();
         const dataInicio = document.getElementById('invest-data-inicio')?.value;
         const status = document.getElementById('invest-status')?.value;

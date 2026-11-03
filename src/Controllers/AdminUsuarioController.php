@@ -244,10 +244,10 @@ final class AdminUsuarioController
         ]);
     }
 
-    public function show(Request $request, array $params = []): void
+    public function show(Request $request, string|int|array $id = 0): void
     {
         $this->checkAdmin();
-        $id = (int)($params['id'] ?? $request->param('id') ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         if ($id <= 0) {
             Response::error('ID de usuário inválido.', 422);
@@ -366,10 +366,10 @@ final class AdminUsuarioController
         ], 201);
     }
 
-    public function update(Request $request, array $params = []): void
+    public function update(Request $request, string|int|array $id = 0): void
     {
         $this->checkAdmin();
-        $id = (int)($params['id'] ?? $request->param('id') ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         if ($id <= 0) {
             Response::error('ID de usuário inválido.', 422);
@@ -466,10 +466,10 @@ final class AdminUsuarioController
         ]);
     }
 
-    public function toggleStatus(Request $request, array $params = []): void
+    public function toggleStatus(Request $request, string|int|array $id = 0): void
     {
         $this->checkAdmin();
-        $id = (int)($params['id'] ?? $request->param('id') ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         if ($id <= 0) {
             Response::error('ID de usuário inválido.', 422);
@@ -502,10 +502,10 @@ final class AdminUsuarioController
         ]);
     }
 
-    public function destroy(Request $request, array $params = []): void
+    public function destroy(Request $request, string|int|array $id = 0): void
     {
         $this->checkAdmin();
-        $id = (int)($params['id'] ?? $request->param('id') ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         if ($id <= 0) {
             Response::error('ID de usuário inválido.', 422);

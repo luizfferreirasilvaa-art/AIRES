@@ -869,7 +869,7 @@ final class PersonalFinanceController
         $teto = $config['teto_gastos_mensal'];
 
         $nomeItem = trim((string)$request->input('nome', 'Item Simulado'));
-        $valorTotal = (float)$request->input('valor_total', 0.0);
+        $valorTotal = $this->parseMoney($request->input('valor_total', 0.0));
         $qtdParcelas = max(1, (int)$request->input('qtd_parcelas', 1));
         $dataPrimeiroVenc = trim((string)$request->input('data_primeiro_vencimento', date('Y-m-d')));
 
@@ -1024,7 +1024,7 @@ final class PersonalFinanceController
         $nome = trim((string)$request->input('nome', ''));
         $categoria = trim((string)$request->input('categoria', 'outros'));
         $tipo = trim((string)$request->input('tipo', 'fixo_mensal'));
-        $valorTotal = (float)$request->input('valor_total', 0.0);
+        $valorTotal = $this->parseMoney($request->input('valor_total', 0.0));
         $qtdParcelas = max(1, (int)$request->input('qtd_parcelas', 1));
         $formaPagamento = trim((string)$request->input('forma_pagamento', 'boleto'));
         $dataVenc = trim((string)$request->input('data_primeiro_vencimento', date('Y-m-d')));
@@ -1091,10 +1091,10 @@ final class PersonalFinanceController
         ], 201);
     }
 
-    public function update(Request $request, array $params): void
+    public function update(Request $request, string|int|array $id = 0): void
     {
         $userId = $this->getUserId();
-        $id = (int)($params['id'] ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         if ($id <= 0) {
             Response::error('Item inválido.', 400);
@@ -1111,7 +1111,7 @@ final class PersonalFinanceController
         $nome = trim((string)$request->input('nome', ''));
         $categoria = trim((string)$request->input('categoria', 'outros'));
         $tipo = trim((string)$request->input('tipo', 'fixo_mensal'));
-        $valorTotal = (float)$request->input('valor_total', 0.0);
+        $valorTotal = $this->parseMoney($request->input('valor_total', 0.0));
         $qtdParcelas = max(1, (int)$request->input('qtd_parcelas', 1));
         $parcelasPagas = max(0, (int)$request->input('parcelas_pagas', 0));
         $formaPagamento = trim((string)$request->input('forma_pagamento', 'boleto'));
@@ -1184,10 +1184,10 @@ final class PersonalFinanceController
         ]);
     }
 
-    public function pagarParcela(Request $request, array $params): void
+    public function pagarParcela(Request $request, string|int|array $id = 0): void
     {
         $userId = $this->getUserId();
-        $id = (int)($params['id'] ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         $stmt = $this->pdo->prepare("
             SELECT id, tipo, qtd_parcelas, parcelas_pagas
@@ -1227,10 +1227,10 @@ final class PersonalFinanceController
         ]);
     }
 
-    public function destroy(Request $request, array $params): void
+    public function destroy(Request $request, string|int|array $id = 0): void
     {
         $userId = $this->getUserId();
-        $id = (int)($params['id'] ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         if ($id <= 0) {
             Response::error('Item inválido.', 400);
@@ -1427,11 +1427,11 @@ final class PersonalFinanceController
         $nome = trim((string)$request->input('nome', ''));
         $tipo = trim((string)$request->input('tipo', 'renda_fixa'));
         $instituicao = trim((string)$request->input('instituicao', 'Nubank')) ?: null;
-        $valorAtual = (float)$request->input('valor_atual', 0.0);
-        $valorAplicado = (float)$request->input('valor_aplicado', $valorAtual);
-        $aporteMensal = (float)$request->input('aporte_mensal', 0.0);
-        $metaValor = (float)$request->input('meta_valor', 0.0) ?: null;
-        $rentabilidade = (float)$request->input('rentabilidade_anual', 10.50);
+        $valorAtual = $this->parseMoney($request->input('valor_atual', 0.0));
+        $valorAplicado = $this->parseMoney($request->input('valor_aplicado', $valorAtual));
+        $aporteMensal = $this->parseMoney($request->input('aporte_mensal', 0.0));
+        $metaValor = $this->parseMoney($request->input('meta_valor', 0.0)) ?: null;
+        $rentabilidade = $this->parseMoney($request->input('rentabilidade_anual', 10.50));
         $liquidez = trim((string)$request->input('liquidez', 'Diária (D+0)'));
         $dataInicio = trim((string)$request->input('data_inicio', date('Y-m-d')));
         $status = trim((string)$request->input('status', 'ativo'));
@@ -1501,10 +1501,10 @@ final class PersonalFinanceController
         ], 201);
     }
 
-    public function investimentosUpdate(Request $request, array $params): void
+    public function investimentosUpdate(Request $request, string|int|array $id = 0): void
     {
         $userId = $this->getUserId();
-        $id = (int)($params['id'] ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         if ($id <= 0) {
             Response::error('Investimento inválido.', 400);
@@ -1514,11 +1514,11 @@ final class PersonalFinanceController
         $nome = trim((string)$request->input('nome', ''));
         $tipo = trim((string)$request->input('tipo', 'renda_fixa'));
         $instituicao = trim((string)$request->input('instituicao', '')) ?: null;
-        $valorAtual = (float)$request->input('valor_atual', 0.0);
-        $valorAplicado = (float)$request->input('valor_aplicado', 0.0);
-        $aporteMensal = (float)$request->input('aporte_mensal', 0.0);
-        $metaValor = (float)$request->input('meta_valor', 0.0) ?: null;
-        $rentabilidade = (float)$request->input('rentabilidade_anual', 10.00);
+        $valorAtual = $this->parseMoney($request->input('valor_atual', 0.0));
+        $valorAplicado = $this->parseMoney($request->input('valor_aplicado', 0.0));
+        $aporteMensal = $this->parseMoney($request->input('aporte_mensal', 0.0));
+        $metaValor = $this->parseMoney($request->input('meta_valor', 0.0)) ?: null;
+        $rentabilidade = $this->parseMoney($request->input('rentabilidade_anual', 10.00));
         $liquidez = trim((string)$request->input('liquidez', 'diaria'));
         $dataInicio = trim((string)$request->input('data_inicio', date('Y-m-d')));
         $status = trim((string)$request->input('status', 'ativo'));
@@ -1569,13 +1569,13 @@ final class PersonalFinanceController
         ]);
     }
 
-    public function investimentosMovimentar(Request $request, array $params): void
+    public function investimentosMovimentar(Request $request, string|int|array $id = 0): void
     {
         $userId = $this->getUserId();
-        $id = (int)($params['id'] ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         $tipo = trim((string)$request->input('tipo', 'aporte'));
-        $valor = (float)$request->input('valor', 0.0);
+        $valor = $this->parseMoney($request->input('valor', 0.0));
         $dataMov = trim((string)$request->input('data_movimentacao', date('Y-m-d')));
         $obs = trim((string)$request->input('observacoes', '')) ?: null;
 
@@ -1647,10 +1647,10 @@ final class PersonalFinanceController
         ]);
     }
 
-    public function investimentosDestroy(Request $request, array $params): void
+    public function investimentosDestroy(Request $request, string|int|array $id = 0): void
     {
         $userId = $this->getUserId();
-        $id = (int)($params['id'] ?? 0);
+        $id = is_array($id) ? (int)($id['id'] ?? 0) : (int)$id;
 
         if ($id <= 0) {
             Response::error('Investimento inválido.', 400);
@@ -1683,5 +1683,22 @@ final class PersonalFinanceController
         ];
         $idx = $partes[1];
         return ($meses[$idx] ?? $idx) . '/' . $partes[0];
+    }
+    private function parseMoney(mixed $val): float
+    {
+        if (is_numeric($val)) {
+            return (float)$val;
+        }
+        if (is_string($val)) {
+            $val = trim(str_replace(['R$', ' '], '', $val));
+            if (str_contains($val, ',') && str_contains($val, '.')) {
+                $val = str_replace('.', '', $val);
+                $val = str_replace(',', '.', $val);
+            } elseif (str_contains($val, ',')) {
+                $val = str_replace(',', '.', $val);
+            }
+            return (float)$val;
+        }
+        return 0.0;
     }
 }

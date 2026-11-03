@@ -60,6 +60,7 @@ final class Router
 
             if (preg_match($pattern, $reqPath, $matches)) {
                 $params = array_filter($matches, fn($k) => !is_numeric($k), ARRAY_FILTER_USE_KEY);
+                $request->setRouteParams($params);
 
                 foreach ($route['middleware'] as $mw) {
                     if (is_callable($mw)) {
@@ -70,16 +71,47 @@ final class Router
                     }
                 }
 
+                $resolveArgs = function (\ReflectionFunctionAbstract $ref) use ($request, $params): array {
+                    $mParams = $ref->getParameters();
+                    $args = [];
+                    if (isset($mParams[0])) {
+                        $args[] = $request;
+                    }
+                    for ($i = 1; $i < count($mParams); $i++) {
+                        $p = $mParams[$i];
+                        $pName = $p->getName();
+                        $pType = $p->getType();
+                        $typeName = $pType instanceof \ReflectionNamedType ? $pType->getName() : '';
+
+                        if ($typeName === 'array' || $pName === 'params') {
+                            $args[] = $params;
+                        } elseif (array_key_exists($pName, $params)) {
+                            $args[] = $params[$pName];
+                        } elseif (count($params) === 1) {
+                            $args[] = reset($params);
+                        } elseif ($p->isDefaultValueAvailable()) {
+                            $args[] = $p->getDefaultValue();
+                        } else {
+                            $args[] = null;
+                        }
+                    }
+                    return $args;
+                };
+
                 $handler = $route['handler'];
                 if (is_callable($handler)) {
-                    $handler($request, ...$params);
+                    $ref = new \ReflectionFunction($handler);
+                    $args = $resolveArgs($ref);
+                    $handler(...$args);
                     return;
                 }
 
                 if (is_array($handler) && count($handler) === 2) {
                     [$class, $method] = $handler;
                     $controller = new $class();
-                    $controller->$method($request, ...$params);
+                    $ref = new \ReflectionMethod($class, $method);
+                    $args = $resolveArgs($ref);
+                    $controller->$method(...$args);
                     return;
                 }
             }
