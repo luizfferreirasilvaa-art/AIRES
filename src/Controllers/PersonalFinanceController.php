@@ -602,30 +602,39 @@ final class PersonalFinanceController
         }
 
         // Destinação da Renda Mensal
+        $saldoLivreReal = round($renda - ($totalComprometido + $aporteMensalTotal), 2);
         $destinacao = [
             'custos_fixos' => [
+                'rotulo'     => 'Custos Fixos',
                 'label'      => 'Custos Fixos (Moradia, Contas)',
                 'valor'      => round($totalFixos, 2),
+                'pct'        => $renda > 0 ? round(($totalFixos / $renda) * 100, 1) : 0,
                 'percentual' => $renda > 0 ? round(($totalFixos / $renda) * 100, 1) : 0,
                 'cor'        => 'cyan'
             ],
             'parcelas_metas' => [
-                'label'      => 'Metas & Parcelamentos (Geladeira, etc.)',
+                'rotulo'     => 'Parcelamentos & Metas',
+                'label'      => 'Metas & Parcelamentos',
                 'valor'      => round($totalParcelasMes, 2),
+                'pct'        => $renda > 0 ? round(($totalParcelasMes / $renda) * 100, 1) : 0,
                 'percentual' => $renda > 0 ? round(($totalParcelasMes / $renda) * 100, 1) : 0,
                 'cor'        => 'purple'
             ],
             'investimentos_economias' => [
-                'label'      => 'Investimentos & Economias (Aportes)',
+                'rotulo'     => 'Aportes & Economias',
+                'label'      => 'Investimentos & Economias',
                 'valor'      => round($aporteMensalTotal, 2),
+                'pct'        => $renda > 0 ? round(($aporteMensalTotal / $renda) * 100, 1) : 0,
                 'percentual' => $renda > 0 ? round(($aporteMensalTotal / $renda) * 100, 1) : 0,
                 'cor'        => 'lime'
             ],
             'margem_livre' => [
-                'label'      => 'Margem Livre Desimpedida',
-                'valor'      => max(0.0, round($renda - ($totalComprometido + $aporteMensalTotal), 2)),
-                'percentual' => $renda > 0 ? max(0.0, round((($renda - ($totalComprometido + $aporteMensalTotal)) / $renda) * 100, 1)) : 0,
-                'cor'        => 'emerald'
+                'rotulo'     => $saldoLivreReal >= 0 ? 'Margem Livre' : 'Déficit no Mês',
+                'label'      => $saldoLivreReal >= 0 ? 'Margem Livre' : 'Déficit no Mês',
+                'valor'      => $saldoLivreReal,
+                'pct'        => $renda > 0 ? round(($saldoLivreReal / $renda) * 100, 1) : 0,
+                'percentual' => $renda > 0 ? round(($saldoLivreReal / $renda) * 100, 1) : 0,
+                'cor'        => $saldoLivreReal >= 0 ? 'emerald' : 'rose'
             ]
         ];
 

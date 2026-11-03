@@ -383,6 +383,32 @@ const PersonalFinance = (() => {
         const scoreLabel = kpis.saude_label || (score >= 80 ? 'Excelente' : (score >= 60 ? 'Equilibrada' : 'Atenção'));
         const scoreCor = kpis.saude_cor || (score >= 80 ? 'emerald' : (score >= 60 ? 'lime' : 'amber'));
 
+        const baseDestinacao = destinacao.length > 0 ? destinacao : [
+            { rotulo: 'Custos Fixos', valor: fixos, pct: (renda > 0 ? (fixos / renda) * 100 : 0), cor: 'cyan' },
+            { rotulo: 'Parcelamentos & Metas', valor: parcelasMes, pct: (renda > 0 ? (parcelasMes / renda) * 100 : 0), cor: 'purple' },
+            { rotulo: 'Aportes & Economias', valor: aporteMensal, pct: (renda > 0 ? (aporteMensal / renda) * 100 : 0), cor: 'lime' },
+            { rotulo: (saldoLivre - aporteMensal >= 0) ? 'Margem Livre' : 'Déficit no Mês', valor: (saldoLivre - aporteMensal), pct: (renda > 0 ? ((saldoLivre - aporteMensal) / renda) * 100 : 0), cor: (saldoLivre - aporteMensal >= 0) ? 'emerald' : 'rose' }
+        ];
+
+        const itemsDestinacao = baseDestinacao.map(item => {
+            const rotulo = item.rotulo || item.label || 'Item';
+            const valor = parseFloat(item.valor || 0);
+            const rawPct = parseFloat(item.pct ?? item.percentual ?? 0);
+            const isNegativo = valor < 0;
+            const cor = isNegativo ? 'rose' : (item.cor || 'lime');
+            return {
+                ...item,
+                rotulo,
+                valor,
+                pct: isNaN(rawPct) ? 0 : rawPct,
+                isNegativo,
+                cor
+            };
+        });
+
+        const somaPositivos = itemsDestinacao.reduce((acc, it) => acc + (it.valor > 0 ? it.valor : 0), 0);
+        const barScaleTotal = Math.max(renda, somaPositivos);
+
         let maxPatrimonio = 1;
         projecao.forEach(p => {
             const v = Math.max(parseFloat(p.patrimonio_bruto || 0), parseFloat(p.patrimonio_liquido || 0));
@@ -498,14 +524,9 @@ const PersonalFinance = (() => {
 
                     <!-- Multi-segment Progress Bar -->
                     <div class="w-full h-4 bg-zinc-900 rounded-full overflow-hidden p-0.5 border border-white/10 flex">
-                        ${(destinacao.length > 0 ? destinacao : [
-                            { rotulo: 'Custos Fixos', valor: fixos, pct: (renda > 0 ? (fixos/renda)*100 : 0), cor: 'cyan' },
-                            { rotulo: 'Parcelamentos', valor: parcelasMes, pct: (renda > 0 ? (parcelasMes/renda)*100 : 0), cor: 'purple' },
-                            { rotulo: 'Aportes', valor: aporteMensal, pct: (renda > 0 ? (aporteMensal/renda)*100 : 0), cor: 'lime' },
-                            { rotulo: 'Margem Livre', valor: Math.max(0, saldoLivre), pct: (renda > 0 ? (Math.max(0, saldoLivre)/renda)*100 : 0), cor: 'emerald' }
-                        ]).map(item => {
-                            const pct = Math.max(0, Math.min(100, parseFloat(item.pct || 0)));
-                            if (pct <= 0) return '';
+                        ${itemsDestinacao.filter(it => it.valor > 0).map(item => {
+                            const widthPct = barScaleTotal > 0 ? ((item.valor / barScaleTotal) * 100) : 0;
+                            if (widthPct <= 0) return '';
                             const bgCor = {
                                 cyan: 'bg-cyan-400',
                                 purple: 'bg-purple-400',
@@ -513,18 +534,13 @@ const PersonalFinance = (() => {
                                 emerald: 'bg-emerald-400',
                                 rose: 'bg-rose-500'
                             }[item.cor] || 'bg-lime-400';
-                            return `<div class="${bgCor} h-full transition-all duration-500 first:rounded-l-full last:rounded-r-full" style="width: ${pct}%" title="${escapeHtml(item.rotulo)}: ${pct.toFixed(1)}% (R$ ${parseFloat(item.valor).toLocaleString('pt-BR')})"></div>`;
+                            return `<div class="${bgCor} h-full transition-all duration-500 first:rounded-l-full last:rounded-r-full" style="width: ${widthPct.toFixed(1)}%" title="${escapeHtml(item.rotulo)}: ${item.pct.toFixed(1)}% da renda (R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})"></div>`;
                         }).join('')}
                     </div>
 
                     <!-- 4 Buckets Cards -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        ${(destinacao.length > 0 ? destinacao : [
-                            { rotulo: 'Custos Fixos', valor: fixos, pct: (renda > 0 ? (fixos/renda)*100 : 0), cor: 'cyan' },
-                            { rotulo: 'Parcelamentos & Metas', valor: parcelasMes, pct: (renda > 0 ? (parcelasMes/renda)*100 : 0), cor: 'purple' },
-                            { rotulo: 'Aportes & Economias', valor: aporteMensal, pct: (renda > 0 ? (aporteMensal/renda)*100 : 0), cor: 'lime' },
-                            { rotulo: 'Margem Livre', valor: Math.max(0, saldoLivre), pct: (renda > 0 ? (Math.max(0, saldoLivre)/renda)*100 : 0), cor: 'emerald' }
-                        ]).map(item => {
+                        ${itemsDestinacao.map(item => {
                             const corClasses = {
                                 cyan: { text: 'text-cyan-400', bg: 'bg-cyan-400/10', border: 'border-cyan-400/20' },
                                 purple: { text: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/20' },
@@ -535,12 +551,12 @@ const PersonalFinance = (() => {
 
                             return `
                                 <div class="p-3.5 rounded-2xl ${corClasses.bg} border ${corClasses.border} space-y-1">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-[11px] font-bold ${corClasses.text}">${escapeHtml(item.rotulo)}</span>
-                                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md bg-white/5 text-white">${parseFloat(item.pct).toFixed(1)}%</span>
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span class="text-[11px] font-bold ${corClasses.text} truncate" title="${escapeHtml(item.rotulo)}">${escapeHtml(item.rotulo)}</span>
+                                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md bg-white/5 text-white shrink-0">${item.pct.toFixed(1)}%</span>
                                     </div>
-                                    <p class="text-base sm:text-lg font-black text-white font-mono">
-                                        R$ ${parseFloat(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    <p class="text-base sm:text-lg font-black ${item.isNegativo ? 'text-rose-400' : 'text-white'} font-mono">
+                                        ${item.isNegativo ? '-' : ''}R$ ${Math.abs(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                             `;
