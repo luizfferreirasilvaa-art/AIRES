@@ -616,15 +616,15 @@ const StartupFaturamento = (() => {
                 </div>
 
                 <!-- 2. BLOCO DE IDENTIFICAÇÃO E DESCONTO: CÓDIGO DO CLIENTE, INSTALAÇÃO E BADGE VERDE -->
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center mb-4 sm:mb-5">
-                    <div class="sm:col-span-5 text-left">
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-center mb-4 sm:mb-5">
+                    <div class="sm:col-span-4 text-left">
                         <div class="text-[9px] sm:text-[10px] uppercase font-bold text-zinc-700 tracking-wider mb-0.5">CÓDIGO DO CLIENTE</div>
                         <div class="text-xs sm:text-sm md:text-base font-black text-zinc-950 font-mono tracking-tight whitespace-nowrap">
                             ${escapeHtml(dados.codigo_cliente)}
                         </div>
                     </div>
 
-                    <div class="sm:col-span-3 text-left sm:text-center">
+                    <div class="sm:col-span-4 text-left sm:text-center sm:pr-3">
                         <div class="text-[9px] sm:text-[10px] uppercase font-bold text-zinc-700 tracking-wider mb-0.5">CÓDIGO DA INSTALAÇÃO</div>
                         <div class="text-xs sm:text-sm md:text-base font-black text-zinc-950 font-mono tracking-tight whitespace-nowrap">
                             ${escapeHtml(dados.codigo_instalacao)}
